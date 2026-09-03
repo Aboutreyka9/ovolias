@@ -828,8 +828,27 @@ html, body {
     width: 100% !important;
     max-width: 580px !important;
 }
+.modal.fade .modal-dialog.modal-sm {
+    max-width: 400px !important;
+}
+.modal.fade .modal-dialog.modal-md {
+    max-width: 600px !important;
+}
 .modal.fade .modal-dialog.modal-lg {
-    max-width: 800px !important;
+    max-width: 860px !important;
+}
+.modal.fade .modal-dialog.modal-xl {
+    max-width: 1140px !important;
+}
+@media (max-width: 768px) {
+    .modal.fade .modal-dialog,
+    .modal.fade .modal-dialog.modal-sm,
+    .modal.fade .modal-dialog.modal-md,
+    .modal.fade .modal-dialog.modal-lg,
+    .modal.fade .modal-dialog.modal-xl {
+        max-width: 95% !important;
+        margin: 10px auto !important;
+    }
 }
 .modal-backdrop.fade {
     z-index: 10540 !important;
