@@ -21,49 +21,88 @@ $grilles = $grilles ?? [];
         </a>
       </div>
 
-      <!-- Grille des 6 Catégories de Poids Standard en Cartes Structurées -->
-      <div style="margin-bottom: 24px;">
-        <h2 style="font-size: 16px; font-weight: 700; color: #1E293B; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+      <!-- Style Sobres, Élégants & Professionnels -->
+      <style>
+        .cat-poids-card-sobre {
+          background: #FFFFFF;
+          border-radius: 12px;
+          padding: 20px;
+          border: 1px solid #E2E8F0;
+          box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+          position: relative;
+          transition: all 0.3s ease;
+        }
+        .cat-poids-card-sobre:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+          border-color: #CBD5E1;
+        }
+        .cat-poids-card-sobre .cat-icon-sobre {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          background: #F1F5F9;
+          color: #1E3A5F;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.3s ease, color 0.3s ease;
+        }
+        .cat-poids-card-sobre:hover .cat-icon-sobre {
+          background: #1E3A5F;
+          color: #FFFFFF;
+        }
+        .cat-poids-card-sobre .weight-box-sobre {
+          background: #F8FAFC;
+          border: 1px solid #E2E8F0;
+          border-radius: 8px;
+          padding: 10px 14px;
+          text-align: center;
+          margin-top: 12px;
+          transition: background 0.3s ease;
+        }
+        .cat-poids-card-sobre:hover .weight-box-sobre {
+          background: #F1F5F9;
+        }
+      </style>
+
+      <!-- Grille des 6 Catégories de Référence OVOLIA -->
+      <div style="margin-bottom: 28px;">
+        <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
           <i data-lucide="scale" style="width: 18px; height: 18px; color: #1E3A5F;"></i> Les 6 Catégories de Référence OVOLIA
         </h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
           <?php 
-          $accents = [
-              'CATP-ESSENTIEL' => '#10B981',
-              'CATP-CLASSIQUE' => '#059669',
-              'CATP-GRAND'     => '#0284C7',
-              'CATP-EXTRA'     => '#2563EB',
-              'CATP-SIGNATURE' => '#7C3AED',
-              'CATP-PRESTIGE'  => '#DC2626'
+          $icons = [
+              'CATP-ESSENTIEL' => 'feather',
+              'CATP-CLASSIQUE' => 'award',
+              'CATP-GRAND'     => 'package',
+              'CATP-EXTRA'     => 'star',
+              'CATP-SIGNATURE' => 'crown',
+              'CATP-PRESTIGE'  => 'sparkles'
           ];
           foreach ($categories as $cat): 
-              $color = $accents[$cat['code_categorie_poids']] ?? '#059669';
+              $iconName = $icons[$cat['code_categorie_poids']] ?? 'scale';
           ?>
-          <div style="background: #FFFFFF; border-radius: 10px; padding: 18px; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: <?= $color ?>;"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-weight: 800; font-size: 15px; color: #0F172A;"><?= htmlspecialchars($cat['libelle_categorie_poids']) ?></span>
-              <code style="font-weight:700; color:<?= $color ?>; background:<?= $color ?>12; padding:2px 6px; border-radius:4px; font-size: 11px;">
-                <?= htmlspecialchars($cat['code_categorie_poids']) ?>
-              </code>
-            </div>
-            <div style="font-size: 13px; font-weight: 700; color: #047857; background: #ECFDF5; padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 12px;">
-              ⚖️ <?= number_format($cat['poids_min'], 2, ',', ' ') ?> kg à <?= number_format($cat['poids_max'], 2, ',', ' ') ?> kg
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; pt-2; border-top: 1px dashed #E2E8F0;">
-              <div>
-                <span style="color: #64748B; font-size: 11px; font-weight: 600; display: block;">Prix Défaut</span>
-                <span style="font-size: 18px; font-weight: 900; color: <?= $color ?>;">
-                  <?= number_format($cat['prix_vente_defaut'], 0, ',', ' ') ?> <small style="font-size: 11px; font-weight: 700;">FCFA</small>
-                </span>
+          <div class="cat-poids-card-sobre">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="cat-icon-sobre">
+                  <i data-lucide="<?= $iconName ?>" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div>
+                  <span style="font-weight: 800; font-size: 15px; color: #0F172A; display: block;"><?= htmlspecialchars($cat['libelle_categorie_poids']) ?></span>
+                  <code style="font-weight:700; color: #64748B; font-size: 11px;">
+                    <?= htmlspecialchars($cat['code_categorie_poids']) ?>
+                  </code>
+                </div>
               </div>
-              <button class="btn btn-sm btn-outline-primary btn-edit-prix" 
-                      data-code="<?= htmlspecialchars($cat['code_categorie_poids']) ?>" 
-                      data-libelle="<?= htmlspecialchars($cat['libelle_categorie_poids']) ?>" 
-                      data-prix="<?= $cat['prix_vente_defaut'] ?>"
-                      style="font-weight: 700; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
-                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Modifier
-              </button>
+            </div>
+            <div class="weight-box-sobre">
+              <span style="color: #64748B; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px;">Plage de Poids Net</span>
+              <div style="font-size: 17px; font-weight: 800; color: #0F172A;">
+                ⚖️ <?= number_format($cat['poids_min'], 2, ',', ' ') ?> kg &mdash; <?= number_format($cat['poids_max'], 2, ',', ' ') ?> kg
+              </div>
             </div>
           </div>
           <?php endforeach; ?>
