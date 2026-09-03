@@ -273,8 +273,8 @@
             <i data-lucide="layout-dashboard"></i> <span>Tableau de bord</span>
         </a>
 
-        <!-- === MODULE COMMERCIAL (ROLE_COMMERCIAL) === -->
-        <?php if ($canAccess(['COMMERCIAL_VIEW_OWN_CLIENTS', 'COMMERCIAL_ADD_CLIENT'], ['ROLE_COMMERCIAL', 'ROLE_ADMIN'])): ?>
+        <!-- === MODULE COMMERCIAL (NOUVELLE FONCTIONNALITÉ OVOLIA) === -->
+        <?php if ($canAccess(['COMMERCIAL_VIEW_OWN_CLIENTS', 'COMMERCIAL_ADD_CLIENT', 'COMMERCIAL_RECORD_VENTE_AVICOLE'], ['ROLE_COMMERCIAL', 'ROLE_ADMIN'])): ?>
         <div class="nav-section">
             <div class="sidebar-accordion-toggle" data-bs-target="#sec-commercial" aria-expanded="false">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -283,22 +283,19 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-commercial">
-                <a href="<?= RACINE ?>client/list" class="nav-item sub <?= strpos($currentUri, '/client/') !== false ? 'active' : '' ?>" data-title="Mes Clients">
-                    <i data-lucide="users"></i> <span>Mes Clients</span>
+                <a href="<?= RACINE ?>aviculture/clients" class="nav-item sub <?= strpos($currentUri, '/aviculture/clients') !== false ? 'active' : '' ?>" data-title="Clients Avicoles">
+                    <i data-lucide="users"></i> <span>Clients Avicoles</span>
                 </a>
-                <a href="<?= RACINE ?>souscription/list" class="nav-item sub <?= strpos($currentUri, '/souscription/list') !== false ? 'active' : '' ?>" data-title="Mes Souscriptions">
-                    <i data-lucide="file-text"></i> <span>Mes Souscriptions</span>
+                <a href="<?= RACINE ?>aviculture/ventes" class="nav-item sub <?= strpos($currentUri, '/aviculture/ventes') !== false ? 'active' : '' ?>" data-title="Ventes Avicoles">
+                    <i data-lucide="shopping-cart"></i> <span>Ventes Avicoles</span>
                 </a>
-                <a href="<?= RACINE ?>souscription/wizard" class="nav-item sub <?= strpos($currentUri, '/souscription/wizard') !== false ? 'active' : '' ?>" data-title="Nouvelle Souscription">
-                    <i data-lucide="file-plus"></i> <span>Nouvelle Souscription</span>
-                </a>
-                <a href="<?= RACINE ?>cautisation-payment/search-form" class="nav-item sub <?= strpos($currentUri, '/cautisation-payment/') !== false ? 'active' : '' ?>" data-title="Collecter Cotisation">
-                    <i data-lucide="wallet"></i> <span>Collecter Cotisation</span>
+                <a href="<?= RACINE ?>aviculture/categories_poids" class="nav-item sub <?= strpos($currentUri, '/aviculture/categories_poids') !== false ? 'active' : '' ?>" data-title="Grille Poids & Tarifs">
+                    <i data-lucide="scale"></i> <span>Grille Poids & Tarifs</span>
                 </a>
             </div>
         </div>
 
-        <!-- MODULE MA CAISSE & VERSEMENTS (COMMERCIAL) -->
+        <!-- MODULE MA CAISSE & VERSEMENTS (NOUVELLE FONCTIONNALITÉ OVOLIA) -->
         <div class="nav-section">
             <div class="sidebar-accordion-toggle" data-bs-target="#sec-decharger" aria-expanded="false">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -307,6 +304,9 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-decharger">
+                <a href="<?= RACINE ?>aviculture/ventes" class="nav-item sub <?= strpos($currentUri, '/aviculture/ventes') !== false ? 'active' : '' ?>" data-title="Encaissements Ventes">
+                    <i data-lucide="shopping-cart"></i> <span>Encaissements Ventes</span>
+                </a>
                 <a href="<?= RACINE ?>caisse_commercial/formulaire" class="nav-item sub <?= strpos($currentUri, '/caisse_commercial/') !== false ? 'active' : '' ?>" data-title="Ma Caisse Journalière">
                     <i data-lucide="lock"></i> <span>Ma Caisse Journalière</span>
                 </a>
@@ -320,49 +320,49 @@
         </div>
         <?php endif; ?>
 
-        <!-- === MODULE GESTIONNAIRE : CATALOGUE ARTICLES & PACKS === -->
-        <?php if ($canAccess(['GESTIONNAIRE_MANAGE_PACKS', 'GESTIONNAIRE_MANAGE_ARTICLES'], ['ROLE_GESTIONNAIRE', 'ROLE_ADMIN'])): ?>
+        <!-- === MODULE CATALOGUE DES PRODUITS (NOUVELLE FONCTIONNALITÉ OVOLIA) === -->
+        <?php if ($canAccess(['GESTIONNAIRE_MANAGE_PACKS', 'GESTIONNAIRE_MANAGE_ARTICLES', 'GESTIONNAIRE_MANAGE_CATEGORIES_POIDS'], ['ROLE_GESTIONNAIRE', 'ROLE_ADMIN'])): ?>
         <div class="nav-section">
             <div class="sidebar-accordion-toggle" data-bs-target="#sec-catalogue" aria-expanded="false">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="package" style="width: 16px; height: 16px; color: #2563EB;"></i> <span>Catalogue & Packs</span>
+                    <i data-lucide="package" style="width: 16px; height: 16px; color: #2563EB;"></i> <span>Catalogue des Produits</span>
                 </div>
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-catalogue">
-                <a href="<?= RACINE ?>article/list" class="nav-item sub <?= strpos($currentUri, '/article/') !== false ? 'active' : '' ?>" data-title="Articles Produits">
-                    <i data-lucide="shopping-bag"></i> <span>Articles Produits</span>
+                <a href="<?= RACINE ?>aviculture/categories_poids" class="nav-item sub <?= strpos($currentUri, '/aviculture/categories_poids') !== false ? 'active' : '' ?>" data-title="Grille Poids & Tarifs">
+                    <i data-lucide="scale"></i> <span>Grille Poids & Tarifs</span>
                 </a>
-                <!-- <a href="<?= RACINE ?>categories_articles/list" class="nav-item sub <?= strpos($currentUri, '/categories_articles/') !== false ? 'active' : '' ?>" data-title="Catégories d'Articles">
-                    <i data-lucide="layers"></i> <span>Catégories Articles</span>
-                </a> -->
-                <a href="<?= RACINE ?>categorie_pack/list" class="nav-item sub <?= strpos($currentUri, '/categorie_pack/') !== false ? 'active' : '' ?>" data-title="Catégories de Packs">
-                    <i data-lucide="tags"></i> <span>Catégories Packs</span>
-                </a>
-                <a href="<?= RACINE ?>pack/list" class="nav-item sub <?= strpos($currentUri, '/pack/') !== false ? 'active' : '' ?>" data-title="Packs d'Articles">
-                    <i data-lucide="boxes"></i> <span>Packs d'Articles</span>
+                <a href="<?= RACINE ?>aviculture/pesees" class="nav-item sub <?= strpos($currentUri, '/aviculture/pesees') !== false ? 'active' : '' ?>" data-title="Pesées & Étiquettes">
+                    <i data-lucide="qr-code"></i> <span>Pesées & Étiquettes</span>
                 </a>
             </div>
         </div>
 
-        <!-- MODULE GESTIONNAIRE : LOGISTIQUE & DISTRIBUTIONS -->
+        <!-- MODULE GESTIONNAIRE : LOGISTIQUE & APPROVISIONNEMENTS -->
         <div class="nav-section">
             <div class="sidebar-accordion-toggle" data-bs-target="#sec-distribution" aria-expanded="false">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="truck" style="width: 16px; height: 16px; color: #D97706;"></i> <span>Logistique & Retraits</span>
+                    <i data-lucide="truck" style="width: 16px; height: 16px; color: #D97706;"></i> <span>Logistique & Stock</span>
                 </div>
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-distribution">
-                <a href="<?= RACINE ?>distribution/list" class="nav-item sub <?= strpos($currentUri, '/distribution/') !== false ? 'active' : '' ?>" data-title="Distributions Packs">
-                    <i data-lucide="package-check"></i> <span>Distributions Packs</span>
+                <a href="<?= RACINE ?>aviculture/pesees" class="nav-item sub <?= strpos($currentUri, '/aviculture/pesees') !== false ? 'active' : '' ?>" data-title="Pesées & Étiquettes">
+                    <i data-lucide="qr-code"></i> <span>Pesées & Étiquettes</span>
+                </a>
+                <a href="<?= RACINE ?>aviculture/achats" class="nav-item sub <?= strpos($currentUri, '/aviculture/achats') !== false ? 'active' : '' ?>" data-title="Achats Produits Finis">
+                    <i data-lucide="shopping-bag"></i> <span>Achats Produits Finis</span>
+                </a>
+                <a href="<?= RACINE ?>aviculture/fournisseurs" class="nav-item sub <?= strpos($currentUri, '/aviculture/fournisseurs') !== false ? 'active' : '' ?>" data-title="Fournisseurs Avicoles">
+                    <i data-lucide="building"></i> <span>Fournisseurs Avicoles</span>
                 </a>
             </div>
         </div>
         <?php endif; ?>
 
-        <!-- === MODULE FINANCE : FINANCES & CAISSE CENTRALE === -->
-        <?php if ($canAccess(['FINANCE_VIEW_ALL_COTISATIONS', 'FINANCE_VALIDATE_VERSEMENT'], ['ROLE_FINANCE', 'ROLE_ADMIN'])): ?>
+        <!-- === MODULE FINANCE : FINANCES & TRÉSORERIE (NOUVELLE FONCTIONNALITÉ OVOLIA) === -->
+        <?php if ($canAccess(['FINANCE_VIEW_ALL_COTISATIONS', 'FINANCE_VALIDATE_VERSEMENT', 'FINANCE_VIEW_RAPPORTS_AVICULTURE'], ['ROLE_FINANCE', 'ROLE_ADMIN'])): ?>
         <div class="nav-section">
             <div class="sidebar-accordion-toggle" data-bs-target="#sec-finance" aria-expanded="false">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -371,14 +371,11 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-finance">
-                <a href="<?= RACINE ?>cotisation/list" class="nav-item sub <?= strpos($currentUri, '/cotisation/list') !== false ? 'active' : '' ?>" data-title="Suivi des Cotisations">
-                    <i data-lucide="search"></i> <span>Suivi Cotisations</span>
+                <a href="<?= RACINE ?>aviculture/ventes" class="nav-item sub <?= strpos($currentUri, '/aviculture/ventes') !== false ? 'active' : '' ?>" data-title="Ventes & Encaissements">
+                    <i data-lucide="shopping-cart"></i> <span>Ventes & Encaissements</span>
                 </a>
-                <a href="<?= RACINE ?>versement/list" class="nav-item sub <?= strpos($currentUri, '/versement/') !== false ? 'active' : '' ?>" data-title="Validation Versements">
-                    <i data-lucide="arrow-down-left"></i> <span>Versements Commerciaux</span>
-                </a>
-                <a href="<?= RACINE ?>type_depense/list" class="nav-item sub <?= strpos($currentUri, '/type_depense/') !== false ? 'active' : '' ?>" data-title="Types de Dépenses">
-                    <i data-lucide="tags"></i> <span>Types de Dépenses</span>
+                <a href="<?= RACINE ?>aviculture/achats" class="nav-item sub <?= strpos($currentUri, '/aviculture/achats') !== false ? 'active' : '' ?>" data-title="Achats & Règlements">
+                    <i data-lucide="shopping-bag"></i> <span>Achats & Règlements</span>
                 </a>
                 <a href="<?= RACINE ?>depense/list" class="nav-item sub <?= strpos($currentUri, '/depense/') !== false ? 'active' : '' ?>" data-title="Dépenses d'Exploitation">
                     <i data-lucide="arrow-up-right"></i> <span>Dépenses Exploitation</span>

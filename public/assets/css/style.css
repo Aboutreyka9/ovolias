@@ -789,7 +789,7 @@ html, body {
     justify-content: center;
 }
 .modal-overlay.active { display: flex; }
-.modal {
+.modal-overlay > .modal {
     background: var(--modal-bg);
     border-radius: var(--radius-lg);
     max-width: 500px;
@@ -797,6 +797,42 @@ html, body {
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+}
+
+/* Fix Bootstrap 5 modals from conflict with custom .modal CSS */
+.modal.fade {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: transparent !important;
+    max-width: none !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    z-index: 10550 !important;
+}
+.modal.fade.show, div.modal.show {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+.modal.fade .modal-dialog {
+    position: relative !important;
+    margin: auto !important;
+    width: 100% !important;
+    max-width: 580px !important;
+}
+.modal.fade .modal-dialog.modal-lg {
+    max-width: 800px !important;
+}
+.modal-backdrop.fade {
+    z-index: 10540 !important;
 }
 .modal-header {
     display: flex;
@@ -821,10 +857,10 @@ html, body {
     padding: var(--spacing-md);
     border-top: 1px solid var(--border-color);
 }
-.modal .form-group { margin-bottom: var(--spacing-md); }
-.modal .form-group:last-child { margin-bottom: 0; }
-.modal .form-group label { display: block; margin-bottom: var(--spacing-xs); font-weight: 500; }
-.modal .form-group input, .modal .form-group select {
+.modal-overlay > .modal .form-group { margin-bottom: var(--spacing-md); }
+.modal-overlay > .modal .form-group:last-child { margin-bottom: 0; }
+.modal-overlay > .modal .form-group label { display: block; margin-bottom: var(--spacing-xs); font-weight: 500; }
+.modal-overlay > .modal .form-group input, .modal-overlay > .modal .form-group select {
     width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
@@ -3304,7 +3340,7 @@ body {
     }
 
     /* Modals: bottom sheet on mobile */
-    .modal {
+    .modal-overlay > .modal {
         width: 96% !important;
         max-width: 96% !important;
         max-height: 85vh;
@@ -3356,7 +3392,7 @@ body {
         justify-content: center;
     }
     /* Modals: bottom sheet / nearly fullscreen */
-    .modal {
+    .modal-overlay > .modal {
         width: 100% !important;
         max-width: 100% !important;
         max-height: 95vh !important;

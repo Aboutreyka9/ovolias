@@ -117,6 +117,37 @@ $route->addRoute('/pack/edition/{param}', ['PackController', 'edition']);
 $route->addRoute('/pack/formulaire', ['PackController', 'formulaire']);
 
 // -------------------------------------------------------------
+// Module: Aviculture & Pesée OVOLIA
+// -------------------------------------------------------------
+$route->addRoute('/aviculture/categories_poids', ['AvicultureController', 'categoriesPoids']);
+$route->addRoute('/aviculture/pesees', ['AvicultureController', 'pesees']);
+$route->addRoute('/aviculture/apiListPesees', ['AvicultureController', 'apiListPesees']);
+$route->addRoute('/aviculture/addPesee', ['AvicultureController', 'addPesee']);
+$route->addRoute('/aviculture/etiquettePrint/{param}', ['AvicultureController', 'etiquettePrint']);
+
+// Commercial & Approvisionnements Avicoles
+$route->addRoute('/aviculture/clients', ['ClientAvicoleController', 'list']);
+$route->addRoute('/aviculture/apiListClients', ['ClientAvicoleController', 'apiList']);
+$route->addRoute('/aviculture/addClient', ['ClientAvicoleController', 'add']);
+$route->addRoute('/aviculture/editClient', ['ClientAvicoleController', 'edit']);
+$route->addRoute('/aviculture/changerClient', ['ClientAvicoleController', 'changer']);
+
+$route->addRoute('/aviculture/fournisseurs', ['FournisseurAvicoleController', 'list']);
+$route->addRoute('/aviculture/apiListFournisseurs', ['FournisseurAvicoleController', 'apiList']);
+$route->addRoute('/aviculture/addFournisseur', ['FournisseurAvicoleController', 'add']);
+$route->addRoute('/aviculture/editFournisseur', ['FournisseurAvicoleController', 'edit']);
+$route->addRoute('/aviculture/changerFournisseur', ['FournisseurAvicoleController', 'changer']);
+
+$route->addRoute('/aviculture/ventes', ['VenteAvicoleController', 'list']);
+$route->addRoute('/aviculture/apiListVentes', ['VenteAvicoleController', 'apiList']);
+$route->addRoute('/aviculture/addVente', ['VenteAvicoleController', 'addVente']);
+
+$route->addRoute('/aviculture/achats', ['AchatAvicoleController', 'list']);
+$route->addRoute('/aviculture/apiListAchats', ['AchatAvicoleController', 'apiList']);
+$route->addRoute('/aviculture/addAchat', ['AchatAvicoleController', 'addAchat']);
+
+
+// -------------------------------------------------------------
 // Module: Clients & Zones Commerciales
 // -------------------------------------------------------------
 $route->addRoute('/client/list', ['ClientController', 'list']);
@@ -258,7 +289,11 @@ $route->addRoute('/notification/formulaire', ['NotificationController', 'formula
 // Extraction & Exécution de l'URL
 // -------------------------------------------------------------
 $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-if (strpos($url, '/geicg/public') === 0) {
+if (strpos($url, '/ovolias/public') === 0) {
+    $url = str_replace('/ovolias/public', '', $url);
+} elseif (strpos($url, '/ovolias') === 0) {
+    $url = str_replace('/ovolias', '', $url);
+} elseif (strpos($url, '/geicg/public') === 0) {
     $url = str_replace('/geicg/public', '', $url);
 } elseif (strpos($url, '/geicg') === 0) {
     $url = str_replace('/geicg', '', $url);
@@ -269,3 +304,4 @@ if ($url === '') {
     $url = '/';
 }
 $route->run($url);
+

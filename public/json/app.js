@@ -1,4 +1,4 @@
-const LINK = window.location.origin + '/geicg/';
+const LINK = window.location.origin + '/ovolias/';
 
 $.ajaxSetup({
     xhrFields: {
@@ -742,11 +742,11 @@ if (modalSave) {
     });
 
     function updateBottomNavActive() {
-        const path = window.location.pathname.replace(/^\/geicg\/?/, '/');
+        const path = window.location.pathname.replace(/^\/(ovolias|geicg)\/?/, '/');
         document.querySelectorAll('.bottom-nav-item').forEach(function(item) {
             item.classList.remove('active');
             const href = item.getAttribute('href') || '';
-            const cleanHref = href.replace(/^\/geicg\/?/, '/');
+            const cleanHref = href.replace(/^\/(ovolias|geicg)\/?/, '/');
             if (path === cleanHref || path.startsWith(cleanHref + '/')) {
                 item.classList.add('active');
             }
