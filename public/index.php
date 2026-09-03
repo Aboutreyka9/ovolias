@@ -125,6 +125,7 @@ $route->addRoute('/aviculture/addProduit', ['AvicultureController', 'addProduit'
 $route->addRoute('/aviculture/editProduit', ['AvicultureController', 'editProduit']);
 $route->addRoute('/aviculture/categories_poids', ['AvicultureController', 'categoriesPoids']);
 $route->addRoute('/aviculture/updatePrixGrille', ['AvicultureController', 'updatePrixGrille']);
+$route->addRoute('/aviculture/addPrixGrille', ['AvicultureController', 'addPrixGrille']);
 $route->addRoute('/aviculture/toggleStatutGrille', ['AvicultureController', 'toggleStatutGrille']);
 $route->addRoute('/aviculture/pesees', ['AvicultureController', 'pesees']);
 $route->addRoute('/aviculture/apiListPesees', ['AvicultureController', 'apiListPesees']);

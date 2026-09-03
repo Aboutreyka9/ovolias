@@ -16,9 +16,14 @@ $grilles = $grilles ?? [];
           <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0;">Grille Tarifaire & Catégories de Poids OVOLIA</h1>
           <p style="color: #64748B; font-size: 13px; margin: 4px 0 0 0;">Barème officiel par tranche de poids net pour Poulets entiers frais, Pintades & Volailles</p>
         </div>
-        <a href="<?= RACINE ?>aviculture/pesees" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 8px; padding: 10px 18px;">
-          <i data-lucide="qr-code" style="width: 18px; height: 18px;"></i> Registre des Pesées
-        </a>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAddPrixGrille" style="background: #059669; border-color: #059669; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 8px; padding: 10px 18px; color: white;">
+            <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i> Nouveau Tarif de Grille
+          </button>
+          <a href="<?= RACINE ?>aviculture/pesees" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 8px; padding: 10px 18px;">
+            <i data-lucide="qr-code" style="width: 18px; height: 18px;"></i> Registre des Pesées
+          </a>
+        </div>
       </div>
 
       <!-- Style Sobres, Élégants & Professionnels -->
@@ -400,7 +405,7 @@ $(document).ready(function() {
     bsModal.show();
   });
 
-  // Soumission AJAX Formulaire Prix
+  // Soumission AJAX Formulaire Prix Modification
   $('#formEditPrix').on('submit', function(e) {
     e.preventDefault();
     $.post(baseApi + 'aviculture/updatePrixGrille', $(this).serialize(), function(res) {
@@ -419,7 +424,92 @@ $(document).ready(function() {
       }
     }, 'json');
   });
+
+  // Soumission AJAX Formulaire Nouveau Tarif de Grille
+  $('#formAddPrixGrille').on('submit', function(e) {
+    e.preventDefault();
+    $.post(baseApi + 'aviculture/addPrixGrille', $(this).serialize(), function(res) {
+      if (res.status === 'success' || res.status === 1 || res.success) {
+        if (window.toastr) toastr.success(res.message || 'Tarif enregistré avec succès');
+        else alert(res.message);
+
+        var modalEl = document.getElementById('modalAddPrixGrille');
+        var bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
+
+        setTimeout(function() { location.reload(); }, 600);
+      } else {
+        if (window.toastr) toastr.error(res.message || 'Erreur lors de l\'enregistrement');
+        else alert(res.message);
+      }
+    }, 'json');
+  });
 });
 </script>
+
+<!-- Modal Nouveau Tarif de Grille -->
+<div class="modal fade" id="modalAddPrixGrille" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 500px; margin: auto;">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
+        <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="plus-circle" style="width: 20px; height: 20px; color: #6EE7B7;"></i> Nouveau Tarif Produit / Grille
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formAddPrixGrille">
+        <div class="modal-body" style="padding: 20px;">
+          
+          <div style="margin-bottom: 16px;">
+            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Produit Avicole *</label>
+            <select name="produit_code" class="form-select" style="height: 44px; border-radius: 8px; font-weight: 700; color: #0F172A;" required>
+              <option value="">-- Sélectionner un produit --</option>
+              <?php if (!empty($produits)): ?>
+                <?php foreach ($produits as $p): ?>
+                  <option value="<?= htmlspecialchars($p['code_produit_aviculture']) ?>">
+                    <?= htmlspecialchars($p['libelle_produit']) ?> (<?= htmlspecialchars($p['code_produit_aviculture']) ?>)
+                  </option>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Tranche / Catégorie de Poids *</label>
+            <select name="categorie_poids_code" class="form-select" style="height: 44px; border-radius: 8px; font-weight: 700; color: #0F172A;" required>
+              <option value="">-- Sélectionner une catégorie --</option>
+              <?php foreach ($categories as $cat): ?>
+                <option value="<?= htmlspecialchars($cat['code_categorie_poids']) ?>">
+                  <?= htmlspecialchars($cat['libelle_categorie_poids']) ?> (<?= number_format($cat['poids_min'], 2, ',', ' ') ?> - <?= number_format($cat['poids_max'], 2, ',', ' ') ?> kg)
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Prix de Vente Spécifique (FCFA) *</label>
+            <div class="input-group">
+              <input type="number" name="prix_vente" class="form-control" style="border-radius: 8px 0 0 8px; height: 44px; font-size: 16px; font-weight: 800;" required min="1" step="50" placeholder="Ex: 3500">
+              <span class="input-group-text" style="border-radius: 0 8px 8px 0; background: #F1F5F9; font-weight: 700; color: #475569;">FCFA</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Statut du Tarif</label>
+            <select name="statut_grille" class="form-select" style="height: 44px; border-radius: 8px; font-weight: 700; color: #0F172A;">
+              <option value="actif" selected>🟢 Actif</option>
+              <option value="inactif">⚪ Inactif</option>
+            </select>
+          </div>
+
+        </div>
+        <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+          <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600;" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; border-radius: 8px; font-weight: 700; padding: 8px 18px;">Enregistrer le Tarif</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <?php require_once __DIR__ . '/../../public/inc/footer-link.php'; ?>

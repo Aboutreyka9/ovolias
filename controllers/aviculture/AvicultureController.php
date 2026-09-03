@@ -144,10 +144,87 @@ class AvicultureController extends BaseController
         ");
         $grilles = $stmtP->fetchAll(PDO::FETCH_ASSOC);
 
+        $stmtProd = $db->query("SELECT * FROM produits_aviculture_avicole WHERE statut_produit = 'actif' ORDER BY libelle_produit ASC");
+        $produits = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+
         $this->loadView('../views/aviculture/categories_poids.php', [
             'categories' => $categories,
-            'grilles' => $grilles
+            'grilles'    => $grilles,
+            'produits'   => $produits
         ]);
+    }
+
+    /**
+     * API Ajout d'un nouveau tarif de grille pour un produit et une catégorie de poids
+     */
+    public function addPrixGrille()
+    {
+        $this->requirePost(false);
+        $this->requireAuth();
+        $db = $this->model->getCon();
+
+        $produit_code   = trim($this->post('produit_code'));
+        $categorie_code = trim($this->post('categorie_poids_code'));
+        $prix_vente     = (float)$this->post('prix_vente');
+        $statut         = trim($this->post('statut_grille')) === 'inactif' ? 'inactif' : 'actif';
+
+        if (empty($produit_code) || empty($categorie_code) || $prix_vente <= 0) {
+            $this->error("Veuillez remplir tous les champs obligatoires (Produit, Catégorie, Prix valide).");
+            return;
+        }
+
+        // Récupérer la plage de poids de la catégorie de référence
+        $stmtC = $db->prepare("SELECT poids_min, poids_max FROM categories_poids_avicole WHERE code_categorie_poids = :code");
+        $stmtC->execute([':code' => $categorie_code]);
+        $catRow = $stmtC->fetch(PDO::FETCH_ASSOC);
+
+        if (!$catRow) {
+            $this->error("Catégorie de poids introuvable.");
+            return;
+        }
+
+        // Vérifier si un tarif existe déjà pour ce couple (produit, tranche de poids)
+        $stmtExist = $db->prepare("SELECT id_grille_tarif FROM grilles_tarifs_poids_avicole WHERE produit_code = :pcode AND categorie_poids_code = :ccode");
+        $stmtExist->execute([':pcode' => $produit_code, ':ccode' => $categorie_code]);
+        $exist = $stmtExist->fetch(PDO::FETCH_ASSOC);
+
+        if ($exist) {
+            $up = $db->prepare("UPDATE grilles_tarifs_poids_avicole SET prix_vente = :prix, statut_grille = :st, poids_min = :pmin, poids_max = :pmax WHERE id_grille_tarif = :id");
+            $ok = $up->execute([
+                ':prix' => $prix_vente,
+                ':st'   => $statut,
+                ':pmin' => $catRow['poids_min'],
+                ':pmax' => $catRow['poids_max'],
+                ':id'   => $exist['id_grille_tarif']
+            ]);
+            $msg = "Le tarif pour ce produit et cette tranche a été mis à jour avec succès !";
+        } else {
+            $code_grille = 'GTRF-' . strtoupper(substr(uniqid(), -6));
+            $etablissement = $_SESSION['user']['etablissement_code'] ?? '5454544456';
+            $user_code = $_SESSION['user']['code_utilisateur'] ?? null;
+
+            $ins = $db->prepare("INSERT INTO grilles_tarifs_poids_avicole 
+                (code_grille_tarif, produit_code, categorie_poids_code, poids_min, poids_max, prix_vente, statut_grille, etablissement_code, user_code) 
+                VALUES (:code, :pcode, :ccode, :pmin, :pmax, :prix, :st, :etab, :user)");
+            $ok = $ins->execute([
+                ':code'  => $code_grille,
+                ':pcode' => $produit_code,
+                ':ccode' => $categorie_code,
+                ':pmin'  => $catRow['poids_min'],
+                ':pmax'  => $catRow['poids_max'],
+                ':prix'  => $prix_vente,
+                ':st'    => $statut,
+                ':etab'  => $etablissement,
+                ':user'  => $user_code
+            ]);
+            $msg = "Nouveau tarif de grille ajouté avec succès !";
+        }
+
+        if ($ok) {
+            $this->success($msg);
+        } else {
+            $this->error("Erreur lors de l'enregistrement du tarif.");
+        }
     }
 
     /**
