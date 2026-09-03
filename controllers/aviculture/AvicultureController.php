@@ -8,6 +8,123 @@ class AvicultureController extends BaseController
     }
 
     /**
+     * Vue principale du catalogue des produits avicoles OVOLIA
+     */
+    public function produits()
+    {
+        $this->requireAuth();
+        $this->loadView('../views/aviculture/produits.php');
+    }
+
+    /**
+     * API Liste JSON des produits pour DataTables
+     */
+    public function apiListProduits()
+    {
+        $this->requireAuth();
+        $db = $this->model->getCon();
+        $stmt = $db->query("SELECT * FROM produits_aviculture_avicole ORDER BY id_produit_aviculture DESC");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->json(['data' => $rows]);
+    }
+
+    /**
+     * Enregistrement d'un nouveau produit avicole
+     */
+    public function addProduit()
+    {
+        $this->requirePost(false);
+        $this->requireAuth();
+        $db = $this->model->getCon();
+
+        $libelle = trim($this->post('libelle_produit') ?? '');
+        $cond = $this->post('type_conditionnement') ?: 'piece_au_poids';
+        $unite = trim($this->post('unite_mesure') ?? 'kg');
+        $soumis = (int)$this->post('soumis_grille_poids');
+        $desc = trim($this->post('description_produit') ?? '');
+
+        if (empty($libelle)) {
+            $this->error("Le libellé du produit est obligatoire.");
+            return;
+        }
+
+        $code = 'PROD-AV-' . strtoupper(substr(md5(uniqid()), 0, 6));
+        $user_code = $_SESSION[USERS_AUTH]['code_user'] ?? 'USR-ADMIN-001';
+
+        $stmt = $db->prepare("
+            INSERT INTO produits_aviculture_avicole (
+                code_produit_aviculture, libelle_produit, type_conditionnement, unite_mesure,
+                soumis_grille_poids, description_produit, statut_produit, etablissement_code, user_code
+            ) VALUES (
+                :code, :libelle, :cond, :unite, :soumis, :desc, 'actif', '5454544456', :user_code
+            )
+        ");
+
+        $ok = $stmt->execute([
+            ':code' => $code,
+            ':libelle' => $libelle,
+            ':cond' => $cond,
+            ':unite' => $unite,
+            ':soumis' => $soumis,
+            ':desc' => $desc,
+            ':user_code' => $user_code
+        ]);
+
+        if ($ok) {
+            $this->success("Produit avicole ajouté avec succès !");
+        } else {
+            $this->error("Erreur lors de l'enregistrement du produit.");
+        }
+    }
+
+    /**
+     * Modification d'un produit avicole existant
+     */
+    public function editProduit()
+    {
+        $this->requirePost(false);
+        $this->requireAuth();
+        $db = $this->model->getCon();
+
+        $id = (int)$this->post('id_produit_aviculture');
+        $libelle = trim($this->post('libelle_produit') ?? '');
+        $cond = $this->post('type_conditionnement') ?: 'piece_au_poids';
+        $unite = trim($this->post('unite_mesure') ?? 'kg');
+        $soumis = (int)$this->post('soumis_grille_poids');
+        $desc = trim($this->post('description_produit') ?? '');
+
+        if ($id <= 0 || empty($libelle)) {
+            $this->error("Identifiant ou libellé du produit valide requis.");
+            return;
+        }
+
+        $stmt = $db->prepare("
+            UPDATE produits_aviculture_avicole 
+            SET libelle_produit = :libelle,
+                type_conditionnement = :cond,
+                unite_mesure = :unite,
+                soumis_grille_poids = :soumis,
+                description_produit = :desc
+            WHERE id_produit_aviculture = :id
+        ");
+
+        $ok = $stmt->execute([
+            ':libelle' => $libelle,
+            ':cond' => $cond,
+            ':unite' => $unite,
+            ':soumis' => $soumis,
+            ':desc' => $desc,
+            ':id' => $id
+        ]);
+
+        if ($ok) {
+            $this->success("Produit avicole modifié avec succès !");
+        } else {
+            $this->error("Erreur lors de la modification du produit.");
+        }
+    }
+
+    /**
      * Vue des catégories de poids et grilles tarifaires OVOLIA
      */
     public function categoriesPoids()
@@ -31,6 +148,42 @@ class AvicultureController extends BaseController
             'categories' => $categories,
             'grilles' => $grilles
         ]);
+    }
+
+    /**
+     * API Mise à jour du prix d'une catégorie de poids ou grille tarifaire
+     */
+    public function updatePrixGrille()
+    {
+        $this->requirePost(false);
+        $this->requireAuth();
+        $db = $this->model->getCon();
+
+        $code_categorie = trim($this->post('code_categorie') ?? '');
+        $id_grille = (int)$this->post('id_grille');
+        $nouveau_prix = (float)$this->post('prix_vente');
+
+        if ($nouveau_prix <= 0) {
+            $this->error("Veuillez saisir un prix valide supérieur à 0 FCFA.");
+            return;
+        }
+
+        if ($id_grille > 0) {
+            $stmt = $db->prepare("UPDATE grilles_tarifs_poids_avicole SET prix_vente = :prix WHERE id_grille_tarif = :id");
+            $ok = $stmt->execute([':prix' => $nouveau_prix, ':id' => $id_grille]);
+        } elseif (!empty($code_categorie)) {
+            $stmt = $db->prepare("UPDATE categories_poids_avicole SET prix_vente_defaut = :prix WHERE code_categorie_poids = :code");
+            $ok = $stmt->execute([':prix' => $nouveau_prix, ':code' => $code_categorie]);
+        } else {
+            $this->error("Référence non spécifiée.");
+            return;
+        }
+
+        if ($ok) {
+            $this->success("Prix mis à jour avec succès !");
+        } else {
+            $this->error("Erreur lors de la mise à jour du prix.");
+        }
     }
 
     /**

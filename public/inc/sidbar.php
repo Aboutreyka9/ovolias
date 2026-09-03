@@ -330,6 +330,9 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-catalogue">
+                <a href="<?= RACINE ?>aviculture/produits" class="nav-item sub <?= strpos($currentUri, '/aviculture/produits') !== false ? 'active' : '' ?>" data-title="Produits Avicoles">
+                    <i data-lucide="shopping-bag"></i> <span>Produits Avicoles</span>
+                </a>
                 <a href="<?= RACINE ?>aviculture/categories_poids" class="nav-item sub <?= strpos($currentUri, '/aviculture/categories_poids') !== false ? 'active' : '' ?>" data-title="Grille Poids & Tarifs">
                     <i data-lucide="scale"></i> <span>Grille Poids & Tarifs</span>
                 </a>

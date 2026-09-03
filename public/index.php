@@ -117,9 +117,14 @@ $route->addRoute('/pack/edition/{param}', ['PackController', 'edition']);
 $route->addRoute('/pack/formulaire', ['PackController', 'formulaire']);
 
 // -------------------------------------------------------------
-// Module: Aviculture & Pesée OVOLIA
+// Module: Aviculture & Catalogue Produits OVOLIA
 // -------------------------------------------------------------
+$route->addRoute('/aviculture/produits', ['AvicultureController', 'produits']);
+$route->addRoute('/aviculture/apiListProduits', ['AvicultureController', 'apiListProduits']);
+$route->addRoute('/aviculture/addProduit', ['AvicultureController', 'addProduit']);
+$route->addRoute('/aviculture/editProduit', ['AvicultureController', 'editProduit']);
 $route->addRoute('/aviculture/categories_poids', ['AvicultureController', 'categoriesPoids']);
+$route->addRoute('/aviculture/updatePrixGrille', ['AvicultureController', 'updatePrixGrille']);
 $route->addRoute('/aviculture/pesees', ['AvicultureController', 'pesees']);
 $route->addRoute('/aviculture/apiListPesees', ['AvicultureController', 'apiListPesees']);
 $route->addRoute('/aviculture/addPesee', ['AvicultureController', 'addPesee']);
