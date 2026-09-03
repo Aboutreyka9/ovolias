@@ -6,6 +6,13 @@ $.ajaxSetup({
     }
 });
 
+// Empêcher la molette de la souris de modifier la valeur des champs input type="number"
+document.addEventListener('wheel', function(e) {
+    if (document.activeElement && document.activeElement.type === 'number') {
+        document.activeElement.blur();
+    }
+}, { passive: true });
+
 const dataTableDefaults = {
     pageLength: 10,
     lengthMenu: [5, 10, 25, 50],
