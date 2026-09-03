@@ -70,8 +70,13 @@ $produits = $produits ?? [];
               </select>
             </div>
             <div class="col-md-4">
-              <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 6px; display: block;">N° Facture Fournisseur</label>
-              <input type="text" name="numero_facture_fournisseur" class="form-control" style="border-radius: 8px; height: 42px;" placeholder="Ex: FAC-2026-089">
+              <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">N° Facture Fournisseur *</label>
+              <div class="input-group">
+                <input type="text" name="numero_facture_fournisseur" id="num_facture_input" class="form-control" style="border-radius: 8px 0 0 8px; height: 42px; font-weight: 700; color: #0F172A;" placeholder="FACT-2026-XXXX" required>
+                <button type="button" class="btn btn-outline-secondary" id="btnGenereNumFacture" title="Régénérer un numéro automatique" style="border-radius: 0 8px 8px 0;">
+                  <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+                </button>
+              </div>
             </div>
             <div class="col-md-3">
               <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Statut Règlement</label>
@@ -249,6 +254,25 @@ $(document).ready(function() {
         $('#valTotalAchat').text(grandTotal.toLocaleString('fr-FR') + ' FCFA');
     }
 
+    function chargerNumeroFactureAuto() {
+        $.get(baseApi + 'aviculture/genererNumFacture', function(res) {
+            if (res && res.numero_facture) {
+                $('#num_facture_input').val(res.numero_facture);
+            }
+        }, 'json');
+    }
+
+    var modalAchatEl = document.getElementById('modalAchat');
+    if (modalAchatEl) {
+        modalAchatEl.addEventListener('show.bs.modal', function() {
+            chargerNumeroFactureAuto();
+        });
+    }
+
+    $('#btnGenereNumFacture').on('click', function() {
+        chargerNumeroFactureAuto();
+    });
+
     $('#formAchat').on('submit', function(e) {
         e.preventDefault();
         $.post(baseApi + 'aviculture/addAchat', $(this).serialize(), function(res) {
@@ -265,6 +289,7 @@ $(document).ready(function() {
                 $('#tbodyArticlesModal').empty();
                 rowIndex = 0;
                 addArticleRow();
+                chargerNumeroFactureAuto();
 
                 dt.ajax.reload(null, false);
             } else {

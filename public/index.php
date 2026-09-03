@@ -153,6 +153,7 @@ $route->addRoute('/aviculture/addVente', ['VenteAvicoleController', 'addVente'])
 $route->addRoute('/aviculture/achats', ['AchatAvicoleController', 'list']);
 $route->addRoute('/aviculture/apiListAchats', ['AchatAvicoleController', 'apiList']);
 $route->addRoute('/aviculture/addAchat', ['AchatAvicoleController', 'addAchat']);
+$route->addRoute('/aviculture/genererNumFacture', ['AchatAvicoleController', 'genererNumFacture']);
 
 
 // -------------------------------------------------------------

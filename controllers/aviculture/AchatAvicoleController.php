@@ -48,6 +48,36 @@ class AchatAvicoleController extends BaseController
         $this->json(['data' => $data]);
     }
 
+    /**
+     * Génère un numéro de facture fournisseur unique au format FACT-YYYY-XXXX (3 à 5 chiffres)
+     */
+    public function generateUniqueFactureNumber()
+    {
+        $db = $this->model->getCon();
+        $year = date('Y');
+        $maxAttempts = 100;
+        $attempt = 0;
+
+        do {
+            $attempt++;
+            $rand = rand(100, 99999);
+            $num = "FACT-{$year}-{$rand}";
+
+            $stmt = $db->prepare("SELECT COUNT(*) FROM achats_avicoles WHERE numero_facture_fournisseur = :num");
+            $stmt->execute([':num' => $num]);
+            $exists = ($stmt->fetchColumn() > 0);
+        } while ($exists && $attempt < $maxAttempts);
+
+        return $num;
+    }
+
+    public function genererNumFacture()
+    {
+        $this->requireAuth();
+        $num = $this->generateUniqueFactureNumber();
+        $this->json(['status' => 'success', 'numero_facture' => $num]);
+    }
+
     public function addAchat()
     {
         $this->requirePost(false);
@@ -62,6 +92,17 @@ class AchatAvicoleController extends BaseController
         if (empty($fournisseur_code)) {
             $this->error("Veuillez sélectionner un fournisseur.");
             return;
+        }
+
+        if (!empty($num_facture)) {
+            $stmtCheck = $db->prepare("SELECT COUNT(*) FROM achats_avicoles WHERE numero_facture_fournisseur = :num");
+            $stmtCheck->execute([':num' => $num_facture]);
+            if ($stmtCheck->fetchColumn() > 0) {
+                $this->error("Le numéro de facture '{$num_facture}' existe déjà en base de données. Veuillez en générer un nouveau.");
+                return;
+            }
+        } else {
+            $num_facture = $this->generateUniqueFactureNumber();
         }
 
         if (empty($articles_raw) || !is_array($articles_raw)) {
