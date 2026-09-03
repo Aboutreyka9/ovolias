@@ -243,8 +243,8 @@ $grilles = $grilles ?? [];
                 <th style="padding: 12px;">Libellé Catégorie</th>
                 <th style="padding: 12px;">Tranche Poids Net (Min - Max)</th>
                 <th style="padding: 12px; text-align: right;">Tarif Vente Appliqué</th>
-                <th style="padding: 12px; text-align: center;">Statut</th>
-                <th style="padding: 12px; text-align: right;">Actions</th>
+                <th class="text-center" style="padding: 12px;">Statut</th>
+                <th class="text-end" style="padding: 12px;">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -256,7 +256,7 @@ $grilles = $grilles ?? [];
                   </td>
                   <td style="padding: 12px;">
                     <code style="font-weight:700; color:#334155; background:#F1F5F9; padding:2px 6px; border-radius:4px;">
-                      <?= htmlspecialchars($g['code_categorie_poids']) ?>
+                      <?= htmlspecialchars(!empty($g['categorie_poids_code']) ? $g['categorie_poids_code'] : (!empty($g['code_categorie_poids']) ? $g['code_categorie_poids'] : 'FIXE')) ?>
                     </code>
                   </td>
                   <td style="padding: 12px; font-weight: 600; color: #334155;">
@@ -268,27 +268,32 @@ $grilles = $grilles ?? [];
                   <td style="padding: 12px; text-align: right; font-weight: 800; color: #059669; font-size: 15px;">
                     <?= number_format($g['prix_vente'], 0, ',', ' ') ?> FCFA
                   </td>
-                  <td style="padding: 12px; text-align: center;">
+                  <td class="text-center" style="padding: 12px;">
                     <?php 
                     $isActif = ($g['statut_grille'] === 'actif');
                     $checkedAttr = $isActif ? 'checked' : '';
                     ?>
                     <div style="display:flex; justify-content:center; align-items:center;">
-                      <label class="toggle-switch-container" title="<?= $isActif ? 'Actif - Cliquez pour désactiver' : 'Inactif - Cliquez pour activer' ?>">
-                        <input type="checkbox" class="toggle-statut-grille" data-id="<?= $g['id_grille_tarif'] ?>" <?= $checkedAttr ?>>
-                        <span class="toggle-slider">
-                          <span class="toggle-slider-knob"></span>
+                      <label style="position:relative; display:inline-block; width:38px; height:20px; margin:0; cursor:pointer;" title="<?= $isActif ? 'Actif - Cliquez pour désactiver' : 'Inactif - Cliquez pour activer' ?>">
+                        <input type="checkbox" class="toggle-statut-grille" data-id="<?= $g['id_grille_tarif'] ?>" <?= $checkedAttr ?> style="opacity:0; width:0; height:0;">
+                        <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:<?= $isActif ? '#15803D' : '#CBD5E1' ?>; transition:.3s; border-radius:20px;">
+                          <span style="position:absolute; content:''; height:14px; width:14px; left:<?= $isActif ? '20px' : '3px' ?>; bottom:3px; background-color:white; transition:.3s; border-radius:50%;"></span>
                         </span>
                       </label>
                     </div>
                   </td>
-                  <td style="padding: 12px; text-align: right;">
+                  <td class="text-end" style="padding: 12px;">
                     <button class="btn btn-sm btn-secondary btn-edit-prix-grille" 
                             data-id="<?= $g['id_grille_tarif'] ?>" 
                             data-libelle="<?= htmlspecialchars($g['libelle_produit'] . ' - ' . $g['libelle_categorie_poids']) ?>" 
                             data-prix="<?= $g['prix_vente'] ?>"
-                            style="font-weight: 700; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
-                      <i data-lucide="edit" style="width: 14px; height: 14px;"></i> Éditer Tarif
+                            style="margin-right: 6px; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                      <i data-lucide="edit" style="width: 14px; height: 14px;"></i> Éditer
+                    </button>
+                    <button class="btn btn-sm btn-secondary btn-details-prix-grille" 
+                            data-grille='<?= json_encode($g, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
+                            style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                      <i data-lucide="eye" style="width: 14px; height: 14px;"></i> Détails
                     </button>
                   </td>
                 </tr>
@@ -352,15 +357,28 @@ $(document).ready(function() {
     var id = $(this).data('id');
     var isChecked = $(this).is(':checked');
     var $input = $(this);
+    var $span = $input.siblings('span');
+    var $knob = $span.children('span');
 
     $.ajax({
       url: baseApi + 'aviculture/toggleStatutGrille',
       type: 'POST',
-      data: { id_grille: id },
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      data: { 
+        id_grille: id,
+        csrf_token: '<?= Validator::generateCsrfToken() ?>'
+      },
       dataType: 'json',
       success: function(res) {
         if (res.status === 'success' || res.status === 1 || res.success) {
           if (window.toastr) toastr.success(res.message || 'Statut mis à jour avec succès');
+          if (isChecked) {
+            $span.css('background-color', '#15803D');
+            $knob.css('left', '20px');
+          } else {
+            $span.css('background-color', '#CBD5E1');
+            $knob.css('left', '3px');
+          }
         } else {
           if (window.toastr) toastr.error(res.message || 'Erreur lors du changement de statut');
           $input.prop('checked', !isChecked);
@@ -401,6 +419,37 @@ $(document).ready(function() {
     $('#edit_prix_val').val(prix);
 
     var modalEl = document.getElementById('modalEditPrix');
+    var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    bsModal.show();
+  });
+
+  // Affichage des Détails d'un tarif de grille
+  $(document).on('click', '.btn-details-prix-grille', function() {
+    var g = $(this).data('grille');
+    if (typeof g === 'string') g = JSON.parse(g);
+
+    $('#detail_grille_produit').text(g.libelle_produit || '-');
+    var codeCat = g.categorie_poids_code || g.code_categorie_poids || 'FIXE';
+    $('#detail_grille_code_cat').text(codeCat);
+    $('#detail_grille_libelle_cat').text(g.libelle_categorie_poids || '-');
+    
+    var pmin = parseFloat(g.poids_min) || 0;
+    var pmax = parseFloat(g.poids_max) || 0;
+    if (pmin === 0 && pmax === 0) {
+      $('#detail_grille_tranche').text('Prix Fixe Unitaire (Non soumis)');
+    } else {
+      $('#detail_grille_tranche').text(pmin.toFixed(2).replace('.', ',') + ' kg — ' + pmax.toFixed(2).replace('.', ',') + ' kg');
+    }
+
+    var px = parseFloat(g.prix_vente) || 0;
+    $('#detail_grille_prix').text(new Intl.NumberFormat('fr-FR').format(px) + ' FCFA');
+
+    var isActif = (g.statut_grille === 'actif');
+    $('#detail_grille_statut').html(isActif ? '<span style="color:#15803D;">Actif</span>' : '<span style="color:#64748B;">Inactif</span>');
+
+    if (window.lucide) lucide.createIcons();
+
+    var modalEl = document.getElementById('modalDetailsGrille');
     var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     bsModal.show();
   });
@@ -533,6 +582,55 @@ $(document).ready(function() {
           <button type="submit" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; border-radius: 8px; font-weight: 700; padding: 8px 18px;">Enregistrer le Tarif</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Détails Tarif Grille -->
+<div class="modal fade" id="modalDetailsGrille" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 520px; margin: auto;">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
+        <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="eye" style="width: 20px; height: 20px; color: #6EE7B7;"></i> Détails du Tarif Spécifique
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Produit Avicole</span>
+            <div id="detail_grille_produit" style="font-size: 15px; font-weight: 800; color: #0F172A; margin-top: 2px;"></div>
+          </div>
+          <div style="display: flex; gap: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
+            <div style="flex: 1;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Code Catégorie</span>
+              <div id="detail_grille_code_cat" style="font-size: 13px; font-weight: 700; color: #334155; margin-top: 2px;"></div>
+            </div>
+            <div style="flex: 1;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Libellé Catégorie</span>
+              <div id="detail_grille_libelle_cat" style="font-size: 13px; font-weight: 700; color: #334155; margin-top: 2px;"></div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
+            <div style="flex: 1;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Tranche de Poids Net</span>
+              <div id="detail_grille_tranche" style="font-size: 13px; font-weight: 600; color: #334155; margin-top: 2px;"></div>
+            </div>
+            <div style="flex: 1;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Tarif Vente Appliqué</span>
+              <div id="detail_grille_prix" style="font-size: 15px; font-weight: 800; color: #059669; margin-top: 2px;"></div>
+            </div>
+          </div>
+          <div>
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Statut Actuel</span>
+            <div id="detail_grille_statut" style="font-size: 13px; font-weight: 700; margin-top: 2px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600;" data-bs-dismiss="modal">Fermer</button>
+      </div>
     </div>
   </div>
 </div>

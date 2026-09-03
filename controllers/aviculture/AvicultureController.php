@@ -174,7 +174,7 @@ class AvicultureController extends BaseController
         $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $stmtP = $db->query("
-            SELECT g.*, p.libelle_produit, p.soumis_grille_poids,
+            SELECT g.*, g.categorie_poids_code AS code_categorie_poids, p.libelle_produit, p.soumis_grille_poids,
                    COALESCE(c.libelle_categorie_poids, 'Fixe (Non soumis)') as libelle_categorie_poids 
             FROM grilles_tarifs_poids_avicole g
             JOIN produits_aviculture_avicole p ON g.produit_code = p.code_produit_aviculture

@@ -46,7 +46,7 @@ $produits = $produits ?? [];
 
 <!-- Modal Nouveau Bon d'Achat Intrants Multi-Produits -->
 <div class="modal fade" id="modalAchat" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" style="max-width: 860px; margin: auto;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
       <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
         <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
