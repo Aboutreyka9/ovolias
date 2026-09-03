@@ -187,6 +187,41 @@ class AvicultureController extends BaseController
     }
 
     /**
+     * API Changement de statut (Actif / Inactif) d'un tarif de la grille avicole
+     */
+    public function toggleStatutGrille()
+    {
+        $this->requirePost(false);
+        $this->requireAuth();
+        $db = $this->model->getCon();
+
+        $id = (int)$this->post('id_grille');
+        if ($id <= 0) {
+            $this->error("ID grille non valide.");
+            return;
+        }
+
+        $stmt = $db->prepare("SELECT statut_grille FROM grilles_tarifs_poids_avicole WHERE id_grille_tarif = :id");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            $this->error("Élément introuvable.");
+            return;
+        }
+
+        $nouveauStatut = ($row['statut_grille'] === 'actif') ? 'inactif' : 'actif';
+        $up = $db->prepare("UPDATE grilles_tarifs_poids_avicole SET statut_grille = :st WHERE id_grille_tarif = :id");
+        $ok = $up->execute([':st' => $nouveauStatut, ':id' => $id]);
+
+        if ($ok) {
+            $this->success("Statut mis à jour avec succès !", ['nouveau_statut' => $nouveauStatut]);
+        } else {
+            $this->error("Erreur lors du changement de statut.");
+        }
+    }
+
+    /**
      * Vue du registre des pesées et étiquettes
      */
     public function pesees()

@@ -64,6 +64,74 @@ $grilles = $grilles ?? [];
         .cat-poids-card-sobre:hover .weight-box-sobre {
           background: #F1F5F9;
         }
+
+        /* Style du Switch Toggle Statut Moderne & Badge */
+        .status-cell-wrapper {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+        .toggle-switch-container {
+          position: relative;
+          display: inline-block;
+          width: 40px;
+          height: 22px;
+          margin: 0;
+          cursor: pointer;
+          vertical-align: middle;
+        }
+        .toggle-statut-grille {
+          opacity: 0;
+          width: 0;
+          height: 0;
+          position: absolute;
+        }
+        .toggle-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background-color: #CBD5E1;
+          transition: background-color .25s ease;
+          border-radius: 22px;
+        }
+        .toggle-slider-knob {
+          position: absolute;
+          height: 16px;
+          width: 16px;
+          left: 3px;
+          top: 3px;
+          background-color: #FFFFFF;
+          transition: transform .25s cubic-bezier(0.4, 0, 0.2, 1);
+          border-radius: 50%;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+        }
+        .toggle-statut-grille:checked + .toggle-slider {
+          background-color: #16A34A !important;
+        }
+        .toggle-statut-grille:checked + .toggle-slider .toggle-slider-knob {
+          transform: translateX(18px) !important;
+        }
+        .status-pill-badge {
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 10px;
+          border-radius: 12px;
+          display: inline-block;
+          min-width: 54px;
+          text-align: center;
+          transition: all 0.25s ease;
+        }
+        .status-pill-badge.actif {
+          background-color: #DCFCE7;
+          color: #15803D;
+          border: 1px solid #BBF7D0;
+        }
+        .status-pill-badge.inactif {
+          background-color: #F1F5F9;
+          color: #64748B;
+          border: 1px solid #E2E8F0;
+        }
       </style>
 
       <!-- Grille des 6 Catégories de Référence OVOLIA en col-md-4 avec Couleurs Douces -->
@@ -170,6 +238,7 @@ $grilles = $grilles ?? [];
                 <th style="padding: 12px;">Libellé Catégorie</th>
                 <th style="padding: 12px;">Tranche Poids Net (Min - Max)</th>
                 <th style="padding: 12px; text-align: right;">Tarif Vente Appliqué</th>
+                <th style="padding: 12px; text-align: center;">Statut</th>
                 <th style="padding: 12px; text-align: right;">Actions</th>
               </tr>
             </thead>
@@ -193,6 +262,20 @@ $grilles = $grilles ?? [];
                   </td>
                   <td style="padding: 12px; text-align: right; font-weight: 800; color: #059669; font-size: 15px;">
                     <?= number_format($g['prix_vente'], 0, ',', ' ') ?> FCFA
+                  </td>
+                  <td style="padding: 12px; text-align: center;">
+                    <?php 
+                    $isActif = ($g['statut_grille'] === 'actif');
+                    $checkedAttr = $isActif ? 'checked' : '';
+                    ?>
+                    <div style="display:flex; justify-content:center; align-items:center;">
+                      <label class="toggle-switch-container" title="<?= $isActif ? 'Actif - Cliquez pour désactiver' : 'Inactif - Cliquez pour activer' ?>">
+                        <input type="checkbox" class="toggle-statut-grille" data-id="<?= $g['id_grille_tarif'] ?>" <?= $checkedAttr ?>>
+                        <span class="toggle-slider">
+                          <span class="toggle-slider-knob"></span>
+                        </span>
+                      </label>
+                    </div>
                   </td>
                   <td style="padding: 12px; text-align: right;">
                     <button class="btn btn-sm btn-secondary btn-edit-prix-grille" 
@@ -257,6 +340,32 @@ $(document).ready(function() {
     autoWidth: false,
     language: { url: baseApi + 'json/datatables-i18n-fr-FR.json' },
     drawCallback: function() { if (window.lucide) lucide.createIcons(); }
+  });
+
+  // Bascule de statut via switch toggle
+  $(document).on('change', '.toggle-statut-grille', function() {
+    var id = $(this).data('id');
+    var isChecked = $(this).is(':checked');
+    var $input = $(this);
+
+    $.ajax({
+      url: baseApi + 'aviculture/toggleStatutGrille',
+      type: 'POST',
+      data: { id_grille: id },
+      dataType: 'json',
+      success: function(res) {
+        if (res.status === 'success' || res.status === 1 || res.success) {
+          if (window.toastr) toastr.success(res.message || 'Statut mis à jour avec succès');
+        } else {
+          if (window.toastr) toastr.error(res.message || 'Erreur lors du changement de statut');
+          $input.prop('checked', !isChecked);
+        }
+      },
+      error: function() {
+        if (window.toastr) toastr.error('Erreur réseau');
+        $input.prop('checked', !isChecked);
+      }
+    });
   });
 
   // Édition Prix Défaut Catégorie Reference
