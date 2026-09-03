@@ -66,42 +66,83 @@ $grilles = $grilles ?? [];
         }
       </style>
 
-      <!-- Grille des 6 Catégories de Référence OVOLIA -->
+      <!-- Grille des 6 Catégories de Référence OVOLIA en col-md-4 avec Couleurs Douces -->
       <div style="margin-bottom: 28px;">
         <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
           <i data-lucide="scale" style="width: 18px; height: 18px; color: #1E3A5F;"></i> Les 6 Catégories de Référence OVOLIA
         </h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+        <div class="row">
           <?php 
-          $icons = [
-              'CATP-ESSENTIEL' => 'feather',
-              'CATP-CLASSIQUE' => 'award',
-              'CATP-GRAND'     => 'package',
-              'CATP-EXTRA'     => 'star',
-              'CATP-SIGNATURE' => 'crown',
-              'CATP-PRESTIGE'  => 'sparkles'
+          $softThemes = [
+              'CATP-ESSENTIEL' => [
+                  'icon'      => 'feather',
+                  'accent'    => '#10B981',
+                  'bg_icon'   => '#ECFDF5',
+                  'text_icon' => '#047857',
+                  'bg_box'    => '#F0FDF4'
+              ],
+              'CATP-CLASSIQUE' => [
+                  'icon'      => 'award',
+                  'accent'    => '#0284C7',
+                  'bg_icon'   => '#F0F9FF',
+                  'text_icon' => '#0369A1',
+                  'bg_box'    => '#F0F9FF'
+              ],
+              'CATP-GRAND' => [
+                  'icon'      => 'package',
+                  'accent'    => '#6366F1',
+                  'bg_icon'   => '#EEF2FF',
+                  'text_icon' => '#4338CA',
+                  'bg_box'    => '#EEF2FF'
+              ],
+              'CATP-EXTRA' => [
+                  'icon'      => 'star',
+                  'accent'    => '#8B5CF6',
+                  'bg_icon'   => '#F3E8FF',
+                  'text_icon' => '#6D28D9',
+                  'bg_box'    => '#F5F3FF'
+              ],
+              'CATP-SIGNATURE' => [
+                  'icon'      => 'crown',
+                  'accent'    => '#F59E0B',
+                  'bg_icon'   => '#FEF3C7',
+                  'text_icon' => '#B45309',
+                  'bg_box'    => '#FFFBEB'
+              ],
+              'CATP-PRESTIGE' => [
+                  'icon'      => 'sparkles',
+                  'accent'    => '#EF4444',
+                  'bg_icon'   => '#FEE2E2',
+                  'text_icon' => '#B91C1C',
+                  'bg_box'    => '#FEF2F2'
+              ]
           ];
           foreach ($categories as $cat): 
-              $iconName = $icons[$cat['code_categorie_poids']] ?? 'scale';
+              $st = $softThemes[$cat['code_categorie_poids']] ?? [
+                  'icon' => 'scale', 'accent' => '#1E3A5F', 'bg_icon' => '#F1F5F9', 'text_icon' => '#1E3A5F', 'bg_box' => '#F8FAFC'
+              ];
           ?>
-          <div class="cat-poids-card-sobre">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="cat-icon-sobre">
-                  <i data-lucide="<?= $iconName ?>" style="width: 20px; height: 20px;"></i>
-                </div>
-                <div>
-                  <span style="font-weight: 800; font-size: 15px; color: #0F172A; display: block;"><?= htmlspecialchars($cat['libelle_categorie_poids']) ?></span>
-                  <code style="font-weight:700; color: #64748B; font-size: 11px;">
-                    <?= htmlspecialchars($cat['code_categorie_poids']) ?>
-                  </code>
+          <div class="col-md-4 col-sm-6 mb-3">
+            <div class="cat-poids-card-sobre h-100" style="overflow: hidden; position: relative;">
+              <div style="position: absolute; top: 0; left: 0; right: 0; height: 3.5px; background: <?= $st['accent'] ?>;"></div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; pt-1;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="cat-icon-sobre" style="background: <?= $st['bg_icon'] ?>; color: <?= $st['text_icon'] ?>;">
+                    <i data-lucide="<?= $st['icon'] ?>" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div>
+                    <span style="font-weight: 800; font-size: 15px; color: #0F172A; display: block;"><?= htmlspecialchars($cat['libelle_categorie_poids']) ?></span>
+                    <code style="font-weight:700; color: <?= $st['text_icon'] ?>; font-size: 11px; background: <?= $st['bg_icon'] ?>; padding: 2px 6px; border-radius: 4px;">
+                      <?= htmlspecialchars($cat['code_categorie_poids']) ?>
+                    </code>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="weight-box-sobre">
-              <span style="color: #64748B; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px;">Plage de Poids Net</span>
-              <div style="font-size: 17px; font-weight: 800; color: #0F172A;">
-                ⚖️ <?= number_format($cat['poids_min'], 2, ',', ' ') ?> kg &mdash; <?= number_format($cat['poids_max'], 2, ',', ' ') ?> kg
+              <div class="weight-box-sobre" style="background: <?= $st['bg_box'] ?>; border-color: <?= $st['accent'] ?>30;">
+                <span style="color: #64748B; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px;">Plage de Poids Net</span>
+                <div style="font-size: 17px; font-weight: 800; color: <?= $st['text_icon'] ?>;">
+                  ⚖️ <?= number_format($cat['poids_min'], 2, ',', ' ') ?> kg &mdash; <?= number_format($cat['poids_max'], 2, ',', ' ') ?> kg
+                </div>
               </div>
             </div>
           </div>
