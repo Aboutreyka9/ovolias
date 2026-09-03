@@ -444,6 +444,27 @@ $(document).ready(function() {
       }
     }, 'json');
   });
+
+  // Écouteur sur la sélection du produit avicole (soumis_grille_poids)
+  $('#select_produit_code').on('change', function() {
+    var selectedOpt = $(this).find(':selected');
+    var soumis = parseInt(selectedOpt.data('soumis'));
+
+    var $catSelect = $('#select_categorie_poids');
+    var $infoBox = $('#info_soumis_poids_status');
+
+    if (soumis === 1) {
+      $catSelect.prop('disabled', false).prop('required', true);
+      $infoBox.html('<div class="alert alert-info py-2 px-3 mb-0" style="font-size:12px; border-radius:8px; background:#EFF6FF; border-color:#BFDBFE; color:#1E40AF; display:flex; align-items:center; gap:6px;"><i data-lucide="info" style="width:16px;height:16px;"></i> Ce produit est <strong>soumis aux grilles de poids</strong>. Sélection de la tranche requise.</div>');
+    } else if (soumis === 0) {
+      $catSelect.prop('disabled', true).prop('required', false).val('');
+      $infoBox.html('<div class="alert alert-warning py-2 px-3 mb-0" style="font-size:12px; border-radius:8px; background:#FEF3C7; border-color:#FDE68A; color:#92400E; display:flex; align-items:center; gap:6px;"><i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> Ce produit <strong>n\'est pas soumis aux tranches de poids</strong> (Prix fixe unitaire). La tranche est désactivée.</div>');
+    } else {
+      $catSelect.prop('disabled', false).prop('required', true);
+      $infoBox.empty();
+    }
+    if (window.lucide) lucide.createIcons();
+  });
 });
 </script>
 
@@ -462,21 +483,25 @@ $(document).ready(function() {
           
           <div style="margin-bottom: 16px;">
             <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Produit Avicole *</label>
-            <select name="produit_code" class="form-select" style="height: 44px; border-radius: 8px; font-weight: 700; color: #0F172A;" required>
+            <select name="produit_code" id="select_produit_code" class="form-select" style="height: 44px; border-radius: 8px; font-weight: 700; color: #0F172A;" required>
               <option value="">-- Sélectionner un produit --</option>
               <?php if (!empty($produits)): ?>
                 <?php foreach ($produits as $p): ?>
-                  <option value="<?= htmlspecialchars($p['code_produit_aviculture']) ?>">
-                    <?= htmlspecialchars($p['libelle_produit']) ?> (<?= htmlspecialchars($p['code_produit_aviculture']) ?>)
+                  <option value="<?= htmlspecialchars($p['code_produit_aviculture']) ?>" data-soumis="<?= (int)$p['soumis_grille_poids'] ?>">
+                    <?= htmlspecialchars($p['libelle_produit']) ?> (<?= (int)$p['soumis_grille_poids'] === 1 ? 'Grille Poids' : 'Prix Fixe' ?>)
                   </option>
                 <?php endforeach; ?>
+              <?php else: ?>
+                <option value="" disabled>Tous les produits actifs ont déjà un tarif enregistré</option>
               <?php endif; ?>
             </select>
           </div>
 
+          <div style="margin-bottom: 12px;" id="info_soumis_poids_status"></div>
+
           <div style="margin-bottom: 16px;">
             <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Tranche / Catégorie de Poids *</label>
-            <select name="categorie_poids_code" class="form-select" style="height: 44px; border-radius: 8px; font-weight: 700; color: #0F172A;" required>
+            <select name="categorie_poids_code" id="select_categorie_poids" class="form-select" style="height: 44px; border-radius: 8px; font-weight: 700; color: #0F172A;" required>
               <option value="">-- Sélectionner une catégorie --</option>
               <?php foreach ($categories as $cat): ?>
                 <option value="<?= htmlspecialchars($cat['code_categorie_poids']) ?>">

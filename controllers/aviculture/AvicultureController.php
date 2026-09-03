@@ -125,6 +125,44 @@ class AvicultureController extends BaseController
     }
 
     /**
+     * API Changement de statut (Actif / Inactif) d'un produit avicole
+     */
+    public function changerProduit()
+    {
+        $this->requirePost(false);
+        $this->requireAuth();
+        $db = $this->model->getCon();
+
+        $id = (int)$this->post('id');
+        $statut = $this->post('statut') ?: $this->post('status');
+
+        if ($id <= 0) {
+            $this->error("ID produit invalide.");
+            return;
+        }
+
+        if (empty($statut)) {
+            $stmt = $db->prepare("SELECT statut_produit FROM produits_aviculture_avicole WHERE id_produit_aviculture = :id");
+            $stmt->execute([':id' => $id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                $this->error("Produit introuvable.");
+                return;
+            }
+            $statut = ($row['statut_produit'] === 'actif') ? 'inactif' : 'actif';
+        }
+
+        $stmt = $db->prepare("UPDATE produits_aviculture_avicole SET statut_produit = :statut WHERE id_produit_aviculture = :id");
+        $ok = $stmt->execute([':statut' => $statut, ':id' => $id]);
+
+        if ($ok) {
+            $this->success("Statut du produit mis à jour avec succès !", ['statut' => $statut]);
+        } else {
+            $this->error("Erreur lors du changement de statut.");
+        }
+    }
+
+    /**
      * Vue des catégories de poids et grilles tarifaires OVOLIA
      */
     public function categoriesPoids()
@@ -136,15 +174,23 @@ class AvicultureController extends BaseController
         $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $stmtP = $db->query("
-            SELECT g.*, p.libelle_produit, c.libelle_categorie_poids 
+            SELECT g.*, p.libelle_produit, p.soumis_grille_poids,
+                   COALESCE(c.libelle_categorie_poids, 'Fixe (Non soumis)') as libelle_categorie_poids 
             FROM grilles_tarifs_poids_avicole g
             JOIN produits_aviculture_avicole p ON g.produit_code = p.code_produit_aviculture
-            JOIN categories_poids_avicole c ON g.categorie_poids_code = c.code_categorie_poids
+            LEFT JOIN categories_poids_avicole c ON g.categorie_poids_code = c.code_categorie_poids
             ORDER BY p.libelle_produit ASC, g.poids_min ASC
         ");
         $grilles = $stmtP->fetchAll(PDO::FETCH_ASSOC);
 
-        $stmtProd = $db->query("SELECT * FROM produits_aviculture_avicole WHERE statut_produit = 'actif' ORDER BY libelle_produit ASC");
+        $stmtProd = $db->query("
+            SELECT * FROM produits_aviculture_avicole 
+            WHERE statut_produit = 'actif' 
+              AND code_produit_aviculture NOT IN (
+                  SELECT DISTINCT produit_code FROM grilles_tarifs_poids_avicole
+              )
+            ORDER BY libelle_produit ASC
+        ");
         $produits = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
 
         $this->loadView('../views/aviculture/categories_poids.php', [
@@ -168,19 +214,43 @@ class AvicultureController extends BaseController
         $prix_vente     = (float)$this->post('prix_vente');
         $statut         = trim($this->post('statut_grille')) === 'inactif' ? 'inactif' : 'actif';
 
-        if (empty($produit_code) || empty($categorie_code) || $prix_vente <= 0) {
-            $this->error("Veuillez remplir tous les champs obligatoires (Produit, Catégorie, Prix valide).");
+        if (empty($produit_code) || $prix_vente <= 0) {
+            $this->error("Veuillez sélectionner un produit et entrer un prix de vente valide.");
             return;
         }
 
-        // Récupérer la plage de poids de la catégorie de référence
-        $stmtC = $db->prepare("SELECT poids_min, poids_max FROM categories_poids_avicole WHERE code_categorie_poids = :code");
-        $stmtC->execute([':code' => $categorie_code]);
-        $catRow = $stmtC->fetch(PDO::FETCH_ASSOC);
+        // Récupérer le produit pour vérifier s'il est soumis aux tranches de poids
+        $stmtP = $db->prepare("SELECT soumis_grille_poids FROM produits_aviculture_avicole WHERE code_produit_aviculture = :pcode");
+        $stmtP->execute([':pcode' => $produit_code]);
+        $prodRow = $stmtP->fetch(PDO::FETCH_ASSOC);
 
-        if (!$catRow) {
-            $this->error("Catégorie de poids introuvable.");
+        if (!$prodRow) {
+            $this->error("Produit avicole introuvable.");
             return;
+        }
+
+        $isSoumis = (int)$prodRow['soumis_grille_poids'];
+
+        if ($isSoumis === 1) {
+            if (empty($categorie_code)) {
+                $this->error("Ce produit exige la sélection d'une catégorie / tranche de poids.");
+                return;
+            }
+            $stmtC = $db->prepare("SELECT poids_min, poids_max FROM categories_poids_avicole WHERE code_categorie_poids = :code");
+            $stmtC->execute([':code' => $categorie_code]);
+            $catRow = $stmtC->fetch(PDO::FETCH_ASSOC);
+
+            if (!$catRow) {
+                $this->error("Catégorie de poids introuvable.");
+                return;
+            }
+            $pmin = $catRow['poids_min'];
+            $pmax = $catRow['poids_max'];
+        } else {
+            // Produit non soumis à la grille de poids
+            $categorie_code = 'CATP-NON-SOUMIS';
+            $pmin = 0.00;
+            $pmax = 0.00;
         }
 
         // Vérifier si un tarif existe déjà pour ce couple (produit, tranche de poids)
@@ -193,11 +263,11 @@ class AvicultureController extends BaseController
             $ok = $up->execute([
                 ':prix' => $prix_vente,
                 ':st'   => $statut,
-                ':pmin' => $catRow['poids_min'],
-                ':pmax' => $catRow['poids_max'],
+                ':pmin' => $pmin,
+                ':pmax' => $pmax,
                 ':id'   => $exist['id_grille_tarif']
             ]);
-            $msg = "Le tarif pour ce produit et cette tranche a été mis à jour avec succès !";
+            $msg = "Le tarif pour ce produit a été mis à jour avec succès !";
         } else {
             $code_grille = 'GTRF-' . strtoupper(substr(uniqid(), -6));
             $etablissement = $_SESSION['user']['etablissement_code'] ?? '5454544456';
@@ -210,14 +280,14 @@ class AvicultureController extends BaseController
                 ':code'  => $code_grille,
                 ':pcode' => $produit_code,
                 ':ccode' => $categorie_code,
-                ':pmin'  => $catRow['poids_min'],
-                ':pmax'  => $catRow['poids_max'],
+                ':pmin'  => $pmin,
+                ':pmax'  => $pmax,
                 ':prix'  => $prix_vente,
                 ':st'    => $statut,
                 ':etab'  => $etablissement,
                 ':user'  => $user_code
             ]);
-            $msg = "Nouveau tarif de grille ajouté avec succès !";
+            $msg = "Nouveau tarif enregistré avec succès !";
         }
 
         if ($ok) {

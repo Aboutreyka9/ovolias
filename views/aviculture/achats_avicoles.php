@@ -1,5 +1,8 @@
 <?php require_once __DIR__ . '/../../public/inc/header.php'; ?>
-<?php $fournisseurs = $fournisseurs ?? []; ?>
+<?php 
+$fournisseurs = $fournisseurs ?? []; 
+$produits = $produits ?? [];
+?>
 
 <div class="app-layout">
   <?php require_once __DIR__ . '/../../public/inc/sidbar.php'; ?>
@@ -41,85 +44,84 @@
   </main>
 </div>
 
-<!-- Modal Nouveau Bon d'Achat Intrants -->
+<!-- Modal Nouveau Bon d'Achat Intrants Multi-Produits -->
 <div class="modal fade" id="modalAchat" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" style="max-width: 560px; margin: auto;">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 860px; margin: auto;">
     <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
       <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
         <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="shopping-cart" style="width: 20px; height: 20px; color: #6EE7B7;"></i> Enregistrement d'Achat Produit Fini
+          <i data-lucide="shopping-cart" style="width: 20px; height: 20px; color: #6EE7B7;"></i> Enregistrement Bon d'Achat Produit Fini / Multi-Articles
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <form id="formAchat">
         <div class="modal-body" style="padding: 20px;">
-          <div style="margin-bottom: 16px;">
-            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Fournisseur / Producteur *</label>
-            <select name="fournisseur_avicole_code" class="form-select" style="border-radius: 8px; height: 42px;" required>
-              <option value="">-- Sélectionner un fournisseur --</option>
-              <?php foreach ($fournisseurs as $f): ?>
-                <option value="<?= htmlspecialchars($f['code_fournisseur_avicole']) ?>">
-                  <?= htmlspecialchars($f['nom_fournisseur_avicole']) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-
+          
           <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Gamme Produit Fini *</label>
-              <select name="categorie_intrant" class="form-select" style="border-radius: 8px; height: 42px;" required>
-                <option value="poulets_frais">Poulets entiers frais</option>
-                <option value="oeufs_frais">Œufs frais (Plateaux)</option>
-                <option value="poulets_fumes">Poulets fumés</option>
-                <option value="poules_pondeuses">Poules pondeuses</option>
-                <option value="pintades">Pintades fraîches</option>
+            <div class="col-md-5">
+              <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Fournisseur / Producteur *</label>
+              <select name="fournisseur_avicole_code" class="form-select" style="border-radius: 8px; height: 42px;" required>
+                <option value="">-- Sélectionner un fournisseur --</option>
+                <?php foreach ($fournisseurs as $f): ?>
+                  <option value="<?= htmlspecialchars($f['code_fournisseur_avicole']) ?>">
+                    <?= htmlspecialchars($f['nom_fournisseur_avicole']) ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 6px; display: block;">N° Facture Fournisseur</label>
               <input type="text" name="numero_facture_fournisseur" class="form-control" style="border-radius: 8px; height: 42px;" placeholder="Ex: FAC-2026-089">
             </div>
-          </div>
-
-          <div style="margin-bottom: 16px;">
-            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Désignation / Détails du Lot *</label>
-            <input type="text" name="libelle_article" class="form-control" style="border-radius: 8px; height: 42px;" required placeholder="Ex: Lot de 200 Poulets Frais Prêts à Payer">
-          </div>
-
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Quantité *</label>
-              <input type="number" step="0.01" name="quantite" id="inputAchatQte" class="form-control" style="border-radius: 8px; height: 42px;" required placeholder="200">
-            </div>
-            <div class="col-md-4">
-              <label style="font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 6px; display: block;">Unité</label>
-              <input type="text" name="unite_mesure" class="form-control" style="border-radius: 8px; height: 42px;" placeholder="Pièces / Plateaux">
-            </div>
-            <div class="col-md-4">
-              <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Prix Unitaire *</label>
-              <input type="number" step="100" name="prix_unitaire" id="inputAchatPU" class="form-control" style="border-radius: 8px; height: 42px;" required placeholder="2200">
+            <div class="col-md-3">
+              <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Statut Règlement</label>
+              <select name="statut_reglement" class="form-select" style="border-radius: 8px; height: 42px;">
+                <option value="paye">Payé (Caisse/Banque)</option>
+                <option value="partiel">Partiel</option>
+                <option value="impaye">À Crédit (Dette)</option>
+              </select>
             </div>
           </div>
 
-          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <div style="font-weight: 700; font-size: 13px; color: #334155;">Montant Total Calculé :</div>
-            <div style="font-size: 20px; font-weight: 900; color: #DC2626;" id="valTotalAchat">0 FCFA</div>
+          <div style="border-top: 1px solid #E2E8F0; padding-top: 16px; margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <label style="font-weight: 800; font-size: 14px; color: #1E293B; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="list" style="width: 18px; height: 18px; color: #2563EB;"></i> Articles & Produits Commandés
+              </label>
+              <button type="button" id="btnAddArticleRow" class="btn btn-sm btn-outline-primary" style="border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Ajouter un produit
+              </button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle" id="tableArticlesModal" style="border-color: #E2E8F0;">
+                <thead style="background: #F8FAFC; font-size: 12px; font-weight: 800; color: #475569;">
+                  <tr>
+                    <th style="min-width: 220px;">Produit Avicole *</th>
+                    <th style="width: 110px;">Quantité *</th>
+                    <th style="width: 110px;">Unité</th>
+                    <th style="width: 140px;">Prix Unit. (FCFA) *</th>
+                    <th style="width: 140px; text-align: right;">Sous-Total</th>
+                    <th style="width: 50px; text-align: center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyArticlesModal">
+                  <!-- Injecté dynamiquement par JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <div style="background: #F1F5F9; border: 1px solid #CBD5E1; padding: 14px 18px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+              <div style="font-weight: 800; font-size: 14px; color: #1E293B;">Montant Total Global de la Commande :</div>
+              <div style="font-size: 22px; font-weight: 900; color: #DC2626;" id="valTotalAchat">0 FCFA</div>
+            </div>
           </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Statut du Règlement</label>
-            <select name="statut_reglement" class="form-select" style="border-radius: 8px; height: 42px;">
-              <option value="paye">Payé Intégralement (Caisse / Banques)</option>
-              <option value="partiel">Règlement Partiel</option>
-              <option value="impaye">Achat à Crédit (Dette Fournisseur)</option>
-            </select>
-          </div>
         </div>
 
         <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
           <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600;" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; border-radius: 8px; font-weight: 700; padding: 8px 18px;">Enregistrer Achat</button>
+          <button type="submit" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; border-radius: 8px; font-weight: 700; padding: 8px 18px;">Valider la Commande Multi-Produits</button>
         </div>
       </form>
     </div>
@@ -130,17 +132,18 @@
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
 
-    function getProduitBadge(cat) {
-        cat = (cat || 'poulets_frais').toLowerCase();
+    function getProduitBadge(row) {
+        const libelle = row.produit_libelle || row.libelle_produit || row.categorie_intrant || '-';
+        const cat = (row.categorie_intrant || '').toLowerCase();
         const styles = {
-            'poulets_frais': { bg: '#EFF6FF', color: '#1D4ED8', label: 'Poulets entiers frais' },
-            'oeufs_frais': { bg: '#FEF3C7', color: '#B45309', label: 'Œufs frais' },
-            'poulets_fumes': { bg: '#FFF7ED', color: '#C2410C', label: 'Poulets fumés' },
-            'poules_pondeuses': { bg: '#F5F3FF', color: '#6D28D9', label: 'Poules pondeuses' },
-            'pintades': { bg: '#ECFDF5', color: '#047857', label: 'Pintades fraîches' }
+            'poulets_frais': { bg: '#EFF6FF', color: '#1D4ED8' },
+            'oeufs_frais': { bg: '#FEF3C7', color: '#B45309' },
+            'poulets_fumes': { bg: '#FFF7ED', color: '#C2410C' },
+            'poules_pondeuses': { bg: '#F5F3FF', color: '#6D28D9' },
+            'pintades': { bg: '#ECFDF5', color: '#047857' }
         };
-        const s = styles[cat] || { bg: '#F1F5F9', color: '#475569', label: cat };
-        return `<span style="background: ${s.bg}; color: ${s.color}; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">${s.label}</span>`;
+        const s = styles[cat] || { bg: '#EFF6FF', color: '#1D4ED8' };
+        return `<span style="background: ${s.bg}; color: ${s.color}; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">${libelle}</span>`;
     }
 
     let dt = $('#tableAchatsAvicoles').DataTable({
@@ -152,7 +155,7 @@ $(document).ready(function() {
         columns: [
             { data: 'code_achat_avicole', render: d => `<code style="font-weight:700; color:#334155; background:#F1F5F9; padding:2px 6px; border-radius:4px;">${d}</code>` },
             { data: 'fournisseur_nom', render: d => `<strong style="color:#0F172A;">${d || '-'}</strong>` },
-            { data: 'categorie_intrant', render: d => getProduitBadge(d) },
+            { data: null, render: (d, type, row) => getProduitBadge(row) },
             { data: 'numero_facture_fournisseur', render: d => d || '-' },
             { data: 'montant_total', render: d => `<strong style="color:#DC2626; font-size:14px;">${parseFloat(d||0).toLocaleString('fr-FR')} FCFA</strong>` },
             { data: 'date_achat', render: d => d ? new Date(d).toLocaleDateString('fr-FR') : '-' },
@@ -162,12 +165,89 @@ $(document).ready(function() {
         drawCallback: function() { if (window.lucide) lucide.createIcons(); }
     });
 
-    $('#inputAchatQte, #inputAchatPU').on('input keyup change', function() {
-        let qte = parseFloat($('#inputAchatQte').val()) || 0;
-        let pu = parseFloat($('#inputAchatPU').val()) || 0;
-        let tot = qte * pu;
-        $('#valTotalAchat').text(tot.toLocaleString('fr-FR') + ' FCFA');
+    let rowIndex = 0;
+
+    function addArticleRow(qte = '', pu = '', unite = '') {
+        rowIndex++;
+        let rowId = 'art_row_' + rowIndex;
+        let html = `
+        <tr id="${rowId}" class="article-item-row">
+            <td>
+                <select name="articles[${rowIndex}][produit_code]" class="form-select select-produit-row" style="border-radius: 8px; height: 38px;" required>
+                    <option value="">-- Choisir un produit --</option>
+                    <?php if (!empty($produits)): ?>
+                        <?php foreach ($produits as $p): ?>
+                            <option value="<?= htmlspecialchars($p['code_produit_aviculture']) ?>" data-unite="<?= htmlspecialchars($p['unite_mesure'] ?? 'Pièces') ?>">
+                                <?= htmlspecialchars($p['libelle_produit']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0.01" name="articles[${rowIndex}][quantite]" class="form-control input-qte-row" style="border-radius: 8px; height: 38px;" placeholder="Qte" value="${qte}" required>
+            </td>
+            <td>
+                <input type="text" name="articles[${rowIndex}][unite_mesure]" class="form-control input-unite-row" style="border-radius: 8px; height: 38px;" placeholder="Ex: kg, sacs" value="${unite}">
+            </td>
+            <td>
+                <input type="number" step="50" min="0" name="articles[${rowIndex}][prix_unitaire]" class="form-control input-pu-row" style="border-radius: 8px; height: 38px;" placeholder="FCFA" value="${pu}" required>
+            </td>
+            <td class="text-end fw-bold align-middle cell-stot-row" style="color: #0F172A; font-size: 13px;">
+                0 FCFA
+            </td>
+            <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-remove-row" style="color: #EF4444; border: none; background: #FEE2E2; border-radius: 6px; padding: 4px 8px;" title="Supprimer la ligne">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                </button>
+            </td>
+        </tr>`;
+
+        $('#tbodyArticlesModal').append(html);
+        if (window.lucide) lucide.createIcons();
+        recalcTotals();
+    }
+
+    // Initialiser avec au moins 1 ligne
+    addArticleRow();
+
+    $('#btnAddArticleRow').on('click', function() {
+        addArticleRow();
     });
+
+    $(document).on('click', '.btn-remove-row', function() {
+        if ($('#tbodyArticlesModal tr').length > 1) {
+            $(this).closest('tr').remove();
+            recalcTotals();
+        } else {
+            if (window.toastr) toastr.warning("La commande doit comporter au moins un produit.");
+        }
+    });
+
+    $(document).on('change', '.select-produit-row', function() {
+        let opt = $(this).find(':selected');
+        let u = opt.data('unite') || 'Pièces';
+        let $tr = $(this).closest('tr');
+        if (!$tr.find('.input-unite-row').val()) {
+            $tr.find('.input-unite-row').val(u);
+        }
+    });
+
+    $(document).on('input keyup change', '.input-qte-row, .input-pu-row', function() {
+        recalcTotals();
+    });
+
+    function recalcTotals() {
+        let grandTotal = 0;
+        $('#tbodyArticlesModal tr').each(function() {
+            let qte = parseFloat($(this).find('.input-qte-row').val()) || 0;
+            let pu = parseFloat($(this).find('.input-pu-row').val()) || 0;
+            let stot = qte * pu;
+            grandTotal += stot;
+            $(this).find('.cell-stot-row').text(stot.toLocaleString('fr-FR') + ' FCFA');
+        });
+        $('#valTotalAchat').text(grandTotal.toLocaleString('fr-FR') + ' FCFA');
+    }
 
     $('#formAchat').on('submit', function(e) {
         e.preventDefault();
@@ -179,6 +259,12 @@ $(document).ready(function() {
                 var modalEl = document.getElementById('modalAchat');
                 var bsModal = bootstrap.Modal.getInstance(modalEl);
                 if (bsModal) bsModal.hide();
+
+                // Réinitialiser le formulaire
+                $('#formAchat')[0].reset();
+                $('#tbodyArticlesModal').empty();
+                rowIndex = 0;
+                addArticleRow();
 
                 dt.ajax.reload(null, false);
             } else {

@@ -26,9 +26,9 @@
                 <th style="padding: 12px;">Désignation Produit</th>
                 <th style="padding: 12px;">Conditionnement</th>
                 <th style="padding: 12px;">Unité Mesure</th>
-                <th style="padding: 12px; text-align: center;">Grille Poids</th>
-                <th style="padding: 12px; text-align: center;">Statut</th>
-                <th style="padding: 12px; text-align: right;">Actions</th>
+                <th class="text-center" style="padding: 12px;">Grille Poids</th>
+                <th class="text-center" style="padding: 12px;">Statut</th>
+                <th class="text-end" style="padding: 12px;">Actions</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -94,6 +94,53 @@
   </div>
 </div>
 
+<!-- Modal Détails Produit -->
+<div class="modal fade" id="modalDetailsProduit" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 520px; margin: auto;">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
+        <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="eye" style="width: 20px; height: 20px; color: #38BDF8;"></i> Détails du Produit Avicole
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Code Produit</span>
+            <div id="detail_code" style="font-size: 15px; font-weight: 800; color: #0F172A; margin-top: 2px;"></div>
+          </div>
+          <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Désignation</span>
+            <div id="detail_libelle" style="font-size: 14px; font-weight: 700; color: #1E293B; margin-top: 2px;"></div>
+          </div>
+          <div style="display: flex; gap: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
+            <div style="flex: 1;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Conditionnement</span>
+              <div id="detail_conditionnement" style="font-size: 13px; font-weight: 600; color: #334155; margin-top: 2px;"></div>
+            </div>
+            <div style="flex: 1;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Unité de Mesure</span>
+              <div id="detail_unite" style="font-size: 13px; font-weight: 600; color: #334155; margin-top: 2px;"></div>
+            </div>
+          </div>
+          <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Grille de Poids Tarifaire</span>
+            <div id="detail_grille" style="font-size: 13px; font-weight: 600; color: #334155; margin-top: 2px;"></div>
+          </div>
+          <div>
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Description / Remarques</span>
+            <div id="detail_description" style="font-size: 13px; color: #475569; margin-top: 2px; font-style: italic;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600;" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
@@ -115,9 +162,9 @@ $(document).ready(function() {
             { 
                 data: 'type_conditionnement',
                 render: function(d) {
-                    if (d === 'plateau_oeufs') return `<span style="background:#FEF3C7; color:#B45309; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px;">Plateau d'œufs</span>`;
-                    if (d === 'unite_fixe') return `<span style="background:#F3E8FF; color:#6B21A8; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px;">Unité fixe</span>`;
-                    return `<span style="background:#EFF6FF; color:#1D4ED8; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px;">Pièce au poids net</span>`;
+                    if (d === 'plateau_oeufs') return "Plateau d'œufs";
+                    if (d === 'unite_fixe') return "Unité fixe";
+                    return "Pièce au poids net";
                 }
             },
             { data: 'unite_mesure', defaultContent: 'kg' },
@@ -128,8 +175,20 @@ $(document).ready(function() {
             },
             { 
                 data: 'statut_produit', 
+                width: '90px', 
                 className: 'text-center', 
-                render: d => d === 'actif' ? `<span style="background:#DCFCE7; color:#166534; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px;">Actif</span>` : `<span style="background:#FEE2E2; color:#991B1B; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px;">Inactif</span>`
+                render: function(d, type, row) {
+                    var isActif = (d === 'actif');
+                    var checkedAttr = isActif ? 'checked' : '';
+                    return '<div style="display:flex; justify-content:center; align-items:center;">' +
+                           '<label style="position:relative; display:inline-block; width:38px; height:20px; margin:0; cursor:pointer;" title="' + (isActif ? 'Actif - Cliquez pour désactiver' : 'Inactif - Cliquez pour activer') + '">' +
+                           '<input type="checkbox" class="toggle-statut-produit" data-id="' + row.id_produit_aviculture + '" ' + checkedAttr + ' style="opacity:0; width:0; height:0;">' +
+                           '<span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:' + (isActif ? '#15803D' : '#CBD5E1') + '; transition:.3s; border-radius:20px;">' +
+                           '<span style="position:absolute; content:\'\'; height:14px; width:14px; left:' + (isActif ? '20px' : '3px') + '; bottom:3px; background-color:white; transition:.3s; border-radius:50%;"></span>' +
+                           '</span>' +
+                           '</label>' +
+                           '</div>';
+                } 
             },
             { 
                 data: null, 
@@ -137,12 +196,44 @@ $(document).ready(function() {
                 className: 'text-end',
                 render: function(d, type, row) {
                     var jsonStr = JSON.stringify(row).replace(/'/g, "&#39;");
-                    return `<button class="btn btn-sm btn-secondary btn-edit-produit" data-produit='${jsonStr}' style="font-weight:600; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="edit" style="width:14px;height:14px;"></i> Éditer</button>`;
+                    return '<button class="btn btn-sm btn-secondary btn-edit-produit" data-produit=\'' + jsonStr + '\' style="margin-right:6px; font-weight:600; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="edit" style="width:14px;height:14px;"></i> Éditer</button>' +
+                           '<button class="btn btn-sm btn-secondary btn-details-produit" data-produit=\'' + jsonStr + '\' style="font-weight:600; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="eye" style="width:14px;height:14px;"></i> Détails</button>';
                 } 
             }
         ],
         language: { url: baseApi + 'json/datatables-i18n-fr-FR.json' },
         drawCallback: function() { if (window.lucide) lucide.createIcons(); }
+    });
+
+    $(document).on('change', '.toggle-statut-produit', function() {
+        var id = $(this).data('id');
+        var isChecked = $(this).is(':checked');
+        var $input = $(this);
+
+        $.ajax({
+            url: baseApi + 'aviculture/changerProduit',
+            type: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            data: {
+                id: id,
+                statut: isChecked ? 'actif' : 'inactif',
+                csrf_token: '<?= Validator::generateCsrfToken() ?>'
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 1 || res.success || res.status === 'success') {
+                    if (window.toastr) toastr.success(res.message || 'Statut mis à jour avec succès');
+                    table.ajax.reload(null, false);
+                } else {
+                    if (window.toastr) toastr.error(res.message || 'Erreur lors du changement de statut');
+                    $input.prop('checked', !isChecked);
+                }
+            },
+            error: function() {
+                if (window.toastr) toastr.error('Erreur réseau');
+                $input.prop('checked', !isChecked);
+            }
+        });
     });
 
     $('#btnOpenAddProduit').on('click', function() {
@@ -169,6 +260,29 @@ $(document).ready(function() {
         if (window.lucide) lucide.createIcons();
 
         var modalEl = document.getElementById('modalAddProduit');
+        var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        bsModal.show();
+    });
+
+    $(document).on('click', '.btn-details-produit', function() {
+        var prod = $(this).data('produit');
+        if (typeof prod === 'string') prod = JSON.parse(prod);
+
+        $('#detail_code').text(prod.code_produit_aviculture || '-');
+        $('#detail_libelle').text(prod.libelle_produit || '-');
+        
+        var condText = 'Pièce au poids net';
+        if (prod.type_conditionnement === 'plateau_oeufs') condText = 'Plateau d\'œufs';
+        else if (prod.type_conditionnement === 'unite_fixe') condText = 'Unité fixe';
+        $('#detail_conditionnement').text(condText);
+
+        $('#detail_unite').text(prod.unite_mesure || 'kg');
+        $('#detail_grille').text(parseInt(prod.soumis_grille_poids) === 1 ? 'Oui (Classé par tranches de poids)' : 'Non (Tarif unitaire fixe)');
+        $('#detail_description').text(prod.description_produit || 'Aucune description saisie.');
+
+        if (window.lucide) lucide.createIcons();
+
+        var modalEl = document.getElementById('modalDetailsProduit');
         var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
         bsModal.show();
     });
