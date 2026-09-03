@@ -1,0 +1,75 @@
+<?php require_once __DIR__ . '/../../public/inc/header.php'; ?>
+<?php 
+$isEdit = !empty($item['id_type_depense']);
+$title = $isEdit ? 'Éditer le Type de Dépense' : 'Nouveau Type de Dépense';
+?>
+<div class="app-layout">
+  <?php require_once __DIR__ . '/../../public/inc/sidbar.php'; ?>
+  <main class="main-content">
+    <?php require_once __DIR__ . '/../../public/inc/nav.php'; ?>
+    <div class="content-wrapper" style="padding: 24px;">
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0;"><?= $title ?></h1>
+        <p style="color: #64748B; font-size: 13px; margin: 4px 0 0 0;">Catégorie de frais pour la comptabilité analytique</p>
+      </div>
+      <div class="card" style="background: #FFFFFF; border-radius: 12px; padding: 24px; border: 1px solid #E2E8F0; max-width: 600px;">
+        <form id="form-td" action="<?= RACINE ?>type_depense/<?= $isEdit ? 'edit' : 'add' ?>" method="POST">
+          <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
+          <?php if ($isEdit): ?>
+            <input type="hidden" name="id_type_depense" value="<?= $item['id_type_depense'] ?>">
+          <?php endif; ?>
+          
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:600; color:#334155;">Libellé du Type de Dépense *</label>
+            <input type="text" name="libelle_type_depense" class="form-control" value="<?= htmlspecialchars($item['libelle_type_depense'] ?? '') ?>" required placeholder="ex: Carburant & Transports">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:600; color:#334155;">Description</label>
+            <textarea name="description_type_depense" class="form-control" rows="3" placeholder="Frais de déplacement des commerciaux..."><?= htmlspecialchars($item['description_type_depense'] ?? '') ?></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:600; color:#334155;">Statut</label>
+            <select name="statut_type_depense" class="form-select">
+              <option value="actif" <?= ($item['statut_type_depense'] ?? 'actif') === 'actif' ? 'selected' : '' ?>>Actif</option>
+              <option value="inactif" <?= ($item['statut_type_depense'] ?? '') === 'inactif' ? 'selected' : '' ?>>Inactif</option>
+            </select>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+            <a href="<?= RACINE ?>type_depense/list" class="btn btn-light" style="border:1px solid #CBD5E1;">Annuler</a>
+            <button type="submit" class="btn btn-success" style="background:#15803D; border-color:#15803D; font-weight:700;">
+              <?= $isEdit ? 'Enregistrer les modifications' : 'Créer le type' ?>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+$(document).ready(function() {
+  $('#form-td').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: $(this).attr('action'),
+      type: 'POST',
+      data: $(this).serialize(),
+      dataType: 'json',
+      success: function(res) {
+        if (res.status === 1 || res.success) {
+          if (window.toastr) toastr.success(res.message || 'Opération réussie');
+          setTimeout(function() { window.location.href = '<?= RACINE ?>type_depense/list'; }, 1000);
+        } else {
+          if (window.toastr) toastr.error(res.message || 'Erreur lors de l\'enregistrement');
+        }
+      },
+      error: function() {
+        if (window.toastr) toastr.error('Erreur réseau');
+      }
+    });
+  });
+});
+</script>
+<?php require_once __DIR__ . '/../../public/inc/footer-link.php'; ?>

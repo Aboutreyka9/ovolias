@@ -1,0 +1,89 @@
+# Inventaire des fichiers contenant l'ancien nom de projet ('geicg' ou 'olive')
+
+Ce fichier liste l'ensemble des fichiers du projet Ovolias qui comportent encore des références ou des noms issus des anciens projets **GEICG** ou **Olive Service**.
+
+---
+
+## 1. Fichiers dont le NOM DE FICHIER contient 'geicg' ou 'olive'
+
+- `database/migration_olive_service.sql`
+- `database/olive.sql`
+- `database/run_migration_olive.php`
+
+---
+
+## 2. Fichiers dont le CONTENU contient 'geicg' ou 'olive'
+
+### Configuration et Environnement
+- `.env`
+- `.env.example`
+- `config/const.php`
+- `config/Database.php`
+- `config/GeniusPayConfig.php`
+
+### Noyau et Services Back-end (Core)
+- `core/GeniusPayService.php`
+- `core/MailerService.php`
+- `core/NotificationService.php`
+
+### Contrôleurs (Controllers)
+- `controllers/etablissements/EtablissementController.php`
+- `controllers/users/UserController.php`
+
+### Base de Données et Scripts SQL
+- `database/migration_olive_service.sql`
+- `database/olive.sql`
+- `database/rbac.sql`
+- `database/run_migration_olive.php`
+
+### Point d'Entrée Principal (Router)
+- `public/index.php`
+
+### JavaScript Framework & Logique Front-End
+- `public/json/app.js`
+- `public/json/auth.js`
+- `public/json/dashboard.js`
+- `public/json/theme-manager.js`
+- `public/json/entities/abonnements_pressings.js`
+- `public/json/entities/clients.js`
+- `public/json/entities/commandes.js`
+- `public/json/entities/forfaits.js`
+- `public/json/entities/notifications.js`
+- `public/json/entities/quartiers.js`
+- `public/json/entities/roles.js`
+- `public/json/entities/villes.js`
+
+### JavaScript En-têtes de Modules
+- `public/assets/js/modules/caisse_commercial.js`
+- `public/assets/js/modules/clients.js`
+- `public/assets/js/modules/clotures_caisse.js`
+- `public/assets/js/modules/cotisations.js`
+- `public/assets/js/modules/depenses.js`
+- `public/assets/js/modules/ouvertures_caisse.js`
+- `public/assets/js/modules/packs.js`
+- `public/assets/js/modules/souscriptions.js`
+- `public/assets/js/modules/versements.js`
+
+### Vues, Layouts et Templates d'Emails (Views & Includes)
+- `public/inc/footer.php`
+- `public/inc/nav.php`
+- `public/inc/sidbar.php`
+- `views/caisse_commercial/edit.php`
+- `views/depenses/edit.php`
+- `views/errors/404.php`
+- `views/etablissements/config.php`
+- `views/home/index.php`
+- `views/sessions/list.php`
+- `views/users/connexion.php`
+- `views/users/edit.php`
+- `views/users/forgot_password.php`
+- `views/users/reset_password.php`
+- `views/templates/emails/reset_password.php`
+- `views/templates/emails/welcome_credentials.php`
+
+### Documentation et Notes
+- `README.md`
+- `description_projet.md`
+- `consigne.md`
+- `optimisation_requete.md`
+- `user_accessmd.`

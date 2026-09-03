@@ -1,0 +1,12 @@
+
+D	Code Utilisateur	Nom & Prénom	Email de Connexion	Rôle Affecté	Mot de passe
+
+1	5wBEh2OfI00frxk8ITPf	Admin SuperAdmin	admin@gmail.com	ROLE_SUPERADMIN	admin123
+
+15	USR-ADMIN-001	ADMINISTRATEUR Système	admin@olive.com	ROLE_ADMIN	admin123
+
+16	USR-COMM-001	KOUASSI Commercial	commercial@olive.com	ROLE_COMMERCIAL	admin123
+
+17	USR-GEST-001	TRAORE Gestionnaire	gestionnaire@olive.com	ROLE_GESTIONNAIRE	admin123
+
+18	USR-FIN-001	KONAN Finance	finance@olive.com	ROLE_FINANCE	admin123

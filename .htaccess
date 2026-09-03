@@ -1,0 +1,7 @@
+RewriteEngine On
+DirectoryIndex public/index.php index.php
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ public/index.php [L,QSA]
+
+

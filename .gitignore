@@ -1,0 +1,78 @@
+# ==== Environnement / IDE ====
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*.tmp
+
+# ==== Système ====
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==== PHP / Composer ====
+/vendor/
+composer.phar
+*.log
+
+# ==== Fichiers locaux de configuration / secrets ====
+.env
+.env.*
+!.env.example
+config/.env
+*.local.php
+*.secret.php
+config/Database.php
+
+# ==== Cache / Temp ====
+cache/
+tmp/
+temp/
+*.cache
+
+# ==== Base de données ====
+*.sql
+sql/*.sql
+!sql/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+
+# ==== Fichiers téléchargés / uploads ====
+/public/assets/images/articles/*
+/public/assets/images/produits/*
+/public/assets/images/logo/*
+/public/assets/uploads/*
+!/public/assets/images/articles/.gitkeep
+!/public/assets/images/produits/.gitkeep
+!/public/assets/images/logo/.gitkeep
+!/public/assets/uploads/.gitkeep
+
+# ==== Logs système / erreurs ====
+logs/
+*.error.log
+error_log
+error_log.*
+
+# ==== Rapports / métriques ====
+coverage/
+build/
+dist/
+*.prof
+
+# ==== Archives / Zip ====
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# PHP
+.phpunit.result.cache
