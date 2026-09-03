@@ -46,7 +46,7 @@ $produits = $produits ?? [];
 
 <!-- Modal Nouveau Bon d'Achat Intrants Multi-Produits -->
 <div class="modal fade" id="modalAchat" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
       <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
         <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -211,6 +211,29 @@ $(document).ready(function() {
         $('#tbodyArticlesModal').append(html);
         if (window.lucide) lucide.createIcons();
         recalcTotals();
+        updateProduitSelectOptions();
+    }
+
+    function updateProduitSelectOptions() {
+        let selectedCodes = [];
+        $('.select-produit-row').each(function() {
+            let val = $(this).val();
+            if (val) {
+                selectedCodes.push(val);
+            }
+        });
+
+        $('.select-produit-row').each(function() {
+            let currentVal = $(this).val();
+            $(this).find('option').each(function() {
+                let optVal = $(this).val();
+                if (optVal && selectedCodes.includes(optVal) && optVal !== currentVal) {
+                    $(this).prop('disabled', true).css('color', '#94A3B8');
+                } else {
+                    $(this).prop('disabled', false).css('color', '');
+                }
+            });
+        });
     }
 
     // Initialiser avec au moins 1 ligne
@@ -224,6 +247,7 @@ $(document).ready(function() {
         if ($('#tbodyArticlesModal tr').length > 1) {
             $(this).closest('tr').remove();
             recalcTotals();
+            updateProduitSelectOptions();
         } else {
             if (window.toastr) toastr.warning("La commande doit comporter au moins un produit.");
         }
@@ -236,6 +260,7 @@ $(document).ready(function() {
         if (!$tr.find('.input-unite-row').val()) {
             $tr.find('.input-unite-row').val(u);
         }
+        updateProduitSelectOptions();
     });
 
     $(document).on('input keyup change', '.input-qte-row, .input-pu-row', function() {
