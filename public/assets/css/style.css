@@ -711,6 +711,17 @@ html, body {
     background: var(--bg-secondary);
     color: var(--text-secondary);
 }
+
+/* Masquer les flèches d'incrémentation/décrémentation sur les champs de type number */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
 .input-with-icon { position: relative; }
 .input-with-icon .form-control { padding-left: 42px; }
 .input-icon {
