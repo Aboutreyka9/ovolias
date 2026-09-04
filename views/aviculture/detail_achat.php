@@ -212,11 +212,20 @@ foreach ($details as $dItem) {
                       <?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>
                     </td>
                     <td style="padding: 12px 14px; font-weight: 700; color: #0F172A;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <div style="background: #F1F5F9; padding: 6px; border-radius: 6px; color: #0284C7; display: flex; align-items: center; justify-content: center;">
-                          <i data-lucide="box" style="width: 15px; height: 15px;"></i>
+                      <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <div style="background: #F1F5F9; padding: 6px; border-radius: 6px; color: #0284C7; display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="box" style="width: 15px; height: 15px;"></i>
+                          </div>
+                          <span><?= htmlspecialchars($d['libelle_article_intrant'] ?? 'Article') ?></span>
                         </div>
-                        <span><?= htmlspecialchars($d['libelle_article_intrant'] ?? 'Article') ?></span>
+                        <?php if (!empty($d['libelle_categorie_poids']) || !empty($d['categorie_poids_code'])): ?>
+                          <div style="margin-left: 29px;">
+                            <span style="display: inline-flex; align-items: center; gap: 4px; background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">
+                              <i data-lucide="scale" style="width: 12px; height: 12px;"></i> Grille : <?= htmlspecialchars($d['libelle_categorie_poids'] ?? $d['categorie_poids_code']) ?><?php if (isset($d['poids_min']) && $d['poids_min'] !== null): ?> (<?= number_format($d['poids_min'], 2, ',', ' ') ?> - <?= number_format($d['poids_max'], 2, ',', ' ') ?> kg)<?php endif; ?>
+                            </span>
+                          </div>
+                        <?php endif; ?>
                       </div>
                     </td>
                     <td style="padding: 12px 14px; text-align: center;">

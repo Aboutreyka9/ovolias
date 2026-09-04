@@ -93,7 +93,11 @@ class AchatAvicoleController extends BaseController
         }
 
         $stmtD = $db->prepare("
-            SELECT * FROM details_achats_avicoles WHERE achat_code = :code ORDER BY id_detail_achat ASC
+            SELECT d.*, c.libelle_categorie_poids, c.poids_min, c.poids_max 
+            FROM details_achats_avicoles d 
+            LEFT JOIN categories_poids_avicole c ON d.categorie_poids_code = c.code_categorie_poids 
+            WHERE d.achat_code = :code 
+            ORDER BY d.id_detail_achat ASC
         ");
         $stmtD->execute([':code' => $achat['code_achat_avicole']]);
         $details = $stmtD->fetchAll(PDO::FETCH_ASSOC);
@@ -225,10 +229,11 @@ class AchatAvicoleController extends BaseController
         $grand_total = 0;
 
         foreach ($articles_raw as $item) {
-            $prod_code = trim($item['produit_code'] ?? '');
-            $qte       = (float)($item['quantite'] ?? 0);
-            $pu        = (float)($item['prix_unitaire'] ?? 0);
-            $unite     = trim($item['unite_mesure'] ?? 'Pièces');
+            $prod_code   = trim($item['produit_code'] ?? '');
+            $grille_code = trim($item['categorie_poids_code'] ?? '');
+            $qte         = (float)($item['quantite'] ?? 0);
+            $pu          = (float)($item['prix_unitaire'] ?? 0);
+            $unite       = trim($item['unite_mesure'] ?? 'Pièces');
 
             if (!empty($prod_code) && $qte > 0 && $pu > 0) {
                 $stmtP = $db->prepare("SELECT libelle_produit FROM produits_aviculture_avicole WHERE code_produit_aviculture = :code");
@@ -240,12 +245,13 @@ class AchatAvicoleController extends BaseController
                 $grand_total += $stot;
 
                 $valid_items[] = [
-                    'produit_code' => $prod_code,
-                    'libelle'      => $libelle,
-                    'qte'          => $qte,
-                    'unite'        => $unite,
-                    'pu'           => $pu,
-                    'total'        => $stot
+                    'produit_code'         => $prod_code,
+                    'categorie_poids_code' => !empty($grille_code) ? $grille_code : null,
+                    'libelle'              => $libelle,
+                    'qte'                  => $qte,
+                    'unite'                => $unite,
+                    'pu'                   => $pu,
+                    'total'                => $stot
                 ];
             }
         }
@@ -295,10 +301,10 @@ class AchatAvicoleController extends BaseController
             // 2. Insérer les lignes de détail et mouvements de stock
             $stmtDet = $db->prepare("
                 INSERT INTO details_achats_avicoles (
-                    achat_code, libelle_article_intrant, quantite, 
+                    achat_code, libelle_article_intrant, categorie_poids_code, quantite, 
                     unite_mesure, prix_unitaire, montant_total
                 ) VALUES (
-                    :code, :article, :qte, 
+                    :code, :article, :grille, :qte, 
                     :unite, :pu, :tot
                 )
             ");
@@ -317,6 +323,7 @@ class AchatAvicoleController extends BaseController
                 $stmtDet->execute([
                     ':code'    => $code_achat,
                     ':article' => $item['libelle'],
+                    ':grille'  => $item['categorie_poids_code'],
                     ':qte'     => $item['qte'],
                     ':unite'   => $item['unite'],
                     ':pu'      => $item['pu'],

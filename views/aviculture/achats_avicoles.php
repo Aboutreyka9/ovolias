@@ -586,9 +586,23 @@ $(document).ready(function() {
                         let tot = parseFloat(item.montant_total || (qte * pu));
                         grandTotal += tot;
 
+                        let grilleBadge = '';
+                        if (item.libelle_categorie_poids || item.categorie_poids_code) {
+                            let gTxt = item.libelle_categorie_poids || item.categorie_poids_code;
+                            if (item.poids_min !== undefined && item.poids_min !== null && item.poids_min !== '') {
+                                gTxt += ` (${item.poids_min} - ${item.poids_max} kg)`;
+                            }
+                            grilleBadge = `<br><span style="display: inline-flex; align-items: center; gap: 4px; background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-top: 4px;">
+                                <i data-lucide="scale" style="width: 12px; height: 12px;"></i> Grille : ${gTxt}
+                            </span>`;
+                        }
+
                         tbodyHtml += `
                         <tr>
-                            <td style="padding: 8px 10px; font-weight: 600; color: #1E293B;">${item.libelle_article_intrant || 'Article'}</td>
+                            <td style="padding: 8px 10px; font-weight: 600; color: #1E293B;">
+                                ${item.libelle_article_intrant || 'Article'}
+                                ${grilleBadge}
+                            </td>
                             <td style="padding: 8px 10px; text-align: center; font-weight: 700;">${qte.toLocaleString('fr-FR')} ${item.unite_mesure || ''}</td>
                             <td style="padding: 8px 10px; text-align: right;">${pu.toLocaleString('fr-FR')} FCFA</td>
                             <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: #0F172A;">${tot.toLocaleString('fr-FR')} FCFA</td>
