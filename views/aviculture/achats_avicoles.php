@@ -85,7 +85,8 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
             </div>
             <div class="col-md-3">
               <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Statut Règlement</label>
-              <select name="statut_reglement" class="form-select" style="border-radius: 8px; height: 42px;">
+              <select name="statut_reglement" class="form-select" style="border-radius: 8px; height: 42px;" required>
+                <option value="">-- Sélectionner --</option>
                 <option value="paye">Payé (Caisse/Banque)</option>
                 <option value="partiel">Partiel</option>
                 <option value="impaye">À Crédit (Dette)</option>
@@ -176,7 +177,7 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
 
         <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
           <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600;" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; border-radius: 8px; font-weight: 700; padding: 8px 18px;">Valider la Commande Multi-Produits</button>
+          <button type="submit" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; border-radius: 8px; font-weight: 700; padding: 8px 18px;">Valider la Commande</button>
         </div>
       </form>
     </div>
