@@ -19,6 +19,7 @@ class VenteAvicoleController extends BaseController
         // 2. Produits & Catégories de poids pour le Panier POS
         $produits = $db->query("SELECT * FROM produits_aviculture_avicole WHERE statut_produit = 'actif' ORDER BY libelle_produit ASC")->fetchAll(PDO::FETCH_ASSOC);
         $categoriesPoids = $db->query("SELECT * FROM categories_poids_avicole ORDER BY poids_min ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $grillesTarifs = $db->query("SELECT produit_code, categorie_poids_code, prix_vente FROM grilles_tarifs_poids_avicole WHERE statut_grille = 'actif'")->fetchAll(PDO::FETCH_ASSOC);
 
         // 3. Volailles pesées & étiquetées en stock
         $etiquettesDispo = $db->query("
@@ -50,6 +51,7 @@ class VenteAvicoleController extends BaseController
             'clients'         => $clients,
             'produits'        => $produits,
             'categoriesPoids' => $categoriesPoids,
+            'grillesTarifs'   => $grillesTarifs,
             'etiquettes'      => $etiquettesDispo,
             'kpis'            => $kpis
         ]);

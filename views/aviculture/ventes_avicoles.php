@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../public/inc/header.php';
 $clients = $clients ?? [];
 $produits = $produits ?? [];
 $categoriesPoids = $categoriesPoids ?? [];
+$grillesTarifs = $grillesTarifs ?? [];
 $etiquettes = $etiquettes ?? [];
 $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_a_livrer' => 0];
 ?>
@@ -472,12 +473,39 @@ function recalculerTotaux() {
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
 
-    // Auto-remplissage du prix quand on choisit un produit ou une catégorie
+    const grillesTarifs = <?= json_encode($grillesTarifs) ?>;
+
+    // Auto-remplissage du prix unitaire depuis la grille de tarifs officielle (grilles_tarifs_poids_avicole)
     $('#pos_produit, #pos_cat').on('change', function() {
-        const pPrix = parseFloat($('#pos_produit option:selected').data('prix')) || 0;
-        const cPrix = parseFloat($('#pos_cat option:selected').data('prix')) || 0;
-        const finalPrix = cPrix > 0 ? cPrix : pPrix;
-        $('#pos_prix').val(finalPrix);
+        const pCode = $('#pos_produit').val();
+        const cCode = $('#pos_cat').val();
+
+        if (!pCode) {
+            $('#pos_prix').val(0);
+            return;
+        }
+
+        let matchPrix = null;
+
+        // 1. Recherche par couple exact (produit + catégorie de poids)
+        if (cCode) {
+            const found = grillesTarifs.find(g => g.produit_code === pCode && g.categorie_poids_code === cCode);
+            if (found) matchPrix = parseFloat(found.prix_vente);
+        }
+
+        // 2. Recherche pour produit non soumis à la grille de poids (CATP-NON-SOUMIS)
+        if (matchPrix === null) {
+            const foundFixe = grillesTarifs.find(g => g.produit_code === pCode && g.categorie_poids_code === 'CATP-NON-SOUMIS');
+            if (foundFixe) matchPrix = parseFloat(foundFixe.prix_vente);
+        }
+
+        // 3. Fallback: premier tarif trouvé pour ce produit
+        if (matchPrix === null) {
+            const foundAny = grillesTarifs.find(g => g.produit_code === pCode);
+            if (foundAny) matchPrix = parseFloat(foundAny.prix_vente);
+        }
+
+        $('#pos_prix').val(matchPrix !== null ? matchPrix : 0);
     });
 
     let dt = $('#tableVentesAvicoles').DataTable({
