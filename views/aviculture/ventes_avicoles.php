@@ -296,7 +296,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
 
               <div class="col-md-3">
                 <label style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Remise Accordée (F)</label>
-                <input type="number" name="montant_remise" id="inputRemise" value="0" min="0" oninput="recalculerTotaux()" class="form-control form-control-sm" style="border-radius: 6px; font-size: 14px; font-weight: 700;">
+                <input type="number" name="montant_remise" id="inputRemise" value="0" min="0" readonly oninput="recalculerTotaux()" class="form-control form-control-sm" style="border-radius: 6px; font-size: 14px; font-weight: 700; background: #1E293B; color: #94A3B8; border-color: #334155; cursor: not-allowed;">
               </div>
 
               <div class="col-md-3" style="border-left: 1px solid #334155;">
