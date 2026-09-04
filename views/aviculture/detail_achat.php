@@ -152,30 +152,45 @@ foreach ($details as $dItem) {
 
       </div>
 
-      <!-- CARTE 2 : LISTE DES ARTICLES COMMANDÉS -->
+      <!-- CARTE 2 : LISTE DES ARTICLES COMMANDÉS (TABLEAU ERP PREMIUM) -->
       <div class="card" style="background: #FFFFFF; border-radius: 12px; padding: 24px 28px; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #EFF6FF;">
-          <h3 style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="shopping-bag" style="width: 18px; height: 18px; color: #1E3A5F;"></i> Articles & Intrants Acquis
-          </h3>
-          <div style="font-size: 16px; font-weight: 900; color: #DC2626;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #EFF6FF; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="background: #E0F2FE; color: #0284C7; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="package-check" style="width: 20px; height: 20px;"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 8px;">
+                Articles & Intrants Acquis
+                <span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">
+                  <?= count($details) ?> article(s)
+                </span>
+              </h3>
+              <span style="font-size: 12px; color: #64748B;">Détail exhaustif des lignes de commande de ce bon d'achat</span>
+            </div>
+          </div>
+
+          <div style="background: #FEF2F2; color: #991B1B; border: 1px solid #FECDD3; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="calculator" style="width: 15px; height: 15px; color: #DC2626;"></i>
             Montant Total : <?= number_format($montantTotal, 0, ',', ' ') ?> FCFA
           </div>
         </div>
 
         <?php if (empty($details)): ?>
-          <p style="color: #94A3B8; text-align: center; padding: 20px 0; font-style: italic;">Aucun article n'a été répertorié pour cet achat.</p>
+          <div style="text-align: center; padding: 40px 20px; background: #F8FAFC; border-radius: 10px; border: 1px dashed #CBD5E1;">
+            <i data-lucide="inbox" style="width: 36px; height: 36px; color: #94A3B8; margin-bottom: 8px;"></i>
+            <p style="color: #64748B; font-weight: 600; margin: 0;">Aucun article n'a été répertorié pour cet achat.</p>
+          </div>
         <?php else: ?>
-          <div style="width: 100%; overflow-x: auto;">
-            <table class="table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <div style="width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid #E2E8F0;">
+            <table class="table align-middle" style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 0;">
               <thead>
-                <tr style="background: #F8FAFC; text-align: left; color: #64748B;">
-                  <th style="padding: 10px 12px;">#</th>
-                  <th style="padding: 10px 12px;">Désignation Intrant / Article</th>
-                  <th style="padding: 10px 12px; text-align: center;">Quantité</th>
-                  <th style="padding: 10px 12px; text-align: center;">Unité</th>
-                  <th style="padding: 10px 12px; text-align: right;">Prix Unitaire</th>
-                  <th style="padding: 10px 12px; text-align: right;">Montant Total</th>
+                <tr style="background: #0F172A; color: #FFFFFF;">
+                  <th style="padding: 12px 14px; width: 60px; text-align: center; font-weight: 700; border: none;">#</th>
+                  <th style="padding: 12px 14px; text-align: left; font-weight: 700; border: none;">Désignation Intrant / Article</th>
+                  <th style="padding: 12px 14px; text-align: center; font-weight: 700; border: none;">Quantité</th>
+                  <th style="padding: 12px 14px; text-align: right; font-weight: 700; border: none;">Prix Unitaire</th>
+                  <th style="padding: 12px 14px; text-align: right; font-weight: 700; border: none;">Montant Sous-Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,24 +205,51 @@ foreach ($details as $dItem) {
                   $subTot = floatval($d['montant_total'] ?? ($qte * $pu));
                   $totQte += $qte;
                   $totMontant += $subTot;
+                  $bgRow = ($i % 2 === 0) ? '#F8FAFC' : '#FFFFFF';
                 ?>
-                  <tr style="border-bottom: 1px solid #F1F5F9;">
-                    <td style="padding: 10px 12px; font-weight: 700; color: #64748B;"><?= $i ?></td>
-                    <td style="padding: 10px 12px; font-weight: 700; color: #0F172A;"><?= htmlspecialchars($d['libelle_article_intrant'] ?? 'Article') ?></td>
-                    <td style="padding: 10px 12px; text-align: center; font-weight: 800; color: #1E3A5F;"><?= number_format($qte, 2, ',', ' ') ?></td>
-                    <td style="padding: 10px 12px; text-align: center; color: #64748B;"><?= htmlspecialchars($d['unite_mesure'] ?? '-') ?></td>
-                    <td style="padding: 10px 12px; text-align: right; font-weight: 600; color: #334155;"><?= number_format($pu, 0, ',', ' ') ?> FCFA</td>
-                    <td style="padding: 10px 12px; text-align: right; font-weight: 800; color: #0F172A;"><?= number_format($subTot, 0, ',', ' ') ?> FCFA</td>
+                  <tr style="background: <?= $bgRow ?>; border-bottom: 1px solid #E2E8F0; transition: background 0.2s ease;">
+                    <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #64748B;">
+                      <?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>
+                    </td>
+                    <td style="padding: 12px 14px; font-weight: 700; color: #0F172A;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="background: #F1F5F9; padding: 6px; border-radius: 6px; color: #0284C7; display: flex; align-items: center; justify-content: center;">
+                          <i data-lucide="box" style="width: 15px; height: 15px;"></i>
+                        </div>
+                        <span><?= htmlspecialchars($d['libelle_article_intrant'] ?? 'Article') ?></span>
+                      </div>
+                    </td>
+                    <td style="padding: 12px 14px; text-align: center;">
+                      <span style="background: #EFF6FF; color: #1E3A5F; border: 1px solid #DBEAFE; padding: 4px 12px; border-radius: 8px; font-weight: 800; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                        <?= number_format($qte, 2, ',', ' ') ?>
+                        <span style="font-size: 11px; font-weight: 600; color: #64748B;"><?= htmlspecialchars($d['unite_mesure'] ?? '') ?></span>
+                      </span>
+                    </td>
+                    <td style="padding: 12px 14px; text-align: right; font-weight: 600; color: #475569;">
+                      <?= number_format($pu, 0, ',', ' ') ?> FCFA
+                    </td>
+                    <td style="padding: 12px 14px; text-align: right; font-weight: 800; color: #0F172A; font-size: 14px;">
+                      <?= number_format($subTot, 0, ',', ' ') ?> FCFA
+                    </td>
                   </tr>
                 <?php endforeach; ?>
               </tbody>
               <tfoot>
-                <tr style="background: #F8FAFC; border-top: 2px solid #E2E8F0;">
-                  <th colspan="2" style="padding: 12px; text-align: right; font-weight: 800; color: #0F172A;">TOTAUX :</th>
-                  <th style="padding: 12px; text-align: center; font-weight: 900; color: #1E3A5F;"><?= number_format($totQte, 2, ',', ' ') ?></th>
-                  <th style="padding: 12px;"></th>
-                  <th style="padding: 12px;"></th>
-                  <th style="padding: 12px; text-align: right; font-weight: 900; color: #DC2626; font-size: 15px;"><?= number_format($totMontant, 0, ',', ' ') ?> FCFA</th>
+                <tr style="background: #F1F5F9; border-top: 2px solid #CBD5E1;">
+                  <th colspan="2" style="padding: 14px; text-align: right; font-weight: 800; color: #0F172A; font-size: 13px;">
+                    TOTAUX CUMULÉS :
+                  </th>
+                  <th style="padding: 14px; text-align: center;">
+                    <span style="background: #0F172A; color: #FFFFFF; padding: 6px 14px; border-radius: 8px; font-weight: 800; font-size: 13px; display: inline-block;">
+                      <?= number_format($totQte, 2, ',', ' ') ?>
+                    </span>
+                  </th>
+                  <th style="padding: 14px;"></th>
+                  <th style="padding: 14px; text-align: right;">
+                    <span style="color: #DC2626; font-size: 16px; font-weight: 900;">
+                      <?= number_format($totMontant, 0, ',', ' ') ?> FCFA
+                    </span>
+                  </th>
                 </tr>
               </tfoot>
             </table>
