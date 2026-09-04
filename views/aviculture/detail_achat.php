@@ -266,6 +266,72 @@ foreach ($details as $dItem) {
         <?php endif; ?>
       </div>
 
+      <!-- CARTE 3 : HISTORIQUE DES RÈGLEMENTS (ACCOMPTES & TRANCHES) -->
+      <?php $payments = $payments ?? []; ?>
+      <div class="card" style="background: #FFFFFF; border-radius: 12px; padding: 24px 28px; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #EFF6FF;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="background: #ECFDF5; color: #059669; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="history" style="width: 20px; height: 20px;"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 8px;">
+                Historique des Règlements Échelonnés
+                <span style="background: #ECFDF5; color: #047857; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">
+                  <?= count($payments) ?> versement(s)
+                </span>
+              </h3>
+              <span style="font-size: 12px; color: #64748B;">Traçabilité complète des versements effectués sur cette facture</span>
+            </div>
+          </div>
+        </div>
+
+        <?php if (empty($payments)): ?>
+          <div style="text-align: center; padding: 24px 20px; background: #F8FAFC; border-radius: 10px; border: 1px dashed #CBD5E1;">
+            <p style="color: #64748B; font-weight: 600; margin: 0;">Aucun règlement n'a encore été enregistré pour cette facture.</p>
+          </div>
+        <?php else: ?>
+          <div style="width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid #E2E8F0;">
+            <table class="table align-middle" style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 0;">
+              <thead>
+                <tr style="background: #F8FAFC; color: #334155;">
+                  <th style="padding: 10px 14px; text-align: left; font-weight: 700;">Code Règlement</th>
+                  <th style="padding: 10px 14px; text-align: left; font-weight: 700;">Date & Heure</th>
+                  <th style="padding: 10px 14px; text-align: left; font-weight: 700;">Mode</th>
+                  <th style="padding: 10px 14px; text-align: left; font-weight: 700;">Référence / TransID</th>
+                  <th style="padding: 10px 14px; text-align: right; font-weight: 700;">Montant Versé</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($payments as $p): 
+                  $mVersed = floatval($p['montant_verse'] ?? 0);
+                  $modeLbl = ($p['mode_reglement'] === 'mobile_money') ? 'Mobile Money' : (($p['mode_reglement'] === 'virement') ? 'Virement' : (($p['mode_reglement'] === 'cheque') ? 'Chèque' : 'Espèces'));
+                  $dt = !empty($p['date_reglement']) ? date('d/m/Y H:i', strtotime($p['date_reglement'])) : '-';
+                ?>
+                  <tr style="border-bottom: 1px solid #E2E8F0;">
+                    <td style="padding: 10px 14px; font-weight: 800; color: #0F172A; font-family: monospace;">
+                      <?= htmlspecialchars($p['code_reglement'] ?? '-') ?>
+                    </td>
+                    <td style="padding: 10px 14px; color: #64748B;"><?= $dt ?></td>
+                    <td style="padding: 10px 14px;">
+                      <span style="background: #F1F5F9; color: #334155; padding: 3px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; border: 1px solid #E2E8F0;">
+                        <?= $modeLbl ?>
+                      </span>
+                    </td>
+                    <td style="padding: 10px 14px; color: #475569; font-weight: 600;">
+                      <?= htmlspecialchars($p['reference_reglement'] ?? '-') ?>
+                    </td>
+                    <td style="padding: 10px 14px; text-align: right; font-weight: 900; color: #059669; font-size: 14px;">
+                      + <?= number_format($mVersed, 0, ',', ' ') ?> FCFA
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php endif; ?>
+      </div>
+
     </div>
   </main>
 </div>

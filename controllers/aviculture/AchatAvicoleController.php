@@ -102,13 +102,24 @@ class AchatAvicoleController extends BaseController
         $stmtD->execute([':code' => $achat['code_achat_avicole']]);
         $details = $stmtD->fetchAll(PDO::FETCH_ASSOC);
 
+        $stmtReg = $db->prepare("
+            SELECT r.*, u.nom_user, u.prenom_user 
+            FROM reglements_avicoles r 
+            LEFT JOIN users u ON r.user_code = u.code_user 
+            WHERE r.reference_document = :code AND r.type_transaction = 'achat' 
+            ORDER BY r.date_reglement ASC, r.id_reglement ASC
+        ");
+        $stmtReg->execute([':code' => $achat['code_achat_avicole']]);
+        $payments = $stmtReg->fetchAll(PDO::FETCH_ASSOC);
+
         $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
         $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
 
         $this->json([
-            'status'  => 'success',
-            'achat'   => $achat,
-            'details' => $details
+            'status'   => 'success',
+            'achat'    => $achat,
+            'details'  => $details,
+            'payments' => $payments
         ]);
     }
 
@@ -118,8 +129,8 @@ class AchatAvicoleController extends BaseController
         $code = $param ?? $this->get('code') ?? $this->get('id');
 
         if (empty($code)) {
-            header('Location: ' . RACINE . 'aviculture/achats');
-            exit();
+            $this->redirect(RACINE . 'aviculture/achats');
+            return;
         }
 
         try {
@@ -144,23 +155,143 @@ class AchatAvicoleController extends BaseController
         $achat = $stmtA->fetch(PDO::FETCH_ASSOC);
 
         if (!$achat) {
-            header('Location: ' . RACINE . 'aviculture/achats');
-            exit();
+            $this->renderNotFound("Bon d'achat introuvable.");
+            return;
         }
 
         $stmtD = $db->prepare("
-            SELECT * FROM details_achats_avicoles WHERE achat_code = :code ORDER BY id_detail_achat ASC
+            SELECT d.*, c.libelle_categorie_poids, c.poids_min, c.poids_max 
+            FROM details_achats_avicoles d 
+            LEFT JOIN categories_poids_avicole c ON d.categorie_poids_code = c.code_categorie_poids 
+            WHERE d.achat_code = :code 
+            ORDER BY d.id_detail_achat ASC
         ");
         $stmtD->execute([':code' => $achat['code_achat_avicole']]);
-        $details = $stmtD->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $details = $stmtD->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtReg = $db->prepare("
+            SELECT r.*, u.nom_user, u.prenom_user 
+            FROM reglements_avicoles r 
+            LEFT JOIN users u ON r.user_code = u.code_user 
+            WHERE r.reference_document = :code AND r.type_transaction = 'achat' 
+            ORDER BY r.date_reglement ASC, r.id_reglement ASC
+        ");
+        $stmtReg->execute([':code' => $achat['code_achat_avicole']]);
+        $payments = $stmtReg->fetchAll(PDO::FETCH_ASSOC);
 
         $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
         $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
 
-        $this->loadView('../views/aviculture/detail_achat.php', [
-            'achat'   => $achat,
-            'details' => $details
+        $this->render('aviculture/detail_achat.php', [
+            'achat'    => $achat,
+            'details'  => $details,
+            'payments' => $payments
         ]);
+    }
+
+    public function reglerAchat()
+    {
+        $this->requireAuth();
+        $this->requirePost();
+
+        $code_achat = trim($this->post('code_achat'));
+        $montant_verse = (float)$this->post('montant_verse', 0);
+        $mode_reglement = trim($this->post('mode_reglement', 'especes'));
+        $reference_reglement = trim($this->post('reference_reglement', ''));
+
+        if (empty($code_achat)) {
+            $this->error("Référence de la commande d'achat manquante.");
+            return;
+        }
+
+        if ($montant_verse <= 0) {
+            $this->error("Veuillez saisir un montant valide supérieur à 0 FCFA.");
+            return;
+        }
+
+        $db = $this->model->getCon();
+        $stmt = $db->prepare("SELECT * FROM achats_avicoles WHERE code_achat_avicole = :code OR id_achat_avicole = :code");
+        $stmt->execute([':code' => $code_achat]);
+        $achat = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$achat) {
+            $this->error("Commande d'achat introuvable.");
+            return;
+        }
+
+        $montant_total = (float)$achat['montant_total'];
+        $actuel_paye   = (float)$achat['montant_paye'];
+        $nouveau_paye  = $actuel_paye + $montant_verse;
+
+        if ($nouveau_paye > $montant_total + 0.01) {
+            $this->error("Le montant saisi (" . number_format($montant_verse, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($montant_total - $actuel_paye, 0, ',', ' ') . " FCFA) !");
+            return;
+        }
+
+        $statut_reg = 'partiel';
+        if ($nouveau_paye >= $montant_total - 0.01) {
+            $statut_reg = 'paye';
+            $nouveau_paye = $montant_total;
+        }
+
+        $db->beginTransaction();
+
+        try {
+            $code_reglement = 'REG-ACH-' . date('Ymd') . '-' . rand(1000, 9999);
+            $user_code = $_SESSION[USERS_AUTH]['code_user'] ?? 'USR-ADMIN-001';
+            $etab_code = $_SESSION[USERS_AUTH]['etablissement_code'] ?? '5454544456';
+            $zone_code = $_SESSION[USERS_AUTH]['zone_user'] ?? 'DEFAULT';
+
+            $stmtReg = $db->prepare("
+                INSERT INTO reglements_avicoles (
+                    code_reglement, type_transaction, reference_document, tiers_code, 
+                    montant_verse, mode_reglement, reference_reglement, date_reglement, 
+                    user_code, etablissement_code, zone_code
+                ) VALUES (
+                    :code_reg, 'achat', :ref_doc, :tiers, 
+                    :montant, :mode_reg, :ref_reg, NOW(), 
+                    :user, :etab, :zone
+                )
+            ");
+            $stmtReg->execute([
+                ':code_reg' => $code_reglement,
+                ':ref_doc'  => $achat['code_achat_avicole'],
+                ':tiers'    => $achat['fournisseur_avicole_code'],
+                ':montant'  => $montant_verse,
+                ':mode_reg' => $mode_reglement,
+                ':ref_reg'  => !empty($reference_reglement) ? $reference_reglement : null,
+                ':user'     => $user_code,
+                ':etab'     => $etab_code,
+                ':zone'     => $zone_code
+            ]);
+
+            $stmtUpd = $db->prepare("
+                UPDATE achats_avicoles 
+                SET montant_paye = :paye, 
+                    statut_reglement = :statut
+                WHERE code_achat_avicole = :code
+            ");
+            $stmtUpd->execute([
+                ':paye'   => $nouveau_paye,
+                ':statut' => $statut_reg,
+                ':code'   => $achat['code_achat_avicole']
+            ]);
+
+            $db->commit();
+
+            $reste = max(0, $montant_total - $nouveau_paye);
+
+            $this->success("Règlement de " . number_format($montant_verse, 0, ',', ' ') . " FCFA enregistré avec succès ! (Réf: {$code_reglement})", [
+                'montant_paye'     => $nouveau_paye,
+                'reste_a_payer'    => $reste,
+                'statut_reglement' => $statut_reg,
+                'code_reglement'   => $code_reglement
+            ]);
+
+        } catch (\Exception $e) {
+            $db->rollBack();
+            $this->error("Erreur lors de l'enregistrement du règlement : " . $e->getMessage());
+        }
     }
 
     /**
@@ -298,6 +429,30 @@ class AchatAvicoleController extends BaseController
                 ':zone'       => $zone_code
             ]);
 
+            if ($montant_paye > 0) {
+                $code_reg = 'REG-ACH-' . date('Ymd') . '-' . rand(1000, 9999);
+                $stmtRegInit = $db->prepare("
+                    INSERT INTO reglements_avicoles (
+                        code_reglement, type_transaction, reference_document, tiers_code, 
+                        montant_verse, mode_reglement, reference_reglement, date_reglement, 
+                        user_code, etablissement_code, zone_code
+                    ) VALUES (
+                        :code_reg, 'achat', :ref_doc, :tiers, 
+                        :montant, 'especes', 'Paiement comptant initial', NOW(), 
+                        :user, :etab, :zone
+                    )
+                ");
+                $stmtRegInit->execute([
+                    ':code_reg' => $code_reg,
+                    ':ref_doc'  => $code_achat,
+                    ':tiers'    => $fournisseur_code,
+                    ':montant'  => $montant_paye,
+                    ':user'     => $user_code,
+                    ':etab'     => $etab_code,
+                    ':zone'     => $zone_code
+                ]);
+            }
+
             // 2. Insérer les lignes de détail et mouvements de stock
             $stmtDet = $db->prepare("
                 INSERT INTO details_achats_avicoles (
@@ -356,69 +511,5 @@ class AchatAvicoleController extends BaseController
             $db->rollBack();
             $this->error("Erreur lors de l'enregistrement du bon d'achat : " . $e->getMessage());
         }
-    }
-
-    public function reglerAchat()
-    {
-        $this->requireAuth();
-        $this->requirePost();
-
-        $code_achat = trim($this->post('code_achat'));
-        $montant_verse = (float)$this->post('montant_verse', 0);
-
-        if (empty($code_achat)) {
-            $this->error("Référence de la commande d'achat manquante.");
-            return;
-        }
-
-        if ($montant_verse <= 0) {
-            $this->error("Veuillez saisir un montant valide supérieur à 0 FCFA.");
-            return;
-        }
-
-        $db = $this->model->getCon();
-        $stmt = $db->prepare("SELECT * FROM achats_avicoles WHERE code_achat_avicole = :code OR id_achat_avicole = :code");
-        $stmt->execute([':code' => $code_achat]);
-        $achat = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$achat) {
-            $this->error("Commande d'achat introuvable.");
-            return;
-        }
-
-        $montant_total = (float)$achat['montant_total'];
-        $actuel_paye   = (float)$achat['montant_paye'];
-        $nouveau_paye  = $actuel_paye + $montant_verse;
-
-        if ($nouveau_paye > $montant_total + 0.01) {
-            $this->error("Le montant saisi (" . number_format($montant_verse, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($montant_total - $actuel_paye, 0, ',', ' ') . " FCFA) !");
-            return;
-        }
-
-        $statut_reg = 'partiel';
-        if ($nouveau_paye >= $montant_total) {
-            $statut_reg = 'paye';
-            $nouveau_paye = $montant_total;
-        }
-
-        $stmtUpd = $db->prepare("
-            UPDATE achats_avicoles 
-            SET montant_paye = :paye, 
-                statut_reglement = :statut
-            WHERE code_achat_avicole = :code
-        ");
-        $stmtUpd->execute([
-            ':paye'   => $nouveau_paye,
-            ':statut' => $statut_reg,
-            ':code'   => $achat['code_achat_avicole']
-        ]);
-
-        $reste = max(0, $montant_total - $nouveau_paye);
-
-        $this->success("Règlement de " . number_format($montant_verse, 0, ',', ' ') . " FCFA enregistré avec succès !", [
-            'montant_paye'     => $nouveau_paye,
-            'reste_a_payer'    => $reste,
-            'statut_reglement' => $statut_reg
-        ]);
     }
 }

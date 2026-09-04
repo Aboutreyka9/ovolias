@@ -377,6 +377,8 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
             </tr>
           </tfoot>
         </table>
+        <!-- Historique des règlements -->
+        <div id="facBoxHistoriqueReglements"></div>
       </div>
       <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600;">Fermer</button>
@@ -553,17 +555,30 @@ $(document).ready(function() {
                     $('#boxFormReglement').html(`
                       <form id="formReglerFacture">
                         <input type="hidden" name="code_achat" value="${a.code_achat_avicole || ''}">
-                        <div class="row align-items-end g-3">
-                          <div class="col-md-7">
-                            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Enregistrer un Règlement (FCFA)</label>
+                        <div class="row g-2 align-items-end">
+                          <div class="col-md-4">
+                            <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">Montant Versé (FCFA)</label>
                             <div class="input-group">
-                              <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155;">FCFA</span>
-                              <input type="number" step="any" min="1" max="${resteAchat}" name="montant_verse" id="inputMontantVerse" class="form-control" value="${resteAchat}" required style="border-radius: 0 8px 8px 0; height: 42px; font-weight: 700; color: #0F172A;">
+                              <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155; padding: 4px 8px; font-size: 12px;">FCFA</span>
+                              <input type="number" step="any" min="1" max="${resteAchat}" name="montant_verse" id="inputMontantVerse" class="form-control" value="${resteAchat}" required style="height: 38px; font-weight: 700; color: #0F172A; font-size: 13px;">
                             </div>
                           </div>
-                          <div class="col-md-5">
-                            <button type="submit" class="btn btn-success w-100" style="background: #059669; border-color: #059669; height: 42px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                              <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i> Valider le Règlement
+                          <div class="col-md-3">
+                            <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">Mode Règlement</label>
+                            <select name="mode_reglement" class="form-select" style="height: 38px; font-weight: 600; font-size: 13px;">
+                              <option value="especes">Espèces</option>
+                              <option value="mobile_money">Mobile Money (Wave/OM)</option>
+                              <option value="virement">Virement Bq</option>
+                              <option value="cheque">Chèque Bq</option>
+                            </select>
+                          </div>
+                          <div class="col-md-3">
+                            <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">N° Réf / TransID</label>
+                            <input type="text" name="reference_reglement" class="form-control" placeholder="Optionnel (ex: TransID)" style="height: 38px; font-size: 13px;">
+                          </div>
+                          <div class="col-md-2">
+                            <button type="submit" class="btn btn-success w-100" style="background: #059669; border-color: #059669; height: 38px; font-weight: 700; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                              <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Valider
                             </button>
                           </div>
                         </div>
@@ -615,6 +630,42 @@ $(document).ready(function() {
 
                 $('#facTbodyArticles').html(tbodyHtml);
                 $('#facGrandTotal').text(grandTotal.toLocaleString('fr-FR') + ' FCFA');
+
+                let payments = res.payments || [];
+                let payHistHtml = '';
+                if (payments.length > 0) {
+                    payHistHtml = `
+                    <div style="margin-top: 20px; border-top: 1px dashed #CBD5E1; padding-top: 14px;">
+                        <h6 style="font-weight: 800; color: #0F172A; font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="history" style="width: 16px; height: 16px; color: #0284C7;"></i> Historique des Règlements Échelonnés (${payments.length})
+                        </h6>
+                        <table class="table table-sm table-bordered align-middle" style="font-size: 12px; margin-bottom: 0;">
+                            <thead style="background: #F8FAFC; color: #475569;">
+                                <tr>
+                                    <th style="padding: 6px 10px;">Réf Règlement</th>
+                                    <th style="padding: 6px 10px;">Date & Heure</th>
+                                    <th style="padding: 6px 10px;">Mode</th>
+                                    <th style="padding: 6px 10px;">Référence / TransID</th>
+                                    <th style="padding: 6px 10px; text-align: right;">Montant Versé</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                    payments.forEach(function(p) {
+                        let mVersed = parseFloat(p.montant_verse || 0);
+                        let modeLbl = p.mode_reglement === 'mobile_money' ? 'Mobile Money' : (p.mode_reglement === 'virement' ? 'Virement' : (p.mode_reglement === 'cheque' ? 'Chèque' : 'Espèces'));
+                        let dt = p.date_reglement ? new Date(p.date_reglement).toLocaleString('fr-FR') : '-';
+                        payHistHtml += `
+                            <tr>
+                                <td style="padding: 6px 10px; font-weight: 700; color: #0F172A;">${p.code_reglement || '-'}</td>
+                                <td style="padding: 6px 10px; color: #64748B;">${dt}</td>
+                                <td style="padding: 6px 10px;"><span class="badge bg-light text-dark border" style="font-weight:700;">${modeLbl}</span></td>
+                                <td style="padding: 6px 10px; color: #475569;">${p.reference_reglement || '-'}</td>
+                                <td style="padding: 6px 10px; text-align: right; font-weight: 800; color: #166534;">+ ${mVersed.toLocaleString('fr-FR')} FCFA</td>
+                            </tr>`;
+                    });
+                    payHistHtml += `</tbody></table></div>`;
+                }
+                $('#facBoxHistoriqueReglements').html(payHistHtml);
 
                 let modalEl = document.getElementById('modalFactureAchat');
                 if (window.bootstrap && bootstrap.Modal) {
