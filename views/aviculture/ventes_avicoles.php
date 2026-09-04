@@ -53,7 +53,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
     </div>
 
     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-      <button type="button" onclick="const pWin = window.open(window.location.href + (window.location.href.indexOf('?') > -1 ? '&' : '?') + 'print=1', '_blank');" class="btn btn-dark" style="font-weight: 800; border-radius: 8px; font-size: 13px; background: #0F172A; border-color: #0F172A; color: #FFFFFF; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; box-shadow: 0 2px 6px rgba(15,23,42,0.2);">
+      <button type="button" onclick="imprimerJournalVentes()" class="btn btn-dark" style="font-weight: 800; border-radius: 8px; font-size: 13px; background: #0F172A; border-color: #0F172A; color: #FFFFFF; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; box-shadow: 0 2px 6px rgba(15,23,42,0.2);">
         <i data-lucide="printer" style="width: 16px; height: 16px; color: #FFFFFF;"></i> Imprimer le Journal
       </button>
       <button class="btn btn-success" style="background: #059669; border-color: #059669; display: inline-flex; align-items: center; gap: 8px; font-weight: 800; border-radius: 8px; padding: 10px 18px; box-shadow: 0 4px 12px rgba(5,150,105,0.25);" data-bs-toggle="modal" data-bs-target="#modalVente">
@@ -528,6 +528,18 @@ function verifierBoutonEncaissement() {
     }
 }
 
+function imprimerJournalVentes() {
+    if ($.fn.DataTable.isDataTable('#tableVentesAvicoles')) {
+        let dt = $('#tableVentesAvicoles').DataTable();
+        dt.page.len(-1).draw();
+        setTimeout(function() {
+            window.print();
+        }, 400);
+    } else {
+        window.print();
+    }
+}
+
 function showToast(type, message, title) {
     if (typeof toastr !== 'undefined' && typeof toastr[type] === 'function') {
         toastr[type](message, title || '');
@@ -538,6 +550,12 @@ function showToast(type, message, title) {
 
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
+
+    if (new URLSearchParams(window.location.search).get('print') === '1') {
+        setTimeout(function() {
+            imprimerJournalVentes();
+        }, 800);
+    }
 
     const grillesTarifs = <?= json_encode($grillesTarifs) ?>;
 
