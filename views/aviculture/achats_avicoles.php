@@ -29,11 +29,12 @@ $produits = $produits ?? [];
               <tr style="background: #F8FAFC; text-align: left; color: #64748B;">
                 <th style="padding: 12px;">Code Achat</th>
                 <th style="padding: 12px;">Fournisseur</th>
-                <th style="padding: 12px;">Gamme Produit</th>
+                <th style="padding: 12px; text-align: center;">Qté Totale</th>
                 <th style="padding: 12px;">N° Facture FRS</th>
                 <th style="padding: 12px;">Montant Total</th>
                 <th style="padding: 12px;">Date Achat</th>
                 <th style="padding: 12px; text-align: center;">Statut Règlement</th>
+                <th style="padding: 12px; text-align: center;">Actions</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -133,22 +134,76 @@ $produits = $produits ?? [];
   </div>
 </div>
 
+<!-- Modal Détails Bon d'Achat -->
+<div class="modal fade" id="modalDetailsAchat" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
+        <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="file-text" style="width: 20px; height: 20px; color: #6EE7B7;"></i> Détails du Bon d'Achat
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Code Achat</small>
+              <div id="detCodeAchat" style="font-weight: 800; color: #1E3A5F; font-size: 15px; margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Fournisseur</small>
+              <div id="detFournisseur" style="font-weight: 800; color: #0F172A; font-size: 15px; margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">N° Facture FRS</small>
+              <div id="detNumFacture" style="font-weight: 800; color: #0F172A; font-size: 15px; margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Qté Totale</small>
+              <div id="detQteTotale" style="font-weight: 800; color: #0F172A; font-size: 15px; margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Date d'Achat</small>
+              <div id="detDateAchat" style="font-weight: 700; color: #334155; font-size: 14px; margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Statut Règlement</small>
+              <div id="detStatut" style="margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #FEF2F2; padding: 12px 16px; border-radius: 8px; border: 1px solid #FCA5A5;">
+              <small style="color: #991B1B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Montant Total</small>
+              <div id="detMontantTotal" style="font-weight: 900; color: #DC2626; font-size: 16px; margin-top: 2px;">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600;">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
 
     function getProduitBadge(row) {
         const libelle = row.produit_libelle || row.libelle_produit || row.categorie_intrant || '-';
-        const cat = (row.categorie_intrant || '').toLowerCase();
-        const styles = {
-            'poulets_frais': { bg: '#EFF6FF', color: '#1D4ED8' },
-            'oeufs_frais': { bg: '#FEF3C7', color: '#B45309' },
-            'poulets_fumes': { bg: '#FFF7ED', color: '#C2410C' },
-            'poules_pondeuses': { bg: '#F5F3FF', color: '#6D28D9' },
-            'pintades': { bg: '#ECFDF5', color: '#047857' }
-        };
-        const s = styles[cat] || { bg: '#EFF6FF', color: '#1D4ED8' };
-        return `<span style="background: ${s.bg}; color: ${s.color}; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">${libelle}</span>`;
+        return `<span style="color: #334155; font-weight: 500;">${libelle}</span>`;
     }
 
     let dt = $('#tableAchatsAvicoles').DataTable({
@@ -160,14 +215,46 @@ $(document).ready(function() {
         columns: [
             { data: 'code_achat_avicole', render: d => `<code style="font-weight:700; color:#334155; background:#F1F5F9; padding:2px 6px; border-radius:4px;">${d}</code>` },
             { data: 'fournisseur_nom', render: d => `<strong style="color:#0F172A;">${d || '-'}</strong>` },
-            { data: null, render: (d, type, row) => getProduitBadge(row) },
+            { data: 'quantite_totale', className: 'text-center', render: d => `<span style="font-weight:700; color:#0F172A; font-size:13px;">${parseFloat(d||0).toLocaleString('fr-FR')}</span>` },
             { data: 'numero_facture_fournisseur', render: d => d || '-' },
             { data: 'montant_total', render: d => `<strong style="color:#DC2626; font-size:14px;">${parseFloat(d||0).toLocaleString('fr-FR')} FCFA</strong>` },
             { data: 'date_achat', render: d => d ? new Date(d).toLocaleDateString('fr-FR') : '-' },
-            { data: 'statut_reglement', className: 'text-center', render: d => d === 'paye' ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">Payé</span>` : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">${d}</span>` }
+            { data: 'statut_reglement', className: 'text-center', render: d => d === 'paye' ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">Payé</span>` : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">${d}</span>` },
+            {
+                data: null,
+                className: 'text-center',
+                render: function(d, type, row) {
+                    let jsonStr = JSON.stringify(row).replace(/'/g, "&apos;");
+                    return `<button class="btn btn-sm btn-secondary btn-details-achat" data-achat='${jsonStr}' style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                        <i data-lucide="eye" style="width: 14px; height: 14px;"></i> Détails
+                    </button>`;
+                }
+            }
         ],
         language: { url: baseApi + 'json/datatables-i18n-fr-FR.json' },
         drawCallback: function() { if (window.lucide) lucide.createIcons(); }
+    });
+
+    $(document).on('click', '.btn-details-achat', function() {
+        let raw = $(this).attr('data-achat');
+        if (!raw) return;
+        let data = JSON.parse(raw);
+        $('#detCodeAchat').text(data.code_achat_avicole || '-');
+        $('#detFournisseur').text(data.fournisseur_nom || data.fournisseur_avicole_code || '-');
+        $('#detNumFacture').text(data.numero_facture_fournisseur || '-');
+        $('#detQteTotale').text(parseFloat(data.quantite_totale || 0).toLocaleString('fr-FR'));
+        $('#detDateAchat').text(data.date_achat ? new Date(data.date_achat).toLocaleDateString('fr-FR') : '-');
+        $('#detMontantTotal').text(parseFloat(data.montant_total || 0).toLocaleString('fr-FR') + ' FCFA');
+
+        let statutHtml = data.statut_reglement === 'paye'
+            ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">Payé</span>`
+            : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">${data.statut_reglement || 'Impayé'}</span>`;
+        $('#detStatut').html(statutHtml);
+
+        let modalEl = document.getElementById('modalDetailsAchat');
+        let bsModal = new bootstrap.Modal(modalEl);
+        bsModal.show();
+        if (window.lucide) lucide.createIcons();
     });
 
     let rowIndex = 0;
@@ -234,12 +321,41 @@ $(document).ready(function() {
                 }
             });
         });
+
+        let totalAvailable = $('.select-produit-row').first().find('option').filter(function() {
+            return $(this).val() !== '';
+        }).length;
+
+        let totalRows = $('.article-item-row').length;
+
+        if (totalAvailable > 0 && (selectedCodes.length >= totalAvailable || totalRows >= totalAvailable)) {
+            $('#btnAddArticleRow').prop('disabled', true).addClass('disabled').css({'opacity': '0.5', 'cursor': 'not-allowed'});
+        } else {
+            $('#btnAddArticleRow').prop('disabled', false).removeClass('disabled').css({'opacity': '', 'cursor': ''});
+        }
     }
 
     // Initialiser avec au moins 1 ligne
     addArticleRow();
 
-    $('#btnAddArticleRow').on('click', function() {
+    $('#btnAddArticleRow').on('click', function(e) {
+        let totalAvailable = $('.select-produit-row').first().find('option').filter(function() {
+            return $(this).val() !== '';
+        }).length;
+
+        let selectedCodes = [];
+        $('.select-produit-row').each(function() {
+            if ($(this).val()) selectedCodes.push($(this).val());
+        });
+
+        let totalRows = $('.article-item-row').length;
+
+        if (totalAvailable > 0 && (selectedCodes.length >= totalAvailable || totalRows >= totalAvailable)) {
+            e.preventDefault();
+            if (window.toastr) toastr.warning("Tous les produits disponibles ont déjà été sélectionnés.");
+            return false;
+        }
+
         addArticleRow();
     });
 

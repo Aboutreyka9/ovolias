@@ -27,7 +27,8 @@ class AchatAvicoleController extends BaseController
         $db = $this->model->getCon();
 
         $stmt = $db->query("
-            SELECT a.*, f.nom_fournisseur_avicole, f.categorie_intrants, u.nom_user, u.prenom_user, p.libelle_produit
+            SELECT a.*, f.nom_fournisseur_avicole, f.categorie_intrants, u.nom_user, u.prenom_user, p.libelle_produit,
+                   (SELECT COALESCE(SUM(d.quantite), 0) FROM details_achats_avicoles d WHERE d.achat_code = a.code_achat_avicole) AS quantite_totale
             FROM achats_avicoles a
             LEFT JOIN fournisseurs_avicoles f ON a.fournisseur_avicole_code = f.code_fournisseur_avicole
             LEFT JOIN users u ON a.user_code = u.code_user
@@ -42,6 +43,7 @@ class AchatAvicoleController extends BaseController
             $row['fournisseur_nom'] = $row['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
             $row['agent_nom'] = trim(($row['nom_user'] ?? '') . ' ' . ($row['prenom_user'] ?? ''));
             $row['produit_libelle'] = $row['libelle_produit'] ?? $row['categorie_intrant'];
+            $row['quantite_totale'] = (float)($row['quantite_totale'] ?? 0);
             $data[] = $row;
         }
 
