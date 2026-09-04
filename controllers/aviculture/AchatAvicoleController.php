@@ -229,8 +229,11 @@ class AchatAvicoleController extends BaseController
         }
 
         $statut_reg = 'partiel';
+        $statut_achat = $achat['statut_achat'] ?? 'valide';
+
         if ($nouveau_paye >= $montant_total - 0.01) {
             $statut_reg = 'paye';
+            $statut_achat = 'solde';
             $nouveau_paye = $montant_total;
         }
 
@@ -268,13 +271,15 @@ class AchatAvicoleController extends BaseController
             $stmtUpd = $db->prepare("
                 UPDATE achats_avicoles 
                 SET montant_paye = :paye, 
-                    statut_reglement = :statut
+                    statut_reglement = :statut,
+                    statut_achat = :statut_achat
                 WHERE code_achat_avicole = :code
             ");
             $stmtUpd->execute([
-                ':paye'   => $nouveau_paye,
-                ':statut' => $statut_reg,
-                ':code'   => $achat['code_achat_avicole']
+                ':paye'         => $nouveau_paye,
+                ':statut'       => $statut_reg,
+                ':statut_achat' => $statut_achat,
+                ':code'         => $achat['code_achat_avicole']
             ]);
 
             $db->commit();

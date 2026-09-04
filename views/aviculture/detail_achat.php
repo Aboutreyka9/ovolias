@@ -127,7 +127,11 @@ foreach ($details as $dItem) {
           <div>
             <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 8px;">Statut Achat & Règlement :</span>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <?php if ($statutAchat === 'valide' || $statutAchat === 'recu'): ?>
+              <?php if ($statutAchat === 'solde' || $statutAchat === 'soldé'): ?>
+                <span class="badge" style="background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; padding:8px 16px; border-radius:10px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="check-check" style="width: 15px; height: 15px;"></i> Achat Soldé
+                </span>
+              <?php elseif ($statutAchat === 'valide' || $statutAchat === 'recu'): ?>
                 <span class="badge" style="background:#E0F2FE; color:#0369A1; border:1px solid #BAE6FD; padding:8px 16px; border-radius:10px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
                   <i data-lucide="check-circle" style="width: 15px; height: 15px;"></i> Achat Validé
                 </span>

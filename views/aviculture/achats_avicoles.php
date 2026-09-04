@@ -422,7 +422,9 @@ $(document).ready(function() {
                 className: 'text-center', 
                 render: d => {
                     const st = (d || 'valide').toLowerCase();
-                    if (st === 'valide' || st === 'recu' || st === 'confirme') {
+                    if (st === 'solde' || st === 'soldé') {
+                        return `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Soldé</span>`;
+                    } else if (st === 'valide' || st === 'recu' || st === 'confirme') {
                         return `<span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Validé</span>`;
                     } else if (st === 'annule') {
                         return `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulé</span>`;
