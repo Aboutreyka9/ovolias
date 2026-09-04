@@ -153,6 +153,9 @@ $route->addRoute('/aviculture/addVente', ['VenteAvicoleController', 'addVente'])
 $route->addRoute('/aviculture/achats', ['AchatAvicoleController', 'list']);
 $route->addRoute('/aviculture/apiListAchats', ['AchatAvicoleController', 'apiList']);
 $route->addRoute('/aviculture/addAchat', ['AchatAvicoleController', 'addAchat']);
+$route->addRoute('/aviculture/reglerAchat', ['AchatAvicoleController', 'reglerAchat']);
+$route->addRoute('/aviculture/verifierAchat', ['AchatAvicoleController', 'verifierAchat']);
+$route->addRoute('/aviculture/validerAchat', ['AchatAvicoleController', 'validerAchat']);
 $route->addRoute('/aviculture/genererNumFacture', ['AchatAvicoleController', 'genererNumFacture']);
 $route->addRoute('/aviculture/apiDetailsAchat', ['AchatAvicoleController', 'apiDetails']);
 $route->addRoute('/aviculture/detailAchat/{param}', ['AchatAvicoleController', 'detailAchat']);

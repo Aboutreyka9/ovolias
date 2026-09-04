@@ -102,13 +102,24 @@ class AchatAvicoleController extends BaseController
         $stmtD->execute([':code' => $achat['code_achat_avicole']]);
         $details = $stmtD->fetchAll(PDO::FETCH_ASSOC);
 
+        $stmtReg = $db->prepare("
+            SELECT r.*, u.nom_user, u.prenom_user 
+            FROM reglements_avicoles r 
+            LEFT JOIN users u ON r.user_code = u.code_user 
+            WHERE r.reference_document = :code AND r.type_transaction = 'achat' 
+            ORDER BY r.date_reglement ASC, r.id_reglement ASC
+        ");
+        $stmtReg->execute([':code' => $achat['code_achat_avicole']]);
+        $payments = $stmtReg->fetchAll(PDO::FETCH_ASSOC);
+
         $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
         $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
 
         $this->json([
-            'status'  => 'success',
-            'achat'   => $achat,
-            'details' => $details
+            'status'   => 'success',
+            'achat'    => $achat,
+            'details'  => $details,
+            'payments' => $payments
         ]);
     }
 
@@ -118,8 +129,8 @@ class AchatAvicoleController extends BaseController
         $code = $param ?? $this->get('code') ?? $this->get('id');
 
         if (empty($code)) {
-            header('Location: ' . RACINE . 'aviculture/achats');
-            exit();
+            $this->redirect(RACINE . 'aviculture/achats');
+            return;
         }
 
         try {
@@ -134,33 +145,190 @@ class AchatAvicoleController extends BaseController
         $db = $this->model->getCon();
         $stmtA = $db->prepare("
             SELECT a.*, f.nom_fournisseur_avicole, f.telephone_fournisseur_avicole, f.adresse_fournisseur_avicole,
-                   u.nom_user, u.prenom_user
+                   u.nom_user, u.prenom_user,
+                   uv.nom_user AS verifier_nom, uv.prenom_user AS verifier_prenom,
+                   uval.nom_user AS validator_nom, uval.prenom_user AS validator_prenom
             FROM achats_avicoles a
             LEFT JOIN fournisseurs_avicoles f ON a.fournisseur_avicole_code = f.code_fournisseur_avicole
             LEFT JOIN users u ON a.user_code = u.code_user
+            LEFT JOIN users uv ON a.verifie_par = uv.code_user
+            LEFT JOIN users uval ON a.valide_par = uval.code_user
             WHERE a.code_achat_avicole = :code OR a.id_achat_avicole = :code
         ");
         $stmtA->execute([':code' => $code]);
         $achat = $stmtA->fetch(PDO::FETCH_ASSOC);
 
         if (!$achat) {
-            header('Location: ' . RACINE . 'aviculture/achats');
-            exit();
+            $this->renderNotFound("Bon d'achat introuvable.");
+            return;
         }
 
         $stmtD = $db->prepare("
-            SELECT * FROM details_achats_avicoles WHERE achat_code = :code ORDER BY id_detail_achat ASC
+            SELECT d.*, c.libelle_categorie_poids, c.poids_min, c.poids_max 
+            FROM details_achats_avicoles d 
+            LEFT JOIN categories_poids_avicole c ON d.categorie_poids_code = c.code_categorie_poids 
+            WHERE d.achat_code = :code 
+            ORDER BY d.id_detail_achat ASC
         ");
         $stmtD->execute([':code' => $achat['code_achat_avicole']]);
-        $details = $stmtD->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $details = $stmtD->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtReg = $db->prepare("
+            SELECT r.*, u.nom_user, u.prenom_user 
+            FROM reglements_avicoles r 
+            LEFT JOIN users u ON r.user_code = u.code_user 
+            WHERE r.reference_document = :code AND r.type_transaction = 'achat' 
+            ORDER BY r.date_reglement ASC, r.id_reglement ASC
+        ");
+        $stmtReg->execute([':code' => $achat['code_achat_avicole']]);
+        $payments = $stmtReg->fetchAll(PDO::FETCH_ASSOC);
 
         $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
         $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
 
-        $this->loadView('../views/aviculture/detail_achat.php', [
-            'achat'   => $achat,
-            'details' => $details
+        $vNom = trim(($achat['verifier_nom'] ?? '') . ' ' . ($achat['verifier_prenom'] ?? ''));
+        $achat['verifier_nom_complet'] = !empty($vNom) ? $vNom : ($achat['verifie_par'] ?? '');
+
+        $valNom = trim(($achat['validator_nom'] ?? '') . ' ' . ($achat['validator_prenom'] ?? ''));
+        $achat['validator_nom_complet'] = !empty($valNom) ? $valNom : ($achat['valide_par'] ?? '');
+
+        $userRoles = $_SESSION[USERS_AUTH]['roles'] ?? [$_SESSION[USERS_AUTH]['role_code'] ?? ''];
+        if (is_string($userRoles)) $userRoles = [$userRoles];
+        $userPerms = $_SESSION['permissions'] ?? [];
+        $isSuperAdmin = !empty(array_intersect($userRoles, ['ROLE_SUPERADMIN', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL']));
+        $canReglerFacture = $isSuperAdmin || !empty(array_intersect($userRoles, ['ROLE_FINANCE', 'ROLE_GESTIONNAIRE'])) || in_array('*', $userPerms, true) || in_array('FINANCE_VALIDATE_VERSEMENT', $userPerms, true);
+        $canVerifierAchat = $isSuperAdmin || !empty(array_intersect($userRoles, ['ROLE_GESTIONNAIRE'])) || in_array('*', $userPerms, true) || in_array('LOGISTIQUE_VERIFIER_BON_ACHAT', $userPerms, true);
+        $canValiderAchat  = $isSuperAdmin || !empty(array_intersect($userRoles, ['ROLE_GESTIONNAIRE', 'ROLE_DIR_GENERAL'])) || in_array('*', $userPerms, true) || in_array('LOGISTIQUE_VALIDER_BON_ACHAT', $userPerms, true);
+
+        $this->render('aviculture/detail_achat.php', [
+            'achat'            => $achat,
+            'details'          => $details,
+            'payments'         => $payments,
+            'canReglerFacture' => $canReglerFacture,
+            'canVerifierAchat' => $canVerifierAchat,
+            'canValiderAchat'  => $canValiderAchat
         ]);
+    }
+
+    public function reglerAchat()
+    {
+        $this->requireAuth();
+        $this->requirePost();
+
+        // RBAC check for settlement privileges
+        $userRoles = $_SESSION[USERS_AUTH]['roles'] ?? [$_SESSION[USERS_AUTH]['role_code'] ?? ''];
+        if (is_string($userRoles)) $userRoles = [$userRoles];
+        $userPerms = $_SESSION['permissions'] ?? [];
+
+        $isAuthorized = !empty(array_intersect($userRoles, ['ROLE_SUPERADMIN', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL', 'ROLE_FINANCE', 'ROLE_GESTIONNAIRE']));
+        if (!$isAuthorized && !in_array('*', $userPerms, true) && !in_array('FINANCE_VALIDATE_VERSEMENT', $userPerms, true)) {
+            $this->json(['status' => 0, 'message' => 'Accès refusé. Vous ne disposez pas des privilèges nécessaires pour enregistrer un règlement.'], 403);
+            return;
+        }
+
+        $code_achat = trim($this->post('code_achat'));
+        $montant_verse = (float)$this->post('montant_verse', 0);
+        $mode_reglement = trim($this->post('mode_reglement', 'especes'));
+        $reference_reglement = trim($this->post('reference_reglement', ''));
+
+        if (empty($code_achat)) {
+            $this->error("Référence de la commande d'achat manquante.");
+            return;
+        }
+
+        if ($montant_verse <= 0) {
+            $this->error("Veuillez saisir un montant valide supérieur à 0 FCFA.");
+            return;
+        }
+
+        $db = $this->model->getCon();
+        $stmt = $db->prepare("SELECT * FROM achats_avicoles WHERE code_achat_avicole = :code OR id_achat_avicole = :code");
+        $stmt->execute([':code' => $code_achat]);
+        $achat = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$achat) {
+            $this->error("Commande d'achat introuvable.");
+            return;
+        }
+
+        $montant_total = (float)$achat['montant_total'];
+        $actuel_paye   = (float)$achat['montant_paye'];
+        $nouveau_paye  = $actuel_paye + $montant_verse;
+
+        if ($nouveau_paye > $montant_total + 0.01) {
+            $this->error("Le montant saisi (" . number_format($montant_verse, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($montant_total - $actuel_paye, 0, ',', ' ') . " FCFA) !");
+            return;
+        }
+
+        $statut_reg = 'partiel';
+        $statut_achat = $achat['statut_achat'] ?? 'en_cours';
+
+        if ($nouveau_paye >= $montant_total - 0.01) {
+            $statut_reg = 'paye';
+            $statut_achat = 'solde';
+            $nouveau_paye = $montant_total;
+        }
+
+        $db->beginTransaction();
+
+        try {
+            $code_reglement = 'REG-ACH-' . date('Ymd') . '-' . rand(1000, 9999);
+            $user_code = $_SESSION[USERS_AUTH]['code_user'] ?? 'USR-ADMIN-001';
+            $etab_code = $_SESSION[USERS_AUTH]['etablissement_code'] ?? '5454544456';
+            $zone_code = $_SESSION[USERS_AUTH]['zone_user'] ?? 'DEFAULT';
+
+            $stmtReg = $db->prepare("
+                INSERT INTO reglements_avicoles (
+                    code_reglement, type_transaction, reference_document, tiers_code, 
+                    montant_verse, mode_reglement, reference_reglement, date_reglement, 
+                    user_code, etablissement_code, zone_code
+                ) VALUES (
+                    :code_reg, 'achat', :ref_doc, :tiers, 
+                    :montant, :mode_reg, :ref_reg, NOW(), 
+                    :user, :etab, :zone
+                )
+            ");
+            $stmtReg->execute([
+                ':code_reg' => $code_reglement,
+                ':ref_doc'  => $achat['code_achat_avicole'],
+                ':tiers'    => $achat['fournisseur_avicole_code'],
+                ':montant'  => $montant_verse,
+                ':mode_reg' => $mode_reglement,
+                ':ref_reg'  => !empty($reference_reglement) ? $reference_reglement : null,
+                ':user'     => $user_code,
+                ':etab'     => $etab_code,
+                ':zone'     => $zone_code
+            ]);
+
+            $stmtUpd = $db->prepare("
+                UPDATE achats_avicoles 
+                SET montant_paye = :paye, 
+                    statut_reglement = :statut,
+                    statut_achat = :statut_achat
+                WHERE code_achat_avicole = :code
+            ");
+            $stmtUpd->execute([
+                ':paye'         => $nouveau_paye,
+                ':statut'       => $statut_reg,
+                ':statut_achat' => $statut_achat,
+                ':code'         => $achat['code_achat_avicole']
+            ]);
+
+            $db->commit();
+
+            $reste = max(0, $montant_total - $nouveau_paye);
+
+            $this->success("Règlement de " . number_format($montant_verse, 0, ',', ' ') . " FCFA enregistré avec succès ! (Réf: {$code_reglement})", [
+                'montant_paye'     => $nouveau_paye,
+                'reste_a_payer'    => $reste,
+                'statut_reglement' => $statut_reg,
+                'code_reglement'   => $code_reglement
+            ]);
+
+        } catch (\Exception $e) {
+            $db->rollBack();
+            $this->error("Erreur lors de l'enregistrement du règlement : " . $e->getMessage());
+        }
     }
 
     /**
@@ -268,7 +436,7 @@ class AchatAvicoleController extends BaseController
         $etab_code = $_SESSION[USERS_AUTH]['etablissement_code'] ?? '5454544456';
         $zone_code = $_SESSION[USERS_AUTH]['zone_user'] ?? 'DEFAULT';
 
-        $montant_paye = ($statut_reg === 'paye') ? $grand_total : 0;
+        $montant_paye = 0;
 
         $db->beginTransaction();
 
@@ -281,7 +449,7 @@ class AchatAvicoleController extends BaseController
                     date_achat, user_code, etablissement_code, zone_code
                 ) VALUES (
                     :code, :frs, :num_fac, 
-                    :cat, :tot, :paye, :statut_reg, 'en_attente', 
+                    :cat, :tot, 0.00, :statut_reg, 'en_attente', 
                     NOW(), :user, :etab, :zone
                 )
             ");
@@ -291,7 +459,6 @@ class AchatAvicoleController extends BaseController
                 ':num_fac'    => $num_facture,
                 ':cat'        => $first_cat,
                 ':tot'        => $grand_total,
-                ':paye'       => $montant_paye,
                 ':statut_reg' => $statut_reg,
                 ':user'       => $user_code,
                 ':etab'       => $etab_code,
@@ -358,21 +525,28 @@ class AchatAvicoleController extends BaseController
         }
     }
 
-    public function reglerAchat()
+    public function verifierAchat()
     {
         $this->requireAuth();
         $this->requirePost();
 
-        $code_achat = trim($this->post('code_achat'));
-        $montant_verse = (float)$this->post('montant_verse', 0);
+        $userRoles = $_SESSION[USERS_AUTH]['roles'] ?? [$_SESSION[USERS_AUTH]['role_code'] ?? ''];
+        if (is_string($userRoles)) $userRoles = [$userRoles];
+        $userPerms = $_SESSION['permissions'] ?? [];
 
-        if (empty($code_achat)) {
-            $this->error("Référence de la commande d'achat manquante.");
+        $isAuthorized = !empty(array_intersect($userRoles, ['ROLE_SUPERADMIN', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL', 'ROLE_GESTIONNAIRE']));
+        if (!$isAuthorized && !in_array('*', $userPerms, true) && !in_array('LOGISTIQUE_VERIFIER_BON_ACHAT', $userPerms, true)) {
+            $this->json(['status' => 0, 'message' => 'Accès refusé. Vous ne disposez pas des privilèges nécessaires pour vérifier ce bon d\'achat.'], 403);
             return;
         }
 
-        if ($montant_verse <= 0) {
-            $this->error("Veuillez saisir un montant valide supérieur à 0 FCFA.");
+        $code_achat = trim($this->post('code_achat'));
+        $decision = trim($this->post('decision', 'recue'));
+        $notes = trim($this->post('notes', ''));
+        $quantites_recues = $this->post('quantites_recues');
+
+        if (empty($code_achat)) {
+            $this->error("Référence du bon d'achat manquante.");
             return;
         }
 
@@ -382,43 +556,157 @@ class AchatAvicoleController extends BaseController
         $achat = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$achat) {
-            $this->error("Commande d'achat introuvable.");
+            $this->error("Bon d'achat introuvable.");
             return;
         }
 
-        $montant_total = (float)$achat['montant_total'];
-        $actuel_paye   = (float)$achat['montant_paye'];
-        $nouveau_paye  = $actuel_paye + $montant_verse;
+        $user_code = $_SESSION[USERS_AUTH]['code_user'] ?? '';
+        $statut_reception = 'recue';
+        $statut_verification = 'verifie';
 
-        if ($nouveau_paye > $montant_total + 0.01) {
-            $this->error("Le montant saisi (" . number_format($montant_verse, 0, ',', ' ') . " FCFA) dépasse le reste à payer (" . number_format($montant_total - $actuel_paye, 0, ',', ' ') . " FCFA) !");
+        if ($decision === 'partiellement_recue') {
+            $statut_reception = 'partiellement_recue';
+            $statut_verification = 'partiellement_verifie';
+        } elseif ($decision === 'refusee') {
+            $statut_reception = 'refusee';
+            $statut_verification = 'refuse';
+        }
+
+        try {
+            $db->beginTransaction();
+
+            $upStmt = $db->prepare("
+                UPDATE achats_avicoles 
+                SET statut_reception = :st_rec,
+                    statut_verification = :st_ver,
+                    verifie_par = :ver_par,
+                    date_verification = NOW(),
+                    notes_reception = :notes
+                WHERE id_achat_avicole = :id
+            ");
+            $upStmt->execute([
+                ':st_rec'  => $statut_reception,
+                ':st_ver'  => $statut_verification,
+                ':ver_par' => $user_code,
+                ':notes'   => $notes,
+                ':id'      => $achat['id_achat_avicole']
+            ]);
+
+            if ($decision === 'partiellement_recue' && is_array($quantites_recues)) {
+                $upDet = $db->prepare("UPDATE details_achats_avicoles SET quantite_recue = :qte WHERE id_detail_achat = :id_det AND achat_code = :acode");
+                foreach ($quantites_recues as $idDet => $qteRecue) {
+                    $upDet->execute([
+                        ':qte'    => (float)$qteRecue,
+                        ':id_det' => (int)$idDet,
+                        ':acode'  => $achat['code_achat_avicole']
+                    ]);
+                }
+            } elseif ($decision === 'recue') {
+                $upDet = $db->prepare("UPDATE details_achats_avicoles SET quantite_recue = quantite WHERE achat_code = :acode");
+                $upDet->execute([':acode' => $achat['code_achat_avicole']]);
+            } elseif ($decision === 'refusee') {
+                $upDet = $db->prepare("UPDATE details_achats_avicoles SET quantite_recue = 0 WHERE achat_code = :acode");
+                $upDet->execute([':acode' => $achat['code_achat_avicole']]);
+            }
+
+            $db->commit();
+            $this->json(['status' => 'success', 'message' => 'Contrôle et vérification du bon d\'achat enregistrés avec succès !']);
+        } catch (\Exception $e) {
+            $db->rollBack();
+            $this->error("Erreur lors de la vérification : " . $e->getMessage());
+        }
+    }
+
+    public function validerAchat()
+    {
+        $this->requireAuth();
+        $this->requirePost();
+
+        $userRoles = $_SESSION[USERS_AUTH]['roles'] ?? [$_SESSION[USERS_AUTH]['role_code'] ?? ''];
+        if (is_string($userRoles)) $userRoles = [$userRoles];
+        $userPerms = $_SESSION['permissions'] ?? [];
+
+        $isAuthorized = !empty(array_intersect($userRoles, ['ROLE_SUPERADMIN', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL', 'ROLE_GESTIONNAIRE']));
+        if (!$isAuthorized && !in_array('*', $userPerms, true) && !in_array('LOGISTIQUE_VALIDER_BON_ACHAT', $userPerms, true)) {
+            $this->json(['status' => 0, 'message' => 'Accès refusé. Vous ne disposez pas des privilèges nécessaires pour valider ce bon d\'achat.'], 403);
             return;
         }
 
-        $statut_reg = 'partiel';
-        if ($nouveau_paye >= $montant_total) {
-            $statut_reg = 'paye';
-            $nouveau_paye = $montant_total;
+        $code_achat = trim($this->post('code_achat'));
+        if (empty($code_achat)) {
+            $this->error("Référence du bon d'achat manquante.");
+            return;
         }
 
-        $stmtUpd = $db->prepare("
-            UPDATE achats_avicoles 
-            SET montant_paye = :paye, 
-                statut_reglement = :statut
-            WHERE code_achat_avicole = :code
-        ");
-        $stmtUpd->execute([
-            ':paye'   => $nouveau_paye,
-            ':statut' => $statut_reg,
-            ':code'   => $achat['code_achat_avicole']
-        ]);
+        $db = $this->model->getCon();
+        $stmt = $db->prepare("SELECT * FROM achats_avicoles WHERE code_achat_avicole = :code OR id_achat_avicole = :code");
+        $stmt->execute([':code' => $code_achat]);
+        $achat = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $reste = max(0, $montant_total - $nouveau_paye);
+        if (!$achat) {
+            $this->error("Bon d'achat introuvable.");
+            return;
+        }
 
-        $this->success("Règlement de " . number_format($montant_verse, 0, ',', ' ') . " FCFA enregistré avec succès !", [
-            'montant_paye'     => $nouveau_paye,
-            'reste_a_payer'    => $reste,
-            'statut_reglement' => $statut_reg
-        ]);
+        $user_code = $_SESSION[USERS_AUTH]['code_user'] ?? '';
+
+        try {
+            $db->beginTransaction();
+
+            $upStmt = $db->prepare("
+                UPDATE achats_avicoles 
+                SET statut_reception = 'recue',
+                    statut_achat = 'valide',
+                    valide_par = :val_par,
+                    date_validation = NOW()
+                WHERE id_achat_avicole = :id
+            ");
+            $upStmt->execute([
+                ':val_par' => $user_code,
+                ':id'      => $achat['id_achat_avicole']
+            ]);
+
+            $checkMvt = $db->prepare("SELECT COUNT(*) FROM mouvements_stock_aviculture_avicole WHERE reference_document = :ref");
+            $checkMvt->execute([':ref' => $achat['code_achat_avicole']]);
+            $existingMvt = (int)$checkMvt->fetchColumn();
+
+            if ($existingMvt === 0) {
+                $stmtDet = $db->prepare("SELECT * FROM details_achats_avicoles WHERE achat_code = :code");
+                $stmtDet->execute([':code' => $achat['code_achat_avicole']]);
+                $details = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
+
+                $stmtStock = $db->prepare("
+                    INSERT INTO mouvements_stock_aviculture_avicole (
+                        code_mouvement, produit_code, categorie_poids_code, type_mouvement, quantite_pieces, 
+                        poids_total_kg, reference_document, date_mouvement, user_code, etablissement_code, zone_code
+                    ) VALUES (
+                        :code_mvt, :pcode, :grille, 'ENTREE_ACHAT', :qte_p, 
+                        :poids, :ref_doc, NOW(), :user, :etab, :zone
+                    )
+                ");
+
+                foreach ($details as $d) {
+                    $qteStock = !empty($d['quantite_recue']) ? (float)$d['quantite_recue'] : (float)$d['quantite'];
+                    $code_mvt = 'MVT-ACH-' . strtoupper(substr(uniqid(), -6));
+                    $stmtStock->execute([
+                        ':code_mvt' => $code_mvt,
+                        ':pcode'    => $achat['categorie_intrant'] ?? 'PROD-AVICOLE',
+                        ':grille'   => $d['categorie_poids_code'] ?? null,
+                        ':qte_p'    => (int)$qteStock,
+                        ':poids'    => (float)$qteStock,
+                        ':ref_doc'  => $achat['code_achat_avicole'],
+                        ':user'     => $user_code,
+                        ':etab'     => $achat['etablissement_code'] ?? '5454544456',
+                        ':zone'     => $achat['zone_code'] ?? null
+                    ]);
+                }
+            }
+
+            $db->commit();
+            $this->json(['status' => 'success', 'message' => 'Bon d\'achat validé avec succès et entrée en stock effectuée !']);
+        } catch (\Exception $e) {
+            $db->rollBack();
+            $this->error("Erreur lors de la validation du bon d'achat : " . $e->getMessage());
+        }
     }
 }

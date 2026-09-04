@@ -5,6 +5,11 @@ $produits = $produits ?? [];
 $categoriesPoids = $categoriesPoids ?? [];
 $produitsAvecGrille = array_filter($produits, fn($p) => isset($p['soumis_grille_poids']) && intval($p['soumis_grille_poids']) === 1);
 $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille_poids']) || intval($p['soumis_grille_poids']) === 0);
+
+$canReglerFacture = true;
+if (isset($canAccess)) {
+    $canReglerFacture = $canAccess(['FINANCE_VALIDATE_VERSEMENT', 'GESTIONNAIRE_MANAGE_ARTICLES'], ['ROLE_FINANCE', 'ROLE_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_DIR_GENERAL', 'ROLE_GESTIONNAIRE']);
+}
 ?>
 
 <div class="app-layout">
@@ -76,6 +81,7 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <form id="formAchat">
+        <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
         <div class="modal-body" style="padding: 20px;">
           
           <div class="row g-3 mb-3">
@@ -377,6 +383,8 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
             </tr>
           </tfoot>
         </table>
+        <!-- Historique des règlements -->
+        <div id="facBoxHistoriqueReglements"></div>
       </div>
       <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600;">Fermer</button>
@@ -391,6 +399,7 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
 <script>
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
+    const userCanReglerFacture = <?= json_encode($canReglerFacture) ?>;
 
     function getProduitBadge(row) {
         const libelle = row.produit_libelle || row.libelle_produit || row.categorie_intrant || '-';
@@ -404,7 +413,7 @@ $(document).ready(function() {
             dataSrc: 'data'
         },
         createdRow: function(row, data, dataIndex) {
-            const stAchat = (data.statut_achat || 'valide').toLowerCase();
+            const stAchat = (data.statut_achat || 'en_cours').toLowerCase();
             const stReg = (data.statut_reglement || '').toLowerCase();
             if ((stAchat === 'valide' || stAchat === 'recu' || stAchat === 'confirme') && (stReg === 'paye' || stReg === 'payé')) {
                 $(row).addClass('table-danger-alert');
@@ -418,13 +427,15 @@ $(document).ready(function() {
                 data: 'statut_achat', 
                 className: 'text-center', 
                 render: d => {
-                    const st = (d || 'valide').toLowerCase();
-                    if (st === 'valide' || st === 'recu' || st === 'confirme') {
+                    const st = (d || 'en_cours').toLowerCase();
+                    if (st === 'solde' || st === 'soldé') {
+                        return `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Soldé</span>`;
+                    } else if (st === 'valide' || st === 'recu' || st === 'confirme') {
                         return `<span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Validé</span>`;
                     } else if (st === 'annule') {
                         return `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulé</span>`;
                     } else {
-                        return `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`;
+                        return `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En cours</span>`;
                     }
                 }
             },
@@ -483,12 +494,12 @@ $(document).ready(function() {
         $('#detDateAchat').text(data.date_achat ? new Date(data.date_achat).toLocaleDateString('fr-FR') : '-');
         $('#detMontantTotal').text(parseFloat(data.montant_total || 0).toLocaleString('fr-FR') + ' FCFA');
 
-        let stAchat = (data.statut_achat || 'valide').toLowerCase();
+        let stAchat = (data.statut_achat || 'en_cours').toLowerCase();
         let stAchatHtml = (stAchat === 'valide' || stAchat === 'recu' || stAchat === 'confirme')
             ? `<span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Validé</span>`
             : (stAchat === 'annule'
                 ? `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulé</span>`
-                : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`);
+                : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En cours</span>`);
         $('#detStatutAchat').html(stAchatHtml);
 
         let statutHtml = data.statut_reglement === 'paye'
@@ -547,23 +558,39 @@ $(document).ready(function() {
                 $('#facRecapPaye').text(payeAchat.toLocaleString('fr-FR') + ' FCFA');
                 $('#facRecapReste').text(resteAchat.toLocaleString('fr-FR') + ' FCFA');
 
-                if (resteAchat <= 0) {
+                if (resteAchat <= 0.01) {
                     $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
+                } else if (!userCanReglerFacture) {
+                    $('#boxFormReglement').html('<div style="background: #F8FAFC; border: 1px solid #E2E8F0; color: #475569; border-radius: 8px; padding: 12px; font-weight: 600; text-align: center;"><i class="fa fa-lock me-1"></i> Facture en attente de règlement (Privilèges de saisie réservés à la Comptabilité & Administration).</div>');
                 } else {
                     $('#boxFormReglement').html(`
                       <form id="formReglerFacture">
+                        <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
                         <input type="hidden" name="code_achat" value="${a.code_achat_avicole || ''}">
-                        <div class="row align-items-end g-3">
-                          <div class="col-md-7">
-                            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Enregistrer un Règlement (FCFA)</label>
+                        <div class="row g-2 align-items-end">
+                          <div class="col-md-4">
+                            <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">Montant Versé (FCFA)</label>
                             <div class="input-group">
-                              <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155;">FCFA</span>
-                              <input type="number" step="any" min="1" max="${resteAchat}" name="montant_verse" id="inputMontantVerse" class="form-control" value="${resteAchat}" required style="border-radius: 0 8px 8px 0; height: 42px; font-weight: 700; color: #0F172A;">
+                              <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155; padding: 4px 8px; font-size: 12px;">FCFA</span>
+                              <input type="number" step="any" min="1" max="${resteAchat}" name="montant_verse" id="inputMontantVerse" class="form-control" value="${resteAchat}" required style="height: 38px; font-weight: 700; color: #0F172A; font-size: 13px;">
                             </div>
                           </div>
-                          <div class="col-md-5">
-                            <button type="submit" class="btn btn-success w-100" style="background: #059669; border-color: #059669; height: 42px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                              <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i> Valider le Règlement
+                          <div class="col-md-3">
+                            <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">Mode Règlement</label>
+                            <select name="mode_reglement" class="form-select" style="height: 38px; font-weight: 600; font-size: 13px;">
+                              <option value="especes">Espèces</option>
+                              <option value="mobile_money">Mobile Money (Wave/OM)</option>
+                              <option value="virement">Virement Bq</option>
+                              <option value="cheque">Chèque Bq</option>
+                            </select>
+                          </div>
+                          <div class="col-md-3">
+                            <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">N° Réf / TransID</label>
+                            <input type="text" name="reference_reglement" class="form-control" placeholder="Optionnel (ex: TransID)" style="height: 38px; font-size: 13px;">
+                          </div>
+                          <div class="col-md-2">
+                            <button type="submit" class="btn btn-success w-100" style="background: #059669; border-color: #059669; height: 38px; font-weight: 700; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                              <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Valider
                             </button>
                           </div>
                         </div>
@@ -616,6 +643,42 @@ $(document).ready(function() {
                 $('#facTbodyArticles').html(tbodyHtml);
                 $('#facGrandTotal').text(grandTotal.toLocaleString('fr-FR') + ' FCFA');
 
+                let payments = res.payments || [];
+                let payHistHtml = '';
+                if (payments.length > 0) {
+                    payHistHtml = `
+                    <div style="margin-top: 20px; border-top: 1px dashed #CBD5E1; padding-top: 14px;">
+                        <h6 style="font-weight: 800; color: #0F172A; font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="history" style="width: 16px; height: 16px; color: #0284C7;"></i> Historique des Règlements Échelonnés (${payments.length})
+                        </h6>
+                        <table class="table table-sm table-bordered align-middle" style="font-size: 12px; margin-bottom: 0;">
+                            <thead style="background: #F8FAFC; color: #475569;">
+                                <tr>
+                                    <th style="padding: 6px 10px;">Réf Règlement</th>
+                                    <th style="padding: 6px 10px;">Date & Heure</th>
+                                    <th style="padding: 6px 10px;">Mode</th>
+                                    <th style="padding: 6px 10px;">Référence / TransID</th>
+                                    <th style="padding: 6px 10px; text-align: right;">Montant Versé</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                    payments.forEach(function(p) {
+                        let mVersed = parseFloat(p.montant_verse || 0);
+                        let modeLbl = p.mode_reglement === 'mobile_money' ? 'Mobile Money' : (p.mode_reglement === 'virement' ? 'Virement' : (p.mode_reglement === 'cheque' ? 'Chèque' : 'Espèces'));
+                        let dt = p.date_reglement ? new Date(p.date_reglement).toLocaleString('fr-FR') : '-';
+                        payHistHtml += `
+                            <tr>
+                                <td style="padding: 6px 10px; font-weight: 700; color: #0F172A;">${p.code_reglement || '-'}</td>
+                                <td style="padding: 6px 10px; color: #64748B;">${dt}</td>
+                                <td style="padding: 6px 10px;"><span class="badge bg-light text-dark border" style="font-weight:700;">${modeLbl}</span></td>
+                                <td style="padding: 6px 10px; color: #475569;">${p.reference_reglement || '-'}</td>
+                                <td style="padding: 6px 10px; text-align: right; font-weight: 800; color: #166534;">+ ${mVersed.toLocaleString('fr-FR')} FCFA</td>
+                            </tr>`;
+                    });
+                    payHistHtml += `</tbody></table></div>`;
+                }
+                $('#facBoxHistoriqueReglements').html(payHistHtml);
+
                 let modalEl = document.getElementById('modalFactureAchat');
                 if (window.bootstrap && bootstrap.Modal) {
                     bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -646,19 +709,66 @@ $(document).ready(function() {
                     dt.ajax.reload(null, false);
                 }
                 
-                // Mettre à jour la vue récap du modal
-                let payeVal = parseFloat(res.montant_paye || 0);
-                let resteVal = parseFloat(res.reste_a_payer || 0);
+                let codeAchat = $('#reglerCodeAchat').val() || $('#formReglerFacture input[name="code_achat"]').val();
+                if (codeAchat) {
+                    // Recharger le modal avec l'historique à jour
+                    $.get(baseApi + 'aviculture/apiDetailsAchat', { code: codeAchat }, function(freshRes) {
+                        if (freshRes.status === 'success' && freshRes.achat) {
+                            let a = freshRes.achat;
+                            let totAchat = parseFloat(a.montant_total || 0);
+                            let payeAchat = parseFloat(a.montant_paye || 0);
+                            let resteAchat = Math.max(0, totAchat - payeAchat);
 
-                $('#facRecapPaye').text(payeVal.toLocaleString('fr-FR') + ' FCFA');
-                $('#facRecapReste').text(resteVal.toLocaleString('fr-FR') + ' FCFA');
+                            $('#facRecapPaye').text(payeAchat.toLocaleString('fr-FR') + ' FCFA');
+                            $('#facRecapReste').text(resteAchat.toLocaleString('fr-FR') + ' FCFA');
 
-                if (resteVal <= 0) {
-                    $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
-                    $('#facStatutReg').html('Statut Règlement : <strong style="color: #166534;">Payé</strong>');
-                } else {
-                    $('#inputMontantVerse').val(resteVal).attr('max', resteVal);
-                    $('#facStatutReg').html('Statut Règlement : <strong style="color: #92400E;">Partiel</strong>');
+                            if (resteAchat <= 0.01) {
+                                $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
+                                $('#facStatutReg').html('Statut Règlement : <strong style="color: #166534;">Payé</strong>');
+                            } else {
+                                $('#inputMontantVerse').val(resteAchat).attr('max', resteAchat);
+                                $('#facStatutReg').html('Statut Règlement : <strong style="color: #92400E;">Partiel</strong>');
+                            }
+
+                            // Rendu de l'historique des règlements
+                            let payments = freshRes.payments || [];
+                            let payHistHtml = '';
+                            if (payments.length > 0) {
+                                payHistHtml = `
+                                <div style="margin-top: 20px; border-top: 1px dashed #CBD5E1; padding-top: 14px;">
+                                    <h6 style="font-weight: 800; color: #0F172A; font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                        <i data-lucide="history" style="width: 16px; height: 16px; color: #0284C7;"></i> Historique des Règlements Échelonnés (${payments.length})
+                                    </h6>
+                                    <table class="table table-sm table-bordered align-middle" style="font-size: 12px; margin-bottom: 0;">
+                                        <thead style="background: #F8FAFC; color: #475569;">
+                                            <tr>
+                                                <th style="padding: 6px 10px;">Réf Règlement</th>
+                                                <th style="padding: 6px 10px;">Date & Heure</th>
+                                                <th style="padding: 6px 10px;">Mode</th>
+                                                <th style="padding: 6px 10px;">Référence / TransID</th>
+                                                <th style="padding: 6px 10px; text-align: right;">Montant Versé</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>`;
+                                payments.forEach(function(p) {
+                                    let mVersed = parseFloat(p.montant_verse || 0);
+                                    let modeLbl = p.mode_reglement === 'mobile_money' ? 'Mobile Money' : (p.mode_reglement === 'virement' ? 'Virement' : (p.mode_reglement === 'cheque' ? 'Chèque' : 'Espèces'));
+                                    let dtStr = p.date_reglement ? new Date(p.date_reglement).toLocaleString('fr-FR') : '-';
+                                    payHistHtml += `
+                                        <tr>
+                                            <td style="padding: 6px 10px; font-weight: 700; color: #0F172A;">${p.code_reglement || '-'}</td>
+                                            <td style="padding: 6px 10px; color: #64748B;">${dtStr}</td>
+                                            <td style="padding: 6px 10px;"><span class="badge bg-light text-dark border" style="font-weight:700;">${modeLbl}</span></td>
+                                            <td style="padding: 6px 10px; color: #475569;">${p.reference_reglement || '-'}</td>
+                                            <td style="padding: 6px 10px; text-align: right; font-weight: 800; color: #166534;">+ ${mVersed.toLocaleString('fr-FR')} FCFA</td>
+                                        </tr>`;
+                                });
+                                payHistHtml += `</tbody></table></div>`;
+                            }
+                            $('#facBoxHistoriqueReglements').html(payHistHtml);
+                            if (window.lucide) lucide.createIcons();
+                        }
+                    }, 'json');
                 }
             } else {
                 notifyMsg(res.message || 'Erreur lors du règlement', 'error');
