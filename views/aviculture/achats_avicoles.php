@@ -454,12 +454,13 @@ $(document).ready(function() {
                 data: null,
                 className: 'text-center',
                 render: function(d, type, row) {
-                    let detailUrl = baseApi + 'aviculture/detailAchat/' + (row.editId || row.code_achat_avicole);
+                    let codeVal = row.code_achat_avicole || row.editId || row.id_achat_avicole;
+                    let detailUrl = baseApi + 'aviculture/detailAchat/' + codeVal;
                     return `<div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                         <a href="${detailUrl}" class="btn btn-sm btn-secondary" style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
                             <i data-lucide="eye" style="width: 14px; height: 14px;"></i> Détails
                         </a>
-                        <button class="btn btn-sm btn-outline-primary btn-facture-achat" data-code="${row.code_achat_avicole}" style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                        <button type="button" class="btn btn-sm btn-outline-primary btn-facture-achat" data-code="${codeVal}" style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
                             <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Facture
                         </button>
                     </div>`;
@@ -470,7 +471,8 @@ $(document).ready(function() {
         drawCallback: function() { if (window.lucide) lucide.createIcons(); }
     });
 
-    $(document).on('click', '.btn-details-achat', function() {
+    $(document).on('click', '.btn-details-achat', function(e) {
+        if (e) e.preventDefault();
         let raw = $(this).attr('data-achat');
         if (!raw) return;
         let data = JSON.parse(raw);
@@ -507,17 +509,26 @@ $(document).ready(function() {
         $('#detStatutReception').html(stRecHtml);
 
         let modalEl = document.getElementById('modalDetailsAchat');
-        let bsModal = new bootstrap.Modal(modalEl);
-        bsModal.show();
+        if (window.bootstrap && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        } else {
+            $('#modalDetailsAchat').modal('show');
+        }
         if (window.lucide) lucide.createIcons();
     });
 
-    $(document).on('click', '.btn-facture-achat', function() {
+    $(document).on('click', '.btn-facture-achat', function(e) {
+        if (e) e.preventDefault();
         let code = $(this).attr('data-code');
         if (!code) return;
 
         $.get(baseApi + 'aviculture/apiDetailsAchat', { code: code }, function(res) {
-            if (res.status === 'success' && res.achat) {
+            if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch(err){}
+            }
+            let isOK = res && (res.status === 'success' || res.status === 1 || res.status === '1' || res.success === true);
+
+            if (isOK && res.achat) {
                 let a = res.achat;
                 let details = res.details || [];
 
@@ -592,13 +603,18 @@ $(document).ready(function() {
                 $('#facGrandTotal').text(grandTotal.toLocaleString('fr-FR') + ' FCFA');
 
                 let modalEl = document.getElementById('modalFactureAchat');
-                let bsModal = new bootstrap.Modal(modalEl);
-                bsModal.show();
+                if (window.bootstrap && bootstrap.Modal) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                } else {
+                    $('#modalFactureAchat').modal('show');
+                }
                 if (window.lucide) lucide.createIcons();
             } else {
-                if (window.toastr) toastr.error("Impossible de charger la facture.");
+                notifyMsg("Impossible de charger la facture.", "error");
             }
-        }, 'json');
+        }, 'json').fail(function() {
+            notifyMsg("Erreur lors du chargement des détails de la facture.", "error");
+        });
     });
 
     $(document).on('submit', '#formReglerFacture', function(e) {

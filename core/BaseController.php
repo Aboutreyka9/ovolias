@@ -272,6 +272,11 @@ abstract class BaseController
         $this->render($path, $data, 'main');
     }
 
+    protected function get(string $key, $default = '')
+    {
+        return $_GET[$key] ?? $default;
+    }
+
     protected function post(string $key, $default = '')
     {
         return $_POST[$key] ?? $default;

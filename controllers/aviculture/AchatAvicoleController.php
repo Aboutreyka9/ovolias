@@ -52,6 +52,11 @@ class AchatAvicoleController extends BaseController
         $this->json(['data' => $data]);
     }
 
+    public function apiDetailsAchat()
+    {
+        $this->apiDetails();
+    }
+
     public function apiDetails()
     {
         $this->requireAuth();
@@ -59,6 +64,15 @@ class AchatAvicoleController extends BaseController
         if (empty($code)) {
             $this->error("Code d'achat manquant");
             return;
+        }
+
+        try {
+            $decrypted = $this->validator->decrypter($code);
+            if (!empty($decrypted)) {
+                $code = $decrypted;
+            }
+        } catch (Exception $e) {
+            // garder la valeur originale
         }
 
         $db = $this->model->getCon();
