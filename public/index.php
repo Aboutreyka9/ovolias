@@ -149,6 +149,11 @@ $route->addRoute('/aviculture/changerFournisseur', ['FournisseurAvicoleControlle
 $route->addRoute('/aviculture/ventes', ['VenteAvicoleController', 'list']);
 $route->addRoute('/aviculture/apiListVentes', ['VenteAvicoleController', 'apiList']);
 $route->addRoute('/aviculture/addVente', ['VenteAvicoleController', 'addVente']);
+$route->addRoute('/aviculture/imprimerTicket/{param}', ['VenteAvicoleController', 'imprimerTicket']);
+$route->addRoute('/aviculture/imprimerTicket', ['VenteAvicoleController', 'imprimerTicket']);
+$route->addRoute('/aviculture/imprimerFacture/{param}', ['VenteAvicoleController', 'imprimerFacture']);
+$route->addRoute('/aviculture/imprimerFacture', ['VenteAvicoleController', 'imprimerFacture']);
+$route->addRoute('/aviculture/apiDetailsVente', ['VenteAvicoleController', 'apiDetails']);
 
 $route->addRoute('/aviculture/achats', ['AchatAvicoleController', 'list']);
 $route->addRoute('/aviculture/apiListAchats', ['AchatAvicoleController', 'apiList']);
