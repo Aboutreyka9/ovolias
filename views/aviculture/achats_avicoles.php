@@ -24,6 +24,21 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
         </button>
       </div>
 
+      <style>
+        .table-danger-alert, 
+        .table-danger-alert > td {
+          background-color: #FEF2F2 !important;
+          color: #991B1B !important;
+        }
+        .table-danger-alert:hover, 
+        .table-danger-alert:hover > td {
+          background-color: #FEE2E2 !important;
+        }
+        .table-danger-alert td:first-child {
+          border-left: 4px solid #EF4444 !important;
+        }
+      </style>
+
       <!-- Card Table -->
       <div class="card" style="background: #FFFFFF; border-radius: 12px; padding: 24px; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden;">
         <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
@@ -247,9 +262,9 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
             </div>
           </div>
           <div class="col-md-4">
-            <div style="background: #FEF2F2; padding: 12px 16px; border-radius: 8px; border: 1px solid #FCA5A5;">
-              <small style="color: #991B1B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Montant Total</small>
-              <div id="detMontantTotal" style="font-weight: 900; color: #DC2626; font-size: 16px; margin-top: 2px;">-</div>
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #475569; font-weight: 700; text-transform: uppercase; font-size: 11px;">Montant Total</small>
+              <div id="detMontantTotal" style="font-weight: 900; color: #0F172A; font-size: 16px; margin-top: 2px;">-</div>
             </div>
           </div>
         </div>
@@ -344,6 +359,13 @@ $(document).ready(function() {
             type: 'GET',
             dataSrc: 'data'
         },
+        createdRow: function(row, data, dataIndex) {
+            const stAchat = (data.statut_achat || 'valide').toLowerCase();
+            const stReg = (data.statut_reglement || '').toLowerCase();
+            if ((stAchat === 'valide' || stAchat === 'recu' || stAchat === 'confirme') && (stReg === 'paye' || stReg === 'payé')) {
+                $(row).addClass('table-danger-alert');
+            }
+        },
         columns: [
             { data: 'code_achat_avicole', render: d => `<code style="font-weight:700; color:#334155; background:#F1F5F9; padding:2px 6px; border-radius:4px;">${d}</code>` },
             { data: 'fournisseur_nom', render: d => `<strong style="color:#0F172A;">${d || '-'}</strong>` },
@@ -363,7 +385,7 @@ $(document).ready(function() {
                 }
             },
             { data: 'quantite_totale', className: 'text-center', render: d => `<span style="font-weight:700; color:#0F172A; font-size:13px;">${parseFloat(d||0).toLocaleString('fr-FR')}</span>` },
-            { data: 'montant_total', render: d => `<strong style="color:#DC2626; font-size:14px;">${parseFloat(d||0).toLocaleString('fr-FR')} FCFA</strong>` },
+            { data: 'montant_total', render: d => `<strong style="color:#0F172A; font-size:14px;">${parseFloat(d||0).toLocaleString('fr-FR')} FCFA</strong>` },
             { data: 'statut_reglement', className: 'text-center', render: d => d === 'paye' ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">Payé</span>` : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">${d}</span>` },
             { data: 'date_achat', className: 'text-center', render: d => d ? new Date(d).toLocaleDateString('fr-FR') : '-' },
             {
