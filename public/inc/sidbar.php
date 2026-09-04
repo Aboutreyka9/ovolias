@@ -351,7 +351,7 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-distribution">
-                <a href="<?= RACINE ?>aviculture/stock" class="nav-item sub <?= strpos($currentUri, '/aviculture/stock') !== false ? 'active' : '' ?>" data-title="État des Stocks">
+                <a href="<?= RACINE ?>aviculture/stock" target="_blank" class="nav-item sub <?= strpos($currentUri, '/aviculture/stock') !== false ? 'active' : '' ?>" data-title="État des Stocks">
                     <i data-lucide="package"></i> <span>État des Stocks</span>
                 </a>
                 <a href="<?= RACINE ?>aviculture/mouvements_stock" class="nav-item sub <?= strpos($currentUri, '/aviculture/mouvements_stock') !== false ? 'active' : '' ?>" data-title="Mouvements de Stock">
