@@ -144,9 +144,13 @@ foreach ($details as $dItem) {
             <i data-lucide="printer" style="width: 16px; height: 16px;"></i> Imprimer Bon / Facture
           </button>
 
-          <?php if ($canReglerFacture && $resteAPayer > 0.01): ?>
+          <?php if ($resteAPayer > 0.01): ?>
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalReglerFactureDetail" style="background: #059669; border-color: #059669; display: inline-flex; align-items: center; gap: 8px; font-weight: 800; border-radius: 8px; padding: 10px 18px; font-size: 13px; color: white; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);">
-              <i data-lucide="credit-card" style="width: 16px; height: 16px;"></i> Régler la Facture
+              <i data-lucide="credit-card" style="width: 16px; height: 16px;"></i> Facture / Règlement
+            </button>
+          <?php else: ?>
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalReglerFactureDetail" style="font-weight: 700; border-radius: 8px; padding: 10px 16px; font-size: 13px; display: inline-flex; align-items: center; gap: 8px;">
+              <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Facture Réglée
             </button>
           <?php endif; ?>
         </div>
@@ -527,64 +531,88 @@ foreach ($details as $dItem) {
   </main>
 </div>
 
-<!-- MODAL QUICK SETTLEMENT (SI AUTORISÉ ET NON RÉGLÉ) -->
-<?php if ($canReglerFacture && $resteAPayer > 0.01): ?>
+<!-- MODAL FACTURE & RÈGLEMENT -->
 <div class="modal fade" id="modalReglerFactureDetail" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
       <div class="modal-header" style="background: #1E3A5F; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
         <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="credit-card" style="width: 20px; height: 20px; color: #6EE7B7;"></i> Saisie Règlement Facture Achat
+          <i data-lucide="file-text" style="width: 20px; height: 20px; color: #6EE7B7;"></i> Règlement Facture Achat - Bon N° <?= $codeAchat ?>
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <form id="formReglerFactureDetail">
-        <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
-        <input type="hidden" name="code_achat" value="<?= $codeAchat ?>">
-        <div class="modal-body" style="padding: 20px;">
-          
-          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
-            <div style="font-size: 12px; color: #1E40AF; font-weight: 700;">Synthèse Solde Restant :</div>
-            <div style="font-size: 20px; font-weight: 900; color: #1E3A5F; margin-top: 2px;">
-              <?= number_format($resteAPayer, 0, ',', ' ') ?> FCFA
-            </div>
+      <div class="modal-body" style="padding: 24px;">
+        
+        <!-- BLOC RÉCAPITULATIF FINANCIER -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px; text-align: center;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Facture</span>
+            <div style="font-size: 16px; font-weight: 800; color: #0F172A; margin-top: 2px;"><?= number_format($montantTotal, 0, ',', ' ') ?> FCFA</div>
           </div>
-
-          <div class="mb-3">
-            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Montant à Verser (FCFA) *</label>
-            <div class="input-group">
-              <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155;">FCFA</span>
-              <input type="number" step="any" min="1" max="<?= $resteAPayer ?>" name="montant_verse" class="form-control" value="<?= $resteAPayer ?>" required style="font-weight: 800; color: #0F172A; font-size: 15px;">
-            </div>
+          <div style="background: #ECFDF5; border: 1px solid #A7F3D0; padding: 12px; border-radius: 8px; text-align: center;">
+            <span style="font-size: 11px; font-weight: 700; color: #047857; text-transform: uppercase;">Total Versé</span>
+            <div style="font-size: 16px; font-weight: 800; color: #059669; margin-top: 2px;"><?= number_format($montantPaye, 0, ',', ' ') ?> FCFA</div>
           </div>
-
-          <div class="mb-3">
-            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Mode de Règlement *</label>
-            <select name="mode_reglement" class="form-select" style="font-weight: 600; font-size: 13px;">
-              <option value="especes">Espèces</option>
-              <option value="mobile_money">Mobile Money (Wave / OM)</option>
-              <option value="virement">Virement Bq</option>
-              <option value="cheque">Chèque Bq</option>
-            </select>
+          <div style="background: <?= $resteAPayer <= 0.01 ? '#EFF6FF' : '#FEF2F2' ?>; border: 1px solid <?= $resteAPayer <= 0.01 ? '#BFDBFE' : '#FECDD3' ?>; padding: 12px; border-radius: 8px; text-align: center;">
+            <span style="font-size: 11px; font-weight: 700; color: <?= $resteAPayer <= 0.01 ? '#1E40AF' : '#991B1B' ?>; text-transform: uppercase;">Reste à Payer</span>
+            <div style="font-size: 16px; font-weight: 900; color: <?= $resteAPayer <= 0.01 ? '#1E3A5F' : '#DC2626' ?>; margin-top: 2px;"><?= number_format($resteAPayer, 0, ',', ' ') ?> FCFA</div>
           </div>
-
-          <div class="mb-3">
-            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">N° Référence / TransID (Optionnel)</label>
-            <input type="text" name="reference_reglement" class="form-control" placeholder="Ex: WAVE-998822 ou N° Chèque" style="font-size: 13px;">
-          </div>
-
         </div>
-        <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-weight: 600; border-radius: 8px;">Annuler</button>
-          <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 800; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
-            <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Valider le Règlement
-          </button>
-        </div>
-      </form>
+
+        <!-- BLOC FORMULAIRE OU STATUT -->
+        <?php if ($resteAPayer <= 0.01): ?>
+          <div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 16px; font-weight: 700; text-align: center;">
+            <i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée
+          </div>
+        <?php elseif (!$canReglerFacture): ?>
+          <div style="background: #F8FAFC; border: 1px solid #CBD5E1; color: #475569; border-radius: 8px; padding: 16px; font-weight: 600; text-align: center;">
+            <i class="fa fa-lock me-1"></i> Facture non soldée. Seuls les profils Comptabilité & Administration disposent des privilèges pour effectuer un règlement.
+          </div>
+        <?php else: ?>
+          <form id="formReglerFactureDetail">
+            <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
+            <input type="hidden" name="code_achat" value="<?= $codeAchat ?>">
+            
+            <div class="row g-3 align-items-end">
+              <div class="col-md-4">
+                <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">Montant Versé (FCFA) *</label>
+                <div class="input-group">
+                  <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155; font-size: 12px;">FCFA</span>
+                  <input type="number" step="any" min="1" max="<?= $resteAPayer ?>" name="montant_verse" class="form-control" value="<?= $resteAPayer ?>" required style="font-weight: 800; color: #0F172A; font-size: 14px;">
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">Mode de Règlement *</label>
+                <select name="mode_reglement" class="form-select" style="font-weight: 600; font-size: 13px;">
+                  <option value="especes">Espèces</option>
+                  <option value="mobile_money">Mobile Money (Wave / OM)</option>
+                  <option value="virement">Virement Bq</option>
+                  <option value="cheque">Chèque Bq</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">N° Référence / TransID</label>
+                <input type="text" name="reference_reglement" class="form-control" placeholder="Ex: WAVE-998822" style="font-size: 13px;">
+              </div>
+            </div>
+
+            <div style="margin-top: 16px; text-align: right;">
+              <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 800; border-radius: 8px; padding: 8px 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Valider le Règlement
+              </button>
+            </div>
+          </form>
+        <?php endif; ?>
+
+      </div>
+      <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-weight: 600; border-radius: 8px;">Fermer</button>
+      </div>
     </div>
   </div>
 </div>
-<?php endif; ?>
 
 <script>
 $(document).ready(function() {
