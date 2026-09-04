@@ -76,6 +76,7 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <form id="formAchat">
+        <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
         <div class="modal-body" style="padding: 20px;">
           
           <div class="row g-3 mb-3">
@@ -554,6 +555,7 @@ $(document).ready(function() {
                 } else {
                     $('#boxFormReglement').html(`
                       <form id="formReglerFacture">
+                        <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
                         <input type="hidden" name="code_achat" value="${a.code_achat_avicole || ''}">
                         <div class="row g-2 align-items-end">
                           <div class="col-md-4">
@@ -697,19 +699,66 @@ $(document).ready(function() {
                     dt.ajax.reload(null, false);
                 }
                 
-                // Mettre à jour la vue récap du modal
-                let payeVal = parseFloat(res.montant_paye || 0);
-                let resteVal = parseFloat(res.reste_a_payer || 0);
+                let codeAchat = $('#reglerCodeAchat').val() || $('#formReglerFacture input[name="code_achat"]').val();
+                if (codeAchat) {
+                    // Recharger le modal avec l'historique à jour
+                    $.get(baseApi + 'aviculture/apiDetailsAchat', { code: codeAchat }, function(freshRes) {
+                        if (freshRes.status === 'success' && freshRes.achat) {
+                            let a = freshRes.achat;
+                            let totAchat = parseFloat(a.montant_total || 0);
+                            let payeAchat = parseFloat(a.montant_paye || 0);
+                            let resteAchat = Math.max(0, totAchat - payeAchat);
 
-                $('#facRecapPaye').text(payeVal.toLocaleString('fr-FR') + ' FCFA');
-                $('#facRecapReste').text(resteVal.toLocaleString('fr-FR') + ' FCFA');
+                            $('#facRecapPaye').text(payeAchat.toLocaleString('fr-FR') + ' FCFA');
+                            $('#facRecapReste').text(resteAchat.toLocaleString('fr-FR') + ' FCFA');
 
-                if (resteVal <= 0) {
-                    $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
-                    $('#facStatutReg').html('Statut Règlement : <strong style="color: #166534;">Payé</strong>');
-                } else {
-                    $('#inputMontantVerse').val(resteVal).attr('max', resteVal);
-                    $('#facStatutReg').html('Statut Règlement : <strong style="color: #92400E;">Partiel</strong>');
+                            if (resteAchat <= 0.01) {
+                                $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
+                                $('#facStatutReg').html('Statut Règlement : <strong style="color: #166534;">Payé</strong>');
+                            } else {
+                                $('#inputMontantVerse').val(resteAchat).attr('max', resteAchat);
+                                $('#facStatutReg').html('Statut Règlement : <strong style="color: #92400E;">Partiel</strong>');
+                            }
+
+                            // Rendu de l'historique des règlements
+                            let payments = freshRes.payments || [];
+                            let payHistHtml = '';
+                            if (payments.length > 0) {
+                                payHistHtml = `
+                                <div style="margin-top: 20px; border-top: 1px dashed #CBD5E1; padding-top: 14px;">
+                                    <h6 style="font-weight: 800; color: #0F172A; font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                        <i data-lucide="history" style="width: 16px; height: 16px; color: #0284C7;"></i> Historique des Règlements Échelonnés (${payments.length})
+                                    </h6>
+                                    <table class="table table-sm table-bordered align-middle" style="font-size: 12px; margin-bottom: 0;">
+                                        <thead style="background: #F8FAFC; color: #475569;">
+                                            <tr>
+                                                <th style="padding: 6px 10px;">Réf Règlement</th>
+                                                <th style="padding: 6px 10px;">Date & Heure</th>
+                                                <th style="padding: 6px 10px;">Mode</th>
+                                                <th style="padding: 6px 10px;">Référence / TransID</th>
+                                                <th style="padding: 6px 10px; text-align: right;">Montant Versé</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>`;
+                                payments.forEach(function(p) {
+                                    let mVersed = parseFloat(p.montant_verse || 0);
+                                    let modeLbl = p.mode_reglement === 'mobile_money' ? 'Mobile Money' : (p.mode_reglement === 'virement' ? 'Virement' : (p.mode_reglement === 'cheque' ? 'Chèque' : 'Espèces'));
+                                    let dtStr = p.date_reglement ? new Date(p.date_reglement).toLocaleString('fr-FR') : '-';
+                                    payHistHtml += `
+                                        <tr>
+                                            <td style="padding: 6px 10px; font-weight: 700; color: #0F172A;">${p.code_reglement || '-'}</td>
+                                            <td style="padding: 6px 10px; color: #64748B;">${dtStr}</td>
+                                            <td style="padding: 6px 10px;"><span class="badge bg-light text-dark border" style="font-weight:700;">${modeLbl}</span></td>
+                                            <td style="padding: 6px 10px; color: #475569;">${p.reference_reglement || '-'}</td>
+                                            <td style="padding: 6px 10px; text-align: right; font-weight: 800; color: #166534;">+ ${mVersed.toLocaleString('fr-FR')} FCFA</td>
+                                        </tr>`;
+                                });
+                                payHistHtml += `</tbody></table></div>`;
+                            }
+                            $('#facBoxHistoriqueReglements').html(payHistHtml);
+                            if (window.lucide) lucide.createIcons();
+                        }
+                    }, 'json');
                 }
             } else {
                 notifyMsg(res.message || 'Erreur lors du règlement', 'error');
