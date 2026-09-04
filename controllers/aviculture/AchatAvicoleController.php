@@ -399,7 +399,7 @@ class AchatAvicoleController extends BaseController
         $etab_code = $_SESSION[USERS_AUTH]['etablissement_code'] ?? '5454544456';
         $zone_code = $_SESSION[USERS_AUTH]['zone_user'] ?? 'DEFAULT';
 
-        $montant_paye = ($statut_reg === 'paye') ? $grand_total : 0;
+        $montant_paye = 0;
 
         $db->beginTransaction();
 
@@ -412,7 +412,7 @@ class AchatAvicoleController extends BaseController
                     date_achat, user_code, etablissement_code, zone_code
                 ) VALUES (
                     :code, :frs, :num_fac, 
-                    :cat, :tot, :paye, :statut_reg, 'en_attente', 
+                    :cat, :tot, 0.00, :statut_reg, 'en_attente', 
                     NOW(), :user, :etab, :zone
                 )
             ");
@@ -422,36 +422,11 @@ class AchatAvicoleController extends BaseController
                 ':num_fac'    => $num_facture,
                 ':cat'        => $first_cat,
                 ':tot'        => $grand_total,
-                ':paye'       => $montant_paye,
                 ':statut_reg' => $statut_reg,
                 ':user'       => $user_code,
                 ':etab'       => $etab_code,
                 ':zone'       => $zone_code
             ]);
-
-            if ($montant_paye > 0) {
-                $code_reg = 'REG-ACH-' . date('Ymd') . '-' . rand(1000, 9999);
-                $stmtRegInit = $db->prepare("
-                    INSERT INTO reglements_avicoles (
-                        code_reglement, type_transaction, reference_document, tiers_code, 
-                        montant_verse, mode_reglement, reference_reglement, date_reglement, 
-                        user_code, etablissement_code, zone_code
-                    ) VALUES (
-                        :code_reg, 'achat', :ref_doc, :tiers, 
-                        :montant, 'especes', 'Paiement comptant initial', NOW(), 
-                        :user, :etab, :zone
-                    )
-                ");
-                $stmtRegInit->execute([
-                    ':code_reg' => $code_reg,
-                    ':ref_doc'  => $code_achat,
-                    ':tiers'    => $fournisseur_code,
-                    ':montant'  => $montant_paye,
-                    ':user'     => $user_code,
-                    ':etab'     => $etab_code,
-                    ':zone'     => $zone_code
-                ]);
-            }
 
             // 2. Insérer les lignes de détail et mouvements de stock
             $stmtDet = $db->prepare("
