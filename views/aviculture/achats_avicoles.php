@@ -504,13 +504,13 @@ $(document).ready(function() {
                 </select>
             </td>
             <td>
-                <input type="number" step="0.01" min="0.01" name="articles[${rowIndex}][quantite]" class="form-control input-qte-row" style="border-radius: 8px; height: 38px;" placeholder="Qte" value="${qte}" required>
+                <input type="number" step="any" min="0.001" name="articles[${rowIndex}][quantite]" class="form-control input-qte-row" style="border-radius: 8px; height: 38px;" placeholder="Qte" value="${qte}" required>
             </td>
             <td>
                 <input type="text" name="articles[${rowIndex}][unite_mesure]" class="form-control input-unite-row" style="border-radius: 8px; height: 38px;" placeholder="Ex: kg" value="${unite}">
             </td>
             <td>
-                <input type="number" step="50" min="0" name="articles[${rowIndex}][prix_unitaire]" class="form-control input-pu-row" style="border-radius: 8px; height: 38px;" placeholder="FCFA" value="${pu}" required>
+                <input type="number" step="any" min="0" name="articles[${rowIndex}][prix_unitaire]" class="form-control input-pu-row" style="border-radius: 8px; height: 38px;" placeholder="FCFA" value="${pu}" required>
             </td>
             <td class="text-end fw-bold align-middle cell-stot-row" style="color: #0F172A; font-size: 13px;">
                 0 FCFA
@@ -546,13 +546,13 @@ $(document).ready(function() {
                 </select>
             </td>
             <td>
-                <input type="number" step="0.01" min="0.01" name="articles[${rowIndex}][quantite]" class="form-control input-qte-row" style="border-radius: 8px; height: 38px;" placeholder="Qte" value="${qte}" required>
+                <input type="number" step="any" min="0.001" name="articles[${rowIndex}][quantite]" class="form-control input-qte-row" style="border-radius: 8px; height: 38px;" placeholder="Qte" value="${qte}" required>
             </td>
             <td>
                 <input type="text" name="articles[${rowIndex}][unite_mesure]" class="form-control input-unite-row" style="border-radius: 8px; height: 38px;" placeholder="Ex: sac, unité" value="${unite}">
             </td>
             <td>
-                <input type="number" step="50" min="0" name="articles[${rowIndex}][prix_unitaire]" class="form-control input-pu-row" style="border-radius: 8px; height: 38px;" placeholder="FCFA" value="${pu}" required>
+                <input type="number" step="any" min="0" name="articles[${rowIndex}][prix_unitaire]" class="form-control input-pu-row" style="border-radius: 8px; height: 38px;" placeholder="FCFA" value="${pu}" required>
             </td>
             <td class="text-end fw-bold align-middle cell-stot-row" style="color: #0F172A; font-size: 13px;">
                 0 FCFA
