@@ -4,6 +4,8 @@ $achat = $achat ?? [];
 $details = $details ?? [];
 $payments = $payments ?? [];
 $canReglerFacture = $canReglerFacture ?? true;
+$canVerifierAchat = $canVerifierAchat ?? true;
+$canValiderAchat  = $canValiderAchat ?? true;
 
 $codeAchat = htmlspecialchars($achat['code_achat_avicole'] ?? '-');
 $fournisseurNom = htmlspecialchars($achat['fournisseur_nom'] ?? $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général');
@@ -21,6 +23,12 @@ $pourcentagePaye = ($montantTotal > 0) ? min(100, round(($montantPaye / $montant
 $statutReglement = strtolower($achat['statut_reglement'] ?? 'impaye');
 $statutAchat = strtolower($achat['statut_achat'] ?? 'valide');
 $statutReception = strtolower($achat['statut_reception'] ?? 'en_attente');
+$statutVerification = strtolower($achat['statut_verification'] ?? 'non_verifie');
+$verifiePar = htmlspecialchars($achat['verifie_par'] ?? '');
+$dateVerification = !empty($achat['date_verification']) ? date('d/m/Y H:i', strtotime($achat['date_verification'])) : '';
+$validePar = htmlspecialchars($achat['valide_par'] ?? '');
+$dateValidation = !empty($achat['date_validation']) ? date('d/m/Y H:i', strtotime($achat['date_validation'])) : '';
+$notesReception = htmlspecialchars($achat['notes_reception'] ?? '');
 
 $totQteGlobal = 0;
 foreach ($details as $dItem) {
@@ -334,9 +342,40 @@ foreach ($details as $dItem) {
             </div>
           </div>
 
-          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 6px; color: #0F172A;">
-            <i data-lucide="calculator" style="width: 15px; height: 15px; color: #2563EB;"></i>
-            Montant Total : <strong style="color: #DC2626; margin-left: 4px;"><?= number_format($montantTotal, 0, ',', ' ') ?> FCFA</strong>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <!-- BOUTON 1 : VÉRIFIER BON D'ACHAT -->
+            <?php if ($canVerifierAchat): ?>
+              <?php if ($statutVerification === 'verifie' || $statutReception === 'recue'): ?>
+                <span class="badge" style="background: #F3E8FF; color: #6B21A8; border: 1px solid #E9D5FF; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                  <i data-lucide="shield-check" style="width: 16px; height: 16px;"></i> Bon Vérifié <?= !empty($dateVerification) ? '('.$dateVerification.')' : '' ?>
+                </span>
+              <?php elseif ($statutVerification === 'partiellement_verifie' || $statutReception === 'partiellement_recue'): ?>
+                <span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                  <i data-lucide="pie-chart" style="width: 16px; height: 16px;"></i> Réception Partielle
+                </span>
+              <?php elseif ($statutVerification === 'refuse' || $statutReception === 'refusee'): ?>
+                <span class="badge" style="background: #FEE2E2; color: #991B1B; border: 1px solid #FECDD3; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                  <i data-lucide="x-circle" style="width: 16px; height: 16px;"></i> Réception Refusée
+                </span>
+              <?php else: ?>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalVerifierAchat" style="border-color: #6366F1; color: #4F46E5; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 8px; padding: 8px 14px; font-size: 13px;">
+                  <i data-lucide="shield-check" style="width: 16px; height: 16px;"></i> Vérifier Bon d'Achat
+                </button>
+              <?php endif; ?>
+            <?php endif; ?>
+
+            <!-- BOUTON 2 : VALIDER BON D'ACHAT -->
+            <?php if ($canValiderAchat): ?>
+              <?php if ($statutAchat === 'valide' || $statutAchat === 'solde' || $statutAchat === 'soldé'): ?>
+                <span class="badge" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                  <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i> Bon Validé & Stock Enregistré
+                </span>
+              <?php else: ?>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalValiderAchat" style="background: #059669; border-color: #059669; color: white; display: inline-flex; align-items: center; gap: 8px; font-weight: 800; border-radius: 8px; padding: 8px 16px; font-size: 13px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);">
+                  <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i> Valider Bon d'Achat
+                </button>
+              <?php endif; ?>
+            <?php endif; ?>
           </div>
         </div>
 
@@ -531,6 +570,128 @@ foreach ($details as $dItem) {
   </main>
 </div>
 
+<!-- MODAL VÉRIFIER BON D'ACHAT (PHASE DE CONTRÔLE MAGASINIER) -->
+<div class="modal fade" id="modalVerifierAchat" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background: #4F46E5; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
+        <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="shield-check" style="width: 20px; height: 20px; color: #A5B4FC;"></i> Contrôle &amp; Vérification Bon d'Achat - N° <?= $codeAchat ?>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formVerifierAchat">
+        <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
+        <input type="hidden" name="code_achat" value="<?= $codeAchat ?>">
+        
+        <div class="modal-body" style="padding: 24px;">
+          <div style="background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 8px; padding: 14px; margin-bottom: 20px; color: #3730A3; font-size: 13px;">
+            <i class="fa fa-info-circle me-1"></i> <strong>Contrôle Réception Magasin :</strong> Vérifiez la conformité des articles livrés par le fournisseur par rapport aux lignes de commande ci-dessous.
+          </div>
+
+          <!-- DÉCISION DU CONTRÔLEUR -->
+          <div class="mb-4">
+            <label style="font-weight: 800; font-size: 13px; color: #1E293B; margin-bottom: 8px; display: block;">Décision de Réception *</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <label style="border: 2px solid #CBD5E1; border-radius: 10px; padding: 12px; cursor: pointer; text-align: center; background: #F8FAFC;">
+                <input type="radio" name="decision" value="recue" checked style="margin-right: 6px;" onchange="toggleQteInputs(false)">
+                <span style="font-weight: 800; color: #059669; font-size: 13px;">Totalement Conforme (100%)</span>
+              </label>
+              <label style="border: 2px solid #CBD5E1; border-radius: 10px; padding: 12px; cursor: pointer; text-align: center; background: #F8FAFC;">
+                <input type="radio" name="decision" value="partiellement_recue" style="margin-right: 6px;" onchange="toggleQteInputs(true)">
+                <span style="font-weight: 800; color: #D97706; font-size: 13px;">Réception Partielle</span>
+              </label>
+              <label style="border: 2px solid #CBD5E1; border-radius: 10px; padding: 12px; cursor: pointer; text-align: center; background: #F8FAFC;">
+                <input type="radio" name="decision" value="refusee" style="margin-right: 6px;" onchange="toggleQteInputs(false)">
+                <span style="font-weight: 800; color: #DC2626; font-size: 13px;">Non Conforme / Refusé</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- TABLEAU DES QUANTITÉS REÇUES -->
+          <div class="table-responsive mb-3" style="border: 1px solid #E2E8F0; border-radius: 8px;">
+            <table class="table align-middle" style="margin: 0; font-size: 13px;">
+              <thead style="background: #F1F5F9; color: #334155; font-weight: 700;">
+                <tr>
+                  <th style="padding: 10px 12px;">Article / Intrant</th>
+                  <th style="padding: 10px 12px; text-align: center;">Qté Commandée</th>
+                  <th style="padding: 10px 12px; text-align: center;">Qté Réellement Reçue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($details as $dItem): ?>
+                  <tr>
+                    <td style="padding: 10px 12px; font-weight: 700; color: #0F172A;">
+                      <?= htmlspecialchars($dItem['libelle_article_intrant'] ?? 'Article') ?>
+                      <?php if (!empty($dItem['libelle_categorie_poids'])): ?>
+                        <small style="color: #64748B; display: block;">(Grille : <?= htmlspecialchars($dItem['libelle_categorie_poids']) ?>)</small>
+                      <?php endif; ?>
+                    </td>
+                    <td style="padding: 10px 12px; text-align: center; font-weight: 800;">
+                      <?= number_format($dItem['quantite'], 2, ',', ' ') ?> <?= htmlspecialchars($dItem['unite_mesure']) ?>
+                    </td>
+                    <td style="padding: 10px 12px; text-align: center;">
+                      <input type="number" step="any" min="0" max="<?= $dItem['quantite'] ?>" name="quantites_recues[<?= $dItem['id_detail_achat'] ?>]" value="<?= floatval($dItem['quantite_recue'] ?? $dItem['quantite']) ?>" class="form-control form-control-sm input-qte-recue" disabled style="width: 110px; margin: 0 auto; text-align: center; font-weight: 800;">
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- REMARQUES / OBSERVATIONS -->
+          <div>
+            <label style="font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 4px; display: block;">Notes &amp; Observations du Contrôleur</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="Mentionnez d'éventuelles réserves, sacs détériorés ou écarts constatés..." style="font-size: 13px;"><?= $notesReception ?></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-weight: 600; border-radius: 8px;">Annuler</button>
+          <button type="submit" class="btn btn-primary" style="background: #4F46E5; border-color: #4F46E5; font-weight: 800; border-radius: 8px; padding: 8px 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+            <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Enregistrer le Contrôle
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VALIDER BON D'ACHAT (PHASE D'APPROBATION FINALE CHEF D'EXPLOITATION) -->
+<div class="modal fade" id="modalValiderAchat" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background: #059669; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
+        <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: #A7F3D0;"></i> Validation Finale Bon d'Achat - N° <?= $codeAchat ?>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formValiderAchat">
+        <input type="hidden" name="csrf_token" value="<?= Validator::generateCsrfToken() ?>">
+        <input type="hidden" name="code_achat" value="<?= $codeAchat ?>">
+        
+        <div class="modal-body" style="padding: 24px; text-align: center;">
+          <div style="background: #ECFDF5; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; color: #059669;">
+            <i data-lucide="package-check" style="width: 34px; height: 34px;"></i>
+          </div>
+          <h4 style="font-size: 17px; font-weight: 800; color: #0F172A; margin: 0 0 8px 0;">Confirmer la Validation Officielle</h4>
+          <p style="color: #475569; font-size: 13px; margin: 0 0 20px 0; line-height: 1.5;">
+            Cette action approuve formellement le bon d'achat, intègre automatiquement les <strong><?= count($details) ?> article(s) en stock avicole</strong> et débloque l'autorisation de règlement en trésorerie.
+          </p>
+        </div>
+
+        <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-weight: 600; border-radius: 8px;">Annuler</button>
+          <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 800; border-radius: 8px; padding: 8px 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+            <i data-lucide="check-check" style="width: 16px; height: 16px;"></i> Valider &amp; Entrer en Stock
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FACTURE & RÈGLEMENT -->
 <div class="modal fade" id="modalReglerFactureDetail" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -648,6 +809,96 @@ $(document).ready(function() {
             sessionStorage.removeItem('flash_toast_type');
         }
     } catch(e) {}
+
+    window.toggleQteInputs = function(enable) {
+        $('.input-qte-recue').prop('disabled', !enable);
+    };
+
+    // Soumission du formulaire de vérification du bon d'achat
+    $('#formVerifierAchat').on('submit', function(e) {
+        e.preventDefault();
+        const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
+        const formData = $(this).serialize();
+        const $btn = $(this).find('button[type="submit"]');
+
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Traitement...');
+
+        $.ajax({
+            url: baseApi + 'aviculture/verifierAchat',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 1 || res.status === 'success') {
+                    const msg = res.message || 'Contrôle enregistré avec succès !';
+                    try {
+                        sessionStorage.setItem('flash_toast_msg', msg);
+                        sessionStorage.setItem('flash_toast_type', 'success');
+                    } catch(e) {}
+
+                    notifyMsg(msg, 'success');
+                    $('#modalVerifierAchat').modal('hide');
+
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1200);
+                } else {
+                    notifyMsg(res.message || 'Erreur lors de la vérification', 'error');
+                    $btn.prop('disabled', false).html('<i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Enregistrer le Contrôle');
+                    if (window.lucide) lucide.createIcons();
+                }
+            },
+            error: function(xhr) {
+                let msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Une erreur système est survenue.';
+                notifyMsg(msg, 'error');
+                $btn.prop('disabled', false).html('<i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Enregistrer le Contrôle');
+                if (window.lucide) lucide.createIcons();
+            }
+        });
+    });
+
+    // Soumission du formulaire de validation finale du bon d'achat
+    $('#formValiderAchat').on('submit', function(e) {
+        e.preventDefault();
+        const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
+        const formData = $(this).serialize();
+        const $btn = $(this).find('button[type="submit"]');
+
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Validation...');
+
+        $.ajax({
+            url: baseApi + 'aviculture/validerAchat',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 1 || res.status === 'success') {
+                    const msg = res.message || 'Bon d\'achat validé avec succès !';
+                    try {
+                        sessionStorage.setItem('flash_toast_msg', msg);
+                        sessionStorage.setItem('flash_toast_type', 'success');
+                    } catch(e) {}
+
+                    notifyMsg(msg, 'success');
+                    $('#modalValiderAchat').modal('hide');
+
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1200);
+                } else {
+                    notifyMsg(res.message || 'Erreur lors de la validation', 'error');
+                    $btn.prop('disabled', false).html('<i data-lucide="check-check" style="width: 16px; height: 16px;"></i> Valider & Entrer en Stock');
+                    if (window.lucide) lucide.createIcons();
+                }
+            },
+            error: function(xhr) {
+                let msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Une erreur système est survenue.';
+                notifyMsg(msg, 'error');
+                $btn.prop('disabled', false).html('<i data-lucide="check-check" style="width: 16px; height: 16px;"></i> Valider & Entrer en Stock');
+                if (window.lucide) lucide.createIcons();
+            }
+        });
+    });
 
     // Soumission du formulaire de règlement depuis la page de détails
     $('#formReglerFactureDetail').on('submit', function(e) {
