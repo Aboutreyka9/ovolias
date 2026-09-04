@@ -362,22 +362,14 @@ function selectTypeVente(type) {
     if (type === 'comptoir_direct') {
         $('#btnTypeComptoir').addClass('active');
         $('#btnTypeCommande').removeClass('active');
-        $('#blockCalculMonnaie').show();
     } else {
         $('#btnTypeCommande').addClass('active');
         $('#btnTypeComptoir').removeClass('active');
-        $('#blockCalculMonnaie').hide();
     }
     verifierBoutonEncaissement();
 }
 
 function checkReglement() {
-    const reg = $('#selectReglement').val();
-    if (reg === 'credit' || reg === 'virement') {
-        $('#blockCalculMonnaie').hide();
-    } else {
-        $('#blockCalculMonnaie').show();
-    }
     verifierBoutonEncaissement();
 }
 
