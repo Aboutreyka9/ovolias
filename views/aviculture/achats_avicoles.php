@@ -413,7 +413,7 @@ $(document).ready(function() {
             dataSrc: 'data'
         },
         createdRow: function(row, data, dataIndex) {
-            const stAchat = (data.statut_achat || 'valide').toLowerCase();
+            const stAchat = (data.statut_achat || 'en_cours').toLowerCase();
             const stReg = (data.statut_reglement || '').toLowerCase();
             if ((stAchat === 'valide' || stAchat === 'recu' || stAchat === 'confirme') && (stReg === 'paye' || stReg === 'payé')) {
                 $(row).addClass('table-danger-alert');
@@ -427,7 +427,7 @@ $(document).ready(function() {
                 data: 'statut_achat', 
                 className: 'text-center', 
                 render: d => {
-                    const st = (d || 'valide').toLowerCase();
+                    const st = (d || 'en_cours').toLowerCase();
                     if (st === 'solde' || st === 'soldé') {
                         return `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Soldé</span>`;
                     } else if (st === 'valide' || st === 'recu' || st === 'confirme') {
@@ -435,7 +435,7 @@ $(document).ready(function() {
                     } else if (st === 'annule') {
                         return `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulé</span>`;
                     } else {
-                        return `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`;
+                        return `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En cours</span>`;
                     }
                 }
             },
@@ -494,12 +494,12 @@ $(document).ready(function() {
         $('#detDateAchat').text(data.date_achat ? new Date(data.date_achat).toLocaleDateString('fr-FR') : '-');
         $('#detMontantTotal').text(parseFloat(data.montant_total || 0).toLocaleString('fr-FR') + ' FCFA');
 
-        let stAchat = (data.statut_achat || 'valide').toLowerCase();
+        let stAchat = (data.statut_achat || 'en_cours').toLowerCase();
         let stAchatHtml = (stAchat === 'valide' || stAchat === 'recu' || stAchat === 'confirme')
             ? `<span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Validé</span>`
             : (stAchat === 'annule'
                 ? `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulé</span>`
-                : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`);
+                : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En cours</span>`);
         $('#detStatutAchat').html(stAchatHtml);
 
         let statutHtml = data.statut_reglement === 'paye'

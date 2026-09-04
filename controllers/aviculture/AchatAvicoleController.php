@@ -251,7 +251,7 @@ class AchatAvicoleController extends BaseController
         }
 
         $statut_reg = 'partiel';
-        $statut_achat = $achat['statut_achat'] ?? 'valide';
+        $statut_achat = $achat['statut_achat'] ?? 'en_cours';
 
         if ($nouveau_paye >= $montant_total - 0.01) {
             $statut_reg = 'paye';
@@ -591,6 +591,12 @@ class AchatAvicoleController extends BaseController
                         ':acode'  => $achat['code_achat_avicole']
                     ]);
                 }
+            } elseif ($decision === 'recue') {
+                $upDet = $db->prepare("UPDATE details_achats_avicoles SET quantite_recue = quantite WHERE achat_code = :acode");
+                $upDet->execute([':acode' => $achat['code_achat_avicole']]);
+            } elseif ($decision === 'refusee') {
+                $upDet = $db->prepare("UPDATE details_achats_avicoles SET quantite_recue = 0 WHERE achat_code = :acode");
+                $upDet->execute([':acode' => $achat['code_achat_avicole']]);
             }
 
             $db->commit();

@@ -21,7 +21,7 @@ $resteAPayer = max(0, $montantTotal - $montantPaye);
 $pourcentagePaye = ($montantTotal > 0) ? min(100, round(($montantPaye / $montantTotal) * 100, 1)) : 0;
 
 $statutReglement = strtolower($achat['statut_reglement'] ?? 'impaye');
-$statutAchat = strtolower($achat['statut_achat'] ?? 'valide');
+$statutAchat = strtolower($achat['statut_achat'] ?? 'en_cours');
 $statutReception = strtolower($achat['statut_reception'] ?? 'en_attente');
 $statutVerification = strtolower($achat['statut_verification'] ?? 'non_verifie');
 $verifiePar = htmlspecialchars($achat['verifie_par'] ?? '');
@@ -119,7 +119,7 @@ foreach ($details as $dItem) {
               </span>
             <?php else: ?>
               <span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:6px 14px; border-radius:20px; font-weight:800; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
-                <i data-lucide="clock" style="width: 14px; height: 14px;"></i> En attente
+                <i data-lucide="clock" style="width: 14px; height: 14px;"></i> En cours
               </span>
             <?php endif; ?>
 
@@ -441,6 +441,13 @@ foreach ($details as $dItem) {
                         <?= number_format($qte, 2, ',', ' ') ?>
                         <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;"><?= htmlspecialchars($d['unite_mesure'] ?? 'Unité') ?></span>
                       </span>
+                      <?php if (isset($d['quantite_recue']) && $d['quantite_recue'] !== null && floatval($d['quantite_recue']) != floatval($qte)): ?>
+                        <div style="margin-top: 4px;">
+                          <span style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
+                            Reçu : <?= number_format(floatval($d['quantite_recue']), 2, ',', ' ') ?>
+                          </span>
+                        </div>
+                      <?php endif; ?>
                     </td>
                     <td style="padding: 12px 14px; text-align: right; font-weight: 700; color: #475569; font-size: 13px;">
                       <?= number_format($pu, 0, ',', ' ') ?> FCFA
