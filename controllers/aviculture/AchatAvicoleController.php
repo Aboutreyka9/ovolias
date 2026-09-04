@@ -182,10 +182,17 @@ class AchatAvicoleController extends BaseController
         $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
         $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
 
+        $userRoles = $_SESSION[USERS_AUTH]['roles'] ?? [$_SESSION[USERS_AUTH]['role_code'] ?? ''];
+        if (is_string($userRoles)) $userRoles = [$userRoles];
+        $userPerms = $_SESSION['permissions'] ?? [];
+        $isSuperAdmin = !empty(array_intersect($userRoles, ['ROLE_SUPERADMIN', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL']));
+        $canReglerFacture = $isSuperAdmin || !empty(array_intersect($userRoles, ['ROLE_FINANCE', 'ROLE_GESTIONNAIRE'])) || in_array('*', $userPerms, true) || in_array('FINANCE_VALIDATE_VERSEMENT', $userPerms, true);
+
         $this->render('aviculture/detail_achat.php', [
-            'achat'    => $achat,
-            'details'  => $details,
-            'payments' => $payments
+            'achat'            => $achat,
+            'details'          => $details,
+            'payments'         => $payments,
+            'canReglerFacture' => $canReglerFacture
         ]);
     }
 
