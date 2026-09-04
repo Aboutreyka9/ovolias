@@ -618,6 +618,26 @@ foreach ($details as $dItem) {
 $(document).ready(function() {
     if (window.lucide) lucide.createIcons();
 
+    // Configuration globale Toastr
+    if (typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "4000"
+        };
+    }
+
+    function notifyMsg(message, type = 'success') {
+        if (typeof toastr !== 'undefined' && toastr[type]) {
+            toastr[type](message);
+        } else if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    }
+
     // Soumission du formulaire de règlement depuis la page de détails
     $('#formReglerFactureDetail').on('submit', function(e) {
         e.preventDefault();
@@ -634,19 +654,11 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(res) {
                 if (res.status === 1 || res.status === 'success') {
-                    if (typeof toastr !== 'undefined') {
-                        toastr.success(res.message || 'Règlement enregistré avec succès !');
-                    } else {
-                        alert(res.message || 'Règlement enregistré avec succès !');
-                    }
+                    notifyMsg(res.message || 'Règlement enregistré avec succès !', 'success');
                     $('#modalReglerFactureDetail').modal('hide');
                     setTimeout(() => location.reload(), 600);
                 } else {
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error(res.message || 'Erreur lors du règlement');
-                    } else {
-                        alert(res.message || 'Erreur lors du règlement');
-                    }
+                    notifyMsg(res.message || 'Erreur lors du règlement', 'error');
                     $btn.prop('disabled', false).html('<i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Valider le Règlement');
                     if (window.lucide) lucide.createIcons();
                 }
@@ -656,11 +668,7 @@ $(document).ready(function() {
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     msg = xhr.responseJSON.message;
                 }
-                if (typeof toastr !== 'undefined') {
-                    toastr.error(msg);
-                } else {
-                    alert(msg);
-                }
+                notifyMsg(msg, 'error');
                 $btn.prop('disabled', false).html('<i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Valider le Règlement');
                 if (window.lucide) lucide.createIcons();
             }
