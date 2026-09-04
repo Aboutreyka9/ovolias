@@ -362,9 +362,11 @@ function selectTypeVente(type) {
     if (type === 'comptoir_direct') {
         $('#btnTypeComptoir').addClass('active');
         $('#btnTypeCommande').removeClass('active');
+        $('#selectClient').val('').prop('disabled', true).css({ 'background-color': '#F1F5F9', 'cursor': 'not-allowed' });
     } else {
         $('#btnTypeCommande').addClass('active');
         $('#btnTypeComptoir').removeClass('active');
+        $('#selectClient').prop('disabled', false).css({ 'background-color': '#FFFFFF', 'cursor': 'pointer' });
     }
     verifierBoutonEncaissement();
 }
@@ -519,7 +521,7 @@ $(document).ready(function() {
     });
 
     $('#modalVente').on('shown.bs.modal', function() {
-        verifierBoutonEncaissement();
+        selectTypeVente($('#input_type_vente').val() || 'comptoir_direct');
     });
 
     // Filtre des catégories de poids selon le produit sélectionné
