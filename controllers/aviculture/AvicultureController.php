@@ -186,9 +186,6 @@ class AvicultureController extends BaseController
         $stmtProd = $db->query("
             SELECT * FROM produits_aviculture_avicole 
             WHERE statut_produit = 'actif' 
-              AND code_produit_aviculture NOT IN (
-                  SELECT DISTINCT produit_code FROM grilles_tarifs_poids_avicole
-              )
             ORDER BY libelle_produit ASC
         ");
         $produits = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
