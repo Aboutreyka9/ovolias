@@ -145,10 +145,14 @@ class AchatAvicoleController extends BaseController
         $db = $this->model->getCon();
         $stmtA = $db->prepare("
             SELECT a.*, f.nom_fournisseur_avicole, f.telephone_fournisseur_avicole, f.adresse_fournisseur_avicole,
-                   u.nom_user, u.prenom_user
+                   u.nom_user, u.prenom_user,
+                   uv.nom_user AS verifier_nom, uv.prenom_user AS verifier_prenom,
+                   uval.nom_user AS validator_nom, uval.prenom_user AS validator_prenom
             FROM achats_avicoles a
             LEFT JOIN fournisseurs_avicoles f ON a.fournisseur_avicole_code = f.code_fournisseur_avicole
             LEFT JOIN users u ON a.user_code = u.code_user
+            LEFT JOIN users uv ON a.verifie_par = uv.code_user
+            LEFT JOIN users uval ON a.valide_par = uval.code_user
             WHERE a.code_achat_avicole = :code OR a.id_achat_avicole = :code
         ");
         $stmtA->execute([':code' => $code]);
@@ -181,6 +185,12 @@ class AchatAvicoleController extends BaseController
 
         $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
         $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
+
+        $vNom = trim(($achat['verifier_nom'] ?? '') . ' ' . ($achat['verifier_prenom'] ?? ''));
+        $achat['verifier_nom_complet'] = !empty($vNom) ? $vNom : ($achat['verifie_par'] ?? '');
+
+        $valNom = trim(($achat['validator_nom'] ?? '') . ' ' . ($achat['validator_prenom'] ?? ''));
+        $achat['validator_nom_complet'] = !empty($valNom) ? $valNom : ($achat['valide_par'] ?? '');
 
         $userRoles = $_SESSION[USERS_AUTH]['roles'] ?? [$_SESSION[USERS_AUTH]['role_code'] ?? ''];
         if (is_string($userRoles)) $userRoles = [$userRoles];

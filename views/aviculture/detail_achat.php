@@ -24,9 +24,9 @@ $statutReglement = strtolower($achat['statut_reglement'] ?? 'impaye');
 $statutAchat = strtolower($achat['statut_achat'] ?? 'en_cours');
 $statutReception = strtolower($achat['statut_reception'] ?? 'en_attente');
 $statutVerification = strtolower($achat['statut_verification'] ?? 'non_verifie');
-$verifiePar = htmlspecialchars($achat['verifie_par'] ?? '');
+$verifiePar = htmlspecialchars(!empty($achat['verifier_nom_complet']) ? $achat['verifier_nom_complet'] : ($achat['verifie_par'] ?? ''));
 $dateVerification = !empty($achat['date_verification']) ? date('d/m/Y H:i', strtotime($achat['date_verification'])) : '';
-$validePar = htmlspecialchars($achat['valide_par'] ?? '');
+$validePar = htmlspecialchars(!empty($achat['validator_nom_complet']) ? $achat['validator_nom_complet'] : ($achat['valide_par'] ?? ''));
 $dateValidation = !empty($achat['date_validation']) ? date('d/m/Y H:i', strtotime($achat['date_validation'])) : '';
 $notesReception = htmlspecialchars($achat['notes_reception'] ?? '');
 
@@ -317,6 +317,78 @@ foreach ($details as $dItem) {
               <div>
                 <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Horodatage Saisie</span>
                 <div style="font-size: 13px; font-weight: 800; color: #0F172A; margin-top: 2px;"><?= $dateAchat ?></div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <div style="background: #F3E8FF; color: #7C3AED; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink:0;">
+                <i data-lucide="clipboard-check" style="width: 18px; height: 18px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Vérification (Contrôle)</span>
+                <div style="font-size: 12px; font-weight: 800; color: #0F172A; margin-top: 2px;">
+                  <?php if (!empty($verifiePar)): ?>
+                    <?= $verifiePar ?> <?= !empty($dateVerification) ? '<small style="color:#64748B; display:block;">('.$dateVerification.')</small>' : '' ?>
+                  <?php else: ?>
+                    <span style="color:#94A3B8; font-weight:600;">Non vérifié</span>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <div style="background: #DCFCE7; color: #166534; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink:0;">
+                <i data-lucide="award" style="width: 18px; height: 18px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Validation (Chef)</span>
+                <div style="font-size: 12px; font-weight: 800; color: #0F172A; margin-top: 2px;">
+                  <?php if (!empty($validePar)): ?>
+                    <?= $validePar ?> <?= !empty($dateValidation) ? '<small style="color:#64748B; display:block;">('.$dateValidation.')</small>' : '' ?>
+                  <?php else: ?>
+                    <span style="color:#94A3B8; font-weight:600;">En attente de validation</span>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <div style="background: #E0F2FE; color: #0369A1; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink:0;">
+                <i data-lucide="truck" style="width: 18px; height: 18px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Statut Réception</span>
+                <div style="margin-top: 2px;">
+                  <?php if ($statutReception === 'recue'): ?>
+                    <span style="background: #DCFCE7; color: #166534; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Reçue (100%)</span>
+                  <?php elseif ($statutReception === 'partiellement_recue'): ?>
+                    <span style="background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Partiellement Reçue</span>
+                  <?php elseif ($statutReception === 'refusee'): ?>
+                    <span style="background: #FEE2E2; color: #991B1B; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Refusée</span>
+                  <?php else: ?>
+                    <span style="background: #F1F5F9; color: #475569; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">En attente</span>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <div style="background: #F5F3FF; color: #6D28D9; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink:0;">
+                <i data-lucide="check-square" style="width: 18px; height: 18px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Statut Contrôle</span>
+                <div style="margin-top: 2px;">
+                  <?php if ($statutVerification === 'verifie'): ?>
+                    <span style="background: #F3E8FF; color: #6B21A8; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Vérifié &amp; Conforme</span>
+                  <?php elseif ($statutVerification === 'partiellement_verifie'): ?>
+                    <span style="background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Partiel</span>
+                  <?php elseif ($statutVerification === 'refuse'): ?>
+                    <span style="background: #FEE2E2; color: #991B1B; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Refusé</span>
+                  <?php else: ?>
+                    <span style="background: #F1F5F9; color: #475569; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Non vérifié</span>
+                  <?php endif; ?>
+                </div>
               </div>
             </div>
           </div>
