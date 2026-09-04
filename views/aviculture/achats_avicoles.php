@@ -5,6 +5,11 @@ $produits = $produits ?? [];
 $categoriesPoids = $categoriesPoids ?? [];
 $produitsAvecGrille = array_filter($produits, fn($p) => isset($p['soumis_grille_poids']) && intval($p['soumis_grille_poids']) === 1);
 $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille_poids']) || intval($p['soumis_grille_poids']) === 0);
+
+$canReglerFacture = true;
+if (isset($canAccess)) {
+    $canReglerFacture = $canAccess(['FINANCE_VALIDATE_VERSEMENT', 'GESTIONNAIRE_MANAGE_ARTICLES'], ['ROLE_FINANCE', 'ROLE_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_DIR_GENERAL', 'ROLE_GESTIONNAIRE']);
+}
 ?>
 
 <div class="app-layout">
@@ -394,6 +399,7 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
 <script>
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
+    const userCanReglerFacture = <?= json_encode($canReglerFacture) ?>;
 
     function getProduitBadge(row) {
         const libelle = row.produit_libelle || row.libelle_produit || row.categorie_intrant || '-';
@@ -554,6 +560,8 @@ $(document).ready(function() {
 
                 if (resteAchat <= 0.01) {
                     $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
+                } else if (!userCanReglerFacture) {
+                    $('#boxFormReglement').html('<div style="background: #F8FAFC; border: 1px solid #E2E8F0; color: #475569; border-radius: 8px; padding: 12px; font-weight: 600; text-align: center;"><i class="fa fa-lock me-1"></i> Facture en attente de règlement (Privilèges de saisie réservés à la Comptabilité & Administration).</div>');
                 } else {
                     $('#boxFormReglement').html(`
                       <form id="formReglerFacture">

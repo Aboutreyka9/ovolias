@@ -194,6 +194,17 @@ class AchatAvicoleController extends BaseController
         $this->requireAuth();
         $this->requirePost();
 
+        // RBAC check for settlement privileges
+        $userRoles = $_SESSION[USERS_AUTH]['roles'] ?? [$_SESSION[USERS_AUTH]['role_code'] ?? ''];
+        if (is_string($userRoles)) $userRoles = [$userRoles];
+        $userPerms = $_SESSION['permissions'] ?? [];
+
+        $isAuthorized = !empty(array_intersect($userRoles, ['ROLE_SUPERADMIN', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL', 'ROLE_FINANCE', 'ROLE_GESTIONNAIRE']));
+        if (!$isAuthorized && !in_array('*', $userPerms, true) && !in_array('FINANCE_VALIDATE_VERSEMENT', $userPerms, true)) {
+            $this->json(['status' => 0, 'message' => 'Accès refusé. Vous ne disposez pas des privilèges nécessaires pour enregistrer un règlement.'], 403);
+            return;
+        }
+
         $code_achat = trim($this->post('code_achat'));
         $montant_verse = (float)$this->post('montant_verse', 0);
         $mode_reglement = trim($this->post('mode_reglement', 'especes'));
