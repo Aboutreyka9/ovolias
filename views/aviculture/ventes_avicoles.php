@@ -495,6 +495,11 @@ function verifierBoutonEncaissement() {
     const net = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
     const $btn = $('#btnSubmitVente');
 
+    if (typeVente === 'commande_livraison') {
+        $btn.prop('disabled', false).css({ 'opacity': '1', 'cursor': 'pointer' });
+        return;
+    }
+
     const hasItems = (panier.length > 0 || $('.chk-etiq:checked').length > 0);
 
     if (!hasItems) {
