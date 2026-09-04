@@ -222,7 +222,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
 
               <div class="col-md-2">
                 <label style="font-size: 11px; font-weight: 700; color: #475569;">Prix Unitaire (F)</label>
-                <input type="number" id="pos_prix" value="0" min="0" step="any" class="form-control form-control-sm" style="border-radius: 6px;">
+                <input type="number" id="pos_prix" value="0" min="0" step="any" readonly class="form-control form-control-sm" style="border-radius: 6px; background-color: #F1F5F9; cursor: not-allowed; font-weight: 700;">
               </div>
 
               <div class="col-md-2">
@@ -388,7 +388,14 @@ function ajouterArticlePanier() {
     const prodNom = $prod.data('nom') || '';
 
     if (!prodCode) {
-        alert('Veuillez sélectionner un produit.');
+        if (typeof toastr !== 'undefined') toastr.error('Veuillez sélectionner un produit.');
+        else alert('Veuillez sélectionner un produit.');
+        return;
+    }
+
+    if (!pu || pu <= 0) {
+        if (typeof toastr !== 'undefined') toastr.warning('Le prix unitaire doit être défini et supérieur à 0 FCFA.');
+        else alert('Le prix unitaire doit être supérieur à 0 FCFA.');
         return;
     }
 
@@ -475,13 +482,61 @@ $(document).ready(function() {
 
     const grillesTarifs = <?= json_encode($grillesTarifs) ?>;
 
-    // Auto-remplissage du prix unitaire depuis la grille de tarifs officielle (grilles_tarifs_poids_avicole)
-    $('#pos_produit, #pos_cat').on('change', function() {
+    // Filtre des catégories de poids selon le produit sélectionné
+    $('#pos_produit').on('change', function() {
+        const pCode = $(this).val();
+        const $catSelect = $('#pos_cat');
+
+        if (!pCode) {
+            $catSelect.find('option').show();
+            $('#pos_prix').val('');
+            return;
+        }
+
+        // Récupérer les codes de catégories de poids configurées et actives pour ce produit
+        const activeCatCodes = grillesTarifs
+            .filter(g => g.produit_code === pCode)
+            .map(g => g.categorie_poids_code);
+
+        // Masquer / afficher les options du select catégorie de poids
+        let hasValidCat = false;
+        $catSelect.find('option').each(function() {
+            const val = $(this).val();
+            if (!val) {
+                $(this).show();
+            } else if (activeCatCodes.includes(val)) {
+                $(this).show();
+                hasValidCat = true;
+            } else {
+                $(this).hide();
+            }
+        });
+
+        // Si des catégories spécifiques existent pour ce produit, pré-sélectionner la première valide
+        if (hasValidCat) {
+            const firstCat = activeCatCodes.find(c => c !== 'CATP-NON-SOUMIS');
+            if (firstCat && $catSelect.find(`option[value="${firstCat}"]`).length > 0) {
+                $catSelect.val(firstCat);
+            } else {
+                $catSelect.val('');
+            }
+        } else {
+            $catSelect.val('');
+        }
+
+        updatePosPrix();
+    });
+
+    $('#pos_cat').on('change', function() {
+        updatePosPrix();
+    });
+
+    function updatePosPrix() {
         const pCode = $('#pos_produit').val();
         const cCode = $('#pos_cat').val();
 
         if (!pCode) {
-            $('#pos_prix').val(0);
+            $('#pos_prix').val('');
             return;
         }
 
@@ -505,8 +560,17 @@ $(document).ready(function() {
             if (foundAny) matchPrix = parseFloat(foundAny.prix_vente);
         }
 
-        $('#pos_prix').val(matchPrix !== null ? matchPrix : 0);
-    });
+        if (matchPrix !== null && matchPrix > 0) {
+            $('#pos_prix').val(matchPrix);
+        } else {
+            $('#pos_prix').val('');
+            const prodText = $('#pos_produit option:selected').text().trim();
+            const msg = "Aucun tarif configuré dans la grille pour " + (prodText || "cet article") + ". Veuillez saisir le prix unitaire.";
+            if (typeof toastr !== 'undefined') {
+                toastr.warning(msg, "Tarif Non Renseigné");
+            }
+        }
+    }
 
     let dt = $('#tableVentesAvicoles').DataTable({
         ajax: {
