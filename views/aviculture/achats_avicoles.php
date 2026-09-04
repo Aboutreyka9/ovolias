@@ -643,13 +643,39 @@ $(document).ready(function() {
         addArticleRowSansGrille();
     });
 
+    function notifyMsg(msg, type = 'success') {
+        if (window.toastr && typeof window.toastr[type] === 'function') {
+            window.toastr[type](msg);
+        } else if (typeof showToast === 'function') {
+            showToast(msg, type);
+        } else {
+            alert(msg);
+        }
+    }
+
+    function hideModalAchat() {
+        let modalEl = document.getElementById('modalAchat');
+        if (modalEl) {
+            if (window.bootstrap) {
+                let bsModal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+                if (bsModal) {
+                    try { bsModal.hide(); } catch(e) {}
+                }
+            }
+            try { $('#modalAchat').modal('hide'); } catch(e) {}
+            $('#modalAchat').removeClass('show').css('display', 'none');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('overflow', '');
+        }
+    }
+
     $(document).on('click', '.btn-remove-row', function() {
         if ($('.article-item-row').length > 1) {
             $(this).closest('tr').remove();
             recalcTotals();
             updateProduitSelectOptions();
         } else {
-            if (window.toastr) toastr.warning("La commande doit comporter au moins un produit.");
+            notifyMsg("La commande doit comporter au moins un produit.", 'warning');
         }
     });
 
@@ -672,11 +698,7 @@ $(document).ready(function() {
                 });
 
                 if (duplicateCount > 1) {
-                    if (window.toastr) {
-                        toastr.warning("Cette combinaison Produit + Grille de Poids est déjà présente dans la commande.");
-                    } else {
-                        alert("Cette combinaison Produit + Grille de Poids est déjà présente dans la commande.");
-                    }
+                    notifyMsg("Cette combinaison Produit + Grille de Poids est déjà présente dans la commande.", 'warning');
                     $(this).val('');
                 }
             }
@@ -727,14 +749,18 @@ $(document).ready(function() {
 
     $('#formAchat').on('submit', function(e) {
         e.preventDefault();
+        let $btnSubmit = $(this).find('button[type="submit"]');
+        if (typeof loading === 'function') loading($btnSubmit, true, 'Enregistrement...');
+
         $.post(baseApi + 'aviculture/addAchat', $(this).serialize(), function(res) {
-            if (res.status === 'success' || res.success) {
-                if (window.toastr) toastr.success(res.message || 'Achat enregistré avec succès');
-                else alert(res.message);
+            if (typeof loading === 'function') loading($btnSubmit, false);
+
+            let isSuccess = (res.status === 1 || res.status === '1' || res.status === 'success' || res.success === true);
+
+            if (isSuccess) {
+                notifyMsg(res.message || 'Achat enregistré avec succès !', 'success');
                 
-                var modalEl = document.getElementById('modalAchat');
-                var bsModal = bootstrap.Modal.getInstance(modalEl);
-                if (bsModal) bsModal.hide();
+                hideModalAchat();
 
                 // Réinitialiser le formulaire
                 $('#formAchat')[0].reset();
@@ -744,12 +770,20 @@ $(document).ready(function() {
                 addArticleRowAvecGrille();
                 chargerNumeroFactureAuto();
 
-                dt.ajax.reload(null, false);
+                if (typeof dt !== 'undefined' && dt) {
+                    dt.ajax.reload(null, false);
+                }
             } else {
-                if (window.toastr) toastr.error(res.message || 'Erreur lors de l\'enregistrement');
-                else alert(res.message || 'Erreur lors de l\'enregistrement');
+                notifyMsg(res.message || 'Erreur lors de l\'enregistrement de l\'achat', 'error');
             }
-        }, 'json');
+        }, 'json').fail(function(xhr) {
+            if (typeof loading === 'function') loading($btnSubmit, false);
+            let errMsg = 'Erreur réseau ou serveur lors de la soumission du formulaire.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errMsg = xhr.responseJSON.message;
+            }
+            notifyMsg(errMsg, 'error');
+        });
     });
 });
 </script>
