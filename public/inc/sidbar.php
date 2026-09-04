@@ -354,7 +354,7 @@
                 <a href="<?= RACINE ?>aviculture/stock" target="_blank" class="nav-item sub <?= strpos($currentUri, '/aviculture/stock') !== false ? 'active' : '' ?>" data-title="État des Stocks">
                     <i data-lucide="package"></i> <span>État des Stocks</span>
                 </a>
-                <a href="<?= RACINE ?>aviculture/mouvements_stock" class="nav-item sub <?= strpos($currentUri, '/aviculture/mouvements_stock') !== false ? 'active' : '' ?>" data-title="Mouvements de Stock">
+                <a href="<?= RACINE ?>aviculture/mouvements_stock" target="_blank" class="nav-item sub <?= strpos($currentUri, '/aviculture/mouvements_stock') !== false ? 'active' : '' ?>" data-title="Mouvements de Stock">
                     <i data-lucide="history"></i> <span>Mouvements de Stock</span>
                 </a>
                 <a href="<?= RACINE ?>aviculture/pesees" class="nav-item sub <?= strpos($currentUri, '/aviculture/pesees') !== false ? 'active' : '' ?>" data-title="Pesées & Étiquettes">
