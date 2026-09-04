@@ -43,100 +43,113 @@ foreach ($details as $dItem) {
 }
 ?>
 
-      <!-- BANNIÈRE EXECUTIVE NAVY (#0F172A) : INFORMATIONS GÉNÉRALES -->
-      <div style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); border-radius: 16px; padding: 28px 32px; color: #FFFFFF; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25); margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.08); position: relative; overflow: hidden;">
-        <!-- Element décoratif d'arrière-plan -->
-        <div style="position: absolute; right: -30px; top: -30px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; pointer-events: none;"></div>
+      <!-- OPTION 1 : LAYOUT HYBRIDE EN 2 BLOCS SÉPARÉS (FICHE + PANNEAU KPI) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px;">
+        
+        <!-- BLOC GAUCHE : FICHE SIGNALÉTIQUE TRANSACTION (60%) -->
+        <div class="card" style="background: #FFFFFF; border-radius: 12px; padding: 24px 28px; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); box-sizing: border-box;">
+          <h3 style="font-size: 15px; font-weight: 800; color: #1E3A5F; margin: 0 0 18px 0; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #EFF6FF; padding-bottom: 10px;">
+            <i data-lucide="file-text" style="width: 18px; height: 18px; color: #3B82F6;"></i> Informations sur la Transaction & Fournisseur
+          </h3>
 
-        <!-- Rangée Supérieure : Titre & Badges Executive -->
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 18px; margin-bottom: 22px;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-              <i data-lucide="file-text" style="width: 22px; height: 22px;"></i>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Item 1 : Code & Facture -->
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="background: #EFF6FF; color: #3B82F6; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i data-lucide="qr-code" style="width: 20px; height: 20px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Code & Facture FRS</span>
+                <div style="font-size: 16px; font-weight: 800; color: #0F172A; font-family: monospace; margin-top: 2px;"><?= $codeAchat ?></div>
+                <div style="font-size: 12px; color: #64748B; margin-top: 2px;">N° Facture : <strong><?= $numFacture ?></strong></div>
+              </div>
             </div>
-            <div>
-              <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #FFFFFF; letter-spacing: 0.5px; text-transform: uppercase;">
-                Informations Générales sur la Transaction
-              </h3>
-              <span style="font-size: 12px; color: #94A3B8;">Bon d'Achat Avicole Officiel GEICG</span>
-            </div>
-          </div>
 
-          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <!-- Badge Statut Achat -->
-            <?php if ($statutAchat === 'valide' || $statutAchat === 'recu'): ?>
-              <span style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                <span style="width: 7px; height: 7px; background: #38BDF8; border-radius: 50%; display: inline-block;"></span> Achat Validé
-              </span>
-            <?php else: ?>
-              <span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                <span style="width: 7px; height: 7px; background: #FBBF24; border-radius: 50%; display: inline-block;"></span> En Attente
-              </span>
-            <?php endif; ?>
+            <!-- Item 2 : Fournisseur Avicole -->
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="background: #ECFDF5; color: #10B981; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i data-lucide="truck" style="width: 20px; height: 20px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Fournisseur Avicole</span>
+                <div style="font-size: 15px; font-weight: 800; color: #0F172A; margin-top: 2px;"><?= $fournisseurNom ?></div>
+                <div style="font-size: 12px; color: #64748B; margin-top: 2px;">Tél : <strong><?= htmlspecialchars($achat['telephone_fournisseur_avicole'] ?? 'N/A') ?></strong></div>
+              </div>
+            </div>
 
-            <!-- Badge Statut Règlement -->
-            <?php if ($statutReglement === 'paye'): ?>
-              <span style="background: rgba(34, 197, 94, 0.15); color: #4ADE80; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                <span style="width: 7px; height: 7px; background: #4ADE80; border-radius: 50%; display: inline-block;"></span> Règlement Payé
-              </span>
-            <?php else: ?>
-              <span style="background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.3); font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                <span style="width: 7px; height: 7px; background: #FB7185; border-radius: 50%; display: inline-block;"></span> <?= ucfirst($statutReglement) ?>
-              </span>
-            <?php endif; ?>
-          </div>
-        </div>
+            <!-- Item 3 : Agent Saisie -->
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="background: #F3E8FF; color: #8B5CF6; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i data-lucide="user-check" style="width: 20px; height: 20px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Agent de Saisie</span>
+                <div style="font-size: 15px; font-weight: 800; color: #334155; margin-top: 2px;"><?= $agentNom ?></div>
+                <div style="font-size: 12px; color: #64748B; margin-top: 2px;">Opérateur agréé</div>
+              </div>
+            </div>
 
-        <!-- Grille Métrique Executive (4 Cartes Puces) -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px;">
-          <!-- Tuile 1 : Code Achat & Facture -->
-          <div style="background: rgba(255, 255, 255, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <i data-lucide="qr-code" style="width: 16px; height: 16px; color: #38BDF8;"></i>
-              <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px;">Code & Facture</span>
-            </div>
-            <div style="font-size: 18px; font-weight: 800; color: #FFFFFF; font-family: monospace;"><?= $codeAchat ?></div>
-            <div style="font-size: 12px; color: #CBD5E1; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-              <i data-lucide="receipt" style="width: 13px; height: 13px; color: #94A3B8;"></i> Facture : <strong><?= $numFacture ?></strong>
-            </div>
-          </div>
-
-          <!-- Tuile 2 : Fournisseur Avicole -->
-          <div style="background: rgba(255, 255, 255, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <i data-lucide="truck" style="width: 16px; height: 16px; color: #4ADE80;"></i>
-              <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px;">Fournisseur</span>
-            </div>
-            <div style="font-size: 16px; font-weight: 800; color: #F8FAFC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= $fournisseurNom ?></div>
-            <div style="font-size: 12px; color: #CBD5E1; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-              <i data-lucide="phone" style="width: 13px; height: 13px; color: #94A3B8;"></i> Tél : <strong><?= htmlspecialchars($achat['telephone_fournisseur_avicole'] ?? 'N/A') ?></strong>
-            </div>
-          </div>
-
-          <!-- Tuile 3 : Agent & Date -->
-          <div style="background: rgba(255, 255, 255, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <i data-lucide="user-check" style="width: 16px; height: 16px; color: #A78BFA;"></i>
-              <span style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px;">Agent & Horodatage</span>
-            </div>
-            <div style="font-size: 16px; font-weight: 700; color: #F1F5F9;"><?= $agentNom ?></div>
-            <div style="font-size: 12px; color: #CBD5E1; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-              <i data-lucide="calendar" style="width: 13px; height: 13px; color: #94A3B8;"></i> Saisi le <strong><?= $dateAchat ?></strong>
-            </div>
-          </div>
-
-          <!-- Tuile 4 : Total Financier & Quantités -->
-          <div style="background: rgba(244, 63, 94, 0.1); padding: 16px; border-radius: 12px; border: 1px solid rgba(244, 63, 94, 0.25);">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <i data-lucide="coins" style="width: 16px; height: 16px; color: #FB7185;"></i>
-              <span style="font-size: 11px; font-weight: 800; color: #FDA4AF; text-transform: uppercase; letter-spacing: 0.5px;">Total Transaction</span>
-            </div>
-            <div style="font-size: 20px; font-weight: 900; color: #FFFFFF; font-family: system-ui, sans-serif;"><?= number_format($montantTotal, 0, ',', ' ') ?> FCFA</div>
-            <div style="font-size: 12px; color: #FECDD3; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-              <i data-lucide="layers" style="width: 13px; height: 13px; color: #FB7185;"></i> Quantité Totale : <strong><?= number_format($totQteGlobal, 2, ',', ' ') ?></strong>
+            <!-- Item 4 : Date & Horodatage -->
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="background: #FEF3C7; color: #D97706; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i data-lucide="calendar" style="width: 20px; height: 20px;"></i>
+              </div>
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Date & Horodatage</span>
+                <div style="font-size: 15px; font-weight: 800; color: #0F172A; margin-top: 2px;"><?= $dateAchat ?></div>
+                <div style="font-size: 12px; color: #64748B; margin-top: 2px;">Enregistrement système</div>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- BLOC DROIT : PANNEAU SYNTHÈSE FINANCIÈRE & STATUTS KPI (40%) -->
+        <div class="card" style="background: #F8FAFC; border-radius: 12px; padding: 24px 28px; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+          <div>
+            <h3 style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px;">
+              <i data-lucide="pie-chart" style="width: 18px; height: 18px; color: #DC2626;"></i> Synthèse Financière & Statuts
+            </h3>
+
+            <!-- KPI Montant Total & Quantité -->
+            <div style="display: flex; justify-content: space-between; align-items: baseline; background: #FFFFFF; padding: 14px 18px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 16px;">
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Montant Total Achat</span>
+                <div style="font-size: 22px; font-weight: 900; color: #DC2626; margin-top: 2px;"><?= number_format($montantTotal, 0, ',', ' ') ?> FCFA</div>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Qté Totale</span>
+                <div style="font-size: 16px; font-weight: 800; color: #1E3A5F; margin-top: 2px;"><?= number_format($totQteGlobal, 2, ',', ' ') ?></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges de Statuts -->
+          <div>
+            <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 8px;">Statut Achat & Règlement :</span>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <?php if ($statutAchat === 'valide' || $statutAchat === 'recu'): ?>
+                <span class="badge" style="background:#E0F2FE; color:#0369A1; border:1px solid #BAE6FD; padding:8px 16px; border-radius:10px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="check-circle" style="width: 15px; height: 15px;"></i> Achat Validé
+                </span>
+              <?php else: ?>
+                <span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:8px 16px; border-radius:10px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="clock" style="width: 15px; height: 15px;"></i> En attente
+                </span>
+              <?php endif; ?>
+
+              <?php if ($statutReglement === 'paye'): ?>
+                <span class="badge" style="background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; padding:8px 16px; border-radius:10px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="credit-card" style="width: 15px; height: 15px;"></i> Payé
+                </span>
+              <?php else: ?>
+                <span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:8px 16px; border-radius:10px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="alert-circle" style="width: 15px; height: 15px;"></i> <?= ucfirst($statutReglement) ?>
+                </span>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- CARTE 2 : LISTE DES ARTICLES COMMANDÉS -->
