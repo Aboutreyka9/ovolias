@@ -372,6 +372,14 @@ function selectTypeVente(type) {
 }
 
 function checkReglement() {
+    const reg = $('#selectReglement').val();
+    if (reg === 'mobile_money' || reg === 'cheque' || reg === 'virement') {
+        const net = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
+        if (net > 0) {
+            $('#inputMontantRecu').val(net);
+            recalculerTotaux();
+        }
+    }
     verifierBoutonEncaissement();
 }
 
