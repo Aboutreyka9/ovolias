@@ -112,6 +112,19 @@ class ModelHome extends BaseModel
             $totalDistributions = (int)$db->query("SELECT COUNT(*) FROM distributions")->fetchColumn();
             $totalDistributionsValidees = (int)$db->query("SELECT COUNT(*) FROM distributions WHERE statut_distribution = 'valide'")->fetchColumn();
 
+            // 8. Ventes Avicoles OVOLIA
+            $sqlV = "SELECT COUNT(*) AS total_ventes, COALESCE(SUM(montant_total_net), 0) AS ca_ventes FROM ventes_avicoles WHERE statut_vente != 'annulee'";
+            $pV = [];
+            if ($userCodeFilter) {
+                $sqlV .= " AND user_code = ?";
+                $pV[] = $userCodeFilter;
+            }
+            $stmtV = $db->prepare($sqlV);
+            $stmtV->execute($pV);
+            $rowV = $stmtV->fetch(PDO::FETCH_ASSOC) ?: [];
+            $totalVentesAvicoles = (int)($rowV['total_ventes'] ?? 0);
+            $caVentesAvicoles = (float)($rowV['ca_ventes'] ?? 0);
+
             return [
                 'annee_code' => $anneeCode,
                 'total_clients' => $totalClients,
@@ -127,7 +140,9 @@ class ModelHome extends BaseModel
                 'total_depenses' => $totalDepenses,
                 'total_distributions' => $totalDistributions,
                 'total_distributions_validees' => $totalDistributionsValidees,
-                'solde_net' => $soldeNet
+                'total_ventes_avicoles' => $totalVentesAvicoles,
+                'ca_ventes_avicoles' => $caVentesAvicoles,
+                'solde_net' => $soldeNet + $caVentesAvicoles
             ];
         } catch (Exception $e) {
             error_log("ModelHome::getStats error: " . $e->getMessage());
@@ -215,6 +230,31 @@ class ModelHome extends BaseModel
             return $db->query($sql)->fetchAll(PDO::FETCH_ASSOC) ?: [];
         } catch (Exception $e) {
             error_log("ModelHome::getRecentDepenses error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getRecentVentesAvicoles(int $limit = 5): array
+    {
+        try {
+            $db = $this->pdo->getCon();
+            $sql = "SELECT v.*, c.nom_client_avicole, u.nom_user, u.prenom_user
+                    FROM ventes_avicoles v
+                    LEFT JOIN clients_avicoles c ON c.code_client_avicole = v.client_avicole_code
+                    LEFT JOIN users u ON u.code_user = v.user_code
+                    WHERE v.statut_vente != 'annulee'";
+            $params = [];
+            if (Context::isCommercial()) {
+                $sql .= " AND v.user_code = ?";
+                $params[] = Context::user();
+            }
+            $limitInt = max(1, (int)$limit);
+            $sql .= " ORDER BY v.id_vente_avicole DESC LIMIT $limitInt";
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            error_log("ModelHome::getRecentVentesAvicoles error: " . $e->getMessage());
             return [];
         }
     }

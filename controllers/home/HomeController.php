@@ -20,6 +20,7 @@ class HomeController extends BaseController
             $recentCotisations = $model->getRecentCotisations(5);
             $recentVersements = $model->getRecentVersements(5);
             $recentDepenses = $model->getRecentDepenses(5);
+            $recentVentesAvicoles = $model->getRecentVentesAvicoles(5);
 
             $this->loadView('../views/home/index.php', [
                 'stats' => $stats,
@@ -28,7 +29,8 @@ class HomeController extends BaseController
                 'auth' => $auth,
                 'recentCotisations' => $recentCotisations,
                 'recentVersements' => $recentVersements,
-                'recentDepenses' => $recentDepenses
+                'recentDepenses' => $recentDepenses,
+                'recentVentesAvicoles' => $recentVentesAvicoles
             ]);
         } else {
             $this->render('../views/users/connexion.php', [], 'guest');

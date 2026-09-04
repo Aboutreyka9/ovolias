@@ -6,6 +6,7 @@ $auth = $auth ?? ($_SESSION[USERS_AUTH] ?? []);
 $recentCotisations = $recentCotisations ?? [];
 $recentVersements = $recentVersements ?? [];
 $recentDepenses = $recentDepenses ?? [];
+$recentVentesAvicoles = $recentVentesAvicoles ?? [];
 ?>
 
 <style>
@@ -399,6 +400,9 @@ $recentDepenses = $recentDepenses ?? [];
 
         <!-- ACTIONS RAPIDES BOUTONS PILULE -->
         <div class="header-actions-group">
+          <a href="<?= RACINE ?>aviculture/ventes" target="_blank" class="action-btn-pill" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: #FFFFFF; border: 1px solid rgba(255,255,255,0.2);">
+            <i data-lucide="shopping-cart" style="width: 17px; height: 17px; color: #10B981;"></i> POS Ventes Avicoles
+          </a>
           <a href="<?= RACINE ?>souscription/formulaire" class="action-btn-pill btn-pill-primary">
             <i data-lucide="plus-circle" style="width: 17px; height: 17px;"></i> Nouvelle Souscription
           </a>
@@ -554,6 +558,25 @@ $recentDepenses = $recentDepenses ?? [];
           </div>
         </div>
 
+        <!-- KPI : Ventes Avicoles OVOLIA -->
+        <div class="kpi-card" style="--kpi-accent: linear-gradient(90deg, #059669, #047857); --kpi-bg-icon: #ECFDF5; --kpi-color-icon: #059669;">
+          <div class="kpi-header">
+            <span class="kpi-title">Ventes Avicoles OVOLIA</span>
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="shopping-cart" style="width: 22px; height: 22px;"></i>
+            </div>
+          </div>
+          <div class="kpi-value" style="color: #059669;">
+            <?= number_format($stats['ca_ventes_avicoles'] ?? 0, 0, ',', ' ') ?> <span style="font-size: 13px; font-weight: 600;">FCFA</span>
+          </div>
+          <div class="kpi-footer">
+            <span>Caisse & Encaissements POS</span>
+            <span class="kpi-tag" style="background: #ECFDF5; color: #059669;">
+              <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i> <?= (int)($stats['total_ventes_avicoles'] ?? 0) ?> ventes
+            </span>
+          </div>
+        </div>
+
         <!-- KPI 8 : Solde Net -->
         <div class="kpi-card" style="--kpi-accent: linear-gradient(90deg, #6366F1, #4338CA); --kpi-bg-icon: #EEF2FF; --kpi-color-icon: #4F46E5;">
           <div class="kpi-header">
@@ -585,6 +608,19 @@ $recentDepenses = $recentDepenses ?? [];
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
           
+          <a href="<?= RACINE ?>aviculture/ventes" target="_blank" class="quick-action-card">
+            <div class="quick-action-content">
+              <div class="quick-action-icon" style="background: #ECFDF5; color: #059669;">
+                <i data-lucide="shopping-cart" style="width: 22px; height: 22px;"></i>
+              </div>
+              <div>
+                <strong style="color: #0F172A; font-size: 14px; display: block; font-weight: 700;">POS Ventes Avicoles</strong>
+                <small style="color: #64748B;">Caisse & encaissements</small>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" class="quick-action-arrow" style="width: 18px; height: 18px;"></i>
+          </a>
+
           <a href="<?= RACINE ?>client/list" class="quick-action-card">
             <div class="quick-action-content">
               <div class="quick-action-icon" style="background: #EFF6FF; color: #2563EB;">
@@ -781,6 +817,47 @@ $recentDepenses = $recentDepenses ?? [];
                       </td>
                       <td style="font-weight: 600; color: #0F172A;"><?= htmlspecialchars($dep['libelle_type_depense'] ?? ($dep['description_depense'] ?? 'Charge générale')) ?></td>
                       <td style="text-align: right; font-weight: 800; color: #DC2626;"><?= number_format((float)($dep['montant_depense'] ?? 0), 0, ',', ' ') ?> FCFA</td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TABLEAU 4 : Dernières Ventes Avicoles OVOLIA -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <h3 class="table-card-title">
+              <i data-lucide="shopping-cart" style="width: 20px; height: 20px; color: #059669;"></i> Dernières Ventes Avicoles (OVOLIA)
+            </h3>
+            <a href="<?= RACINE ?>aviculture/ventes" target="_blank" style="font-size: 12px; font-weight: 700; color: #059669; text-decoration: none;">Voir tout &rarr;</a>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Code Vente</th>
+                  <th>Client / Type</th>
+                  <th style="text-align: right;">Montant Net</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (empty($recentVentesAvicoles)): ?>
+                  <tr>
+                    <td colspan="3" style="padding: 20px; text-align: center; color: #94A3B8;">Aucune vente avicole enregistrée</td>
+                  </tr>
+                <?php else: ?>
+                  <?php foreach ($recentVentesAvicoles as $v): ?>
+                    <tr>
+                      <td style="font-weight: 700; color: #059669; font-family: monospace;">
+                        <?= htmlspecialchars($v['code_vente'] ?? '-') ?>
+                      </td>
+                      <td style="font-weight: 600; color: #0F172A;">
+                        <?= htmlspecialchars($v['nom_client_avicole'] ?? ($v['type_vente'] === 'commande_livraison' ? 'Commande Pro / Particulier' : 'Client Comptoir')) ?>
+                      </td>
+                      <td style="text-align: right; font-weight: 800; color: #059669;"><?= number_format((float)($v['montant_total_net'] ?? 0), 0, ',', ' ') ?> FCFA</td>
                     </tr>
                   <?php endforeach; ?>
                 <?php endif; ?>
