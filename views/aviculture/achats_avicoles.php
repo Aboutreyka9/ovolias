@@ -2,6 +2,9 @@
 <?php 
 $fournisseurs = $fournisseurs ?? []; 
 $produits = $produits ?? [];
+$categoriesPoids = $categoriesPoids ?? [];
+$produitsAvecGrille = array_filter($produits, fn($p) => isset($p['soumis_grille_poids']) && intval($p['soumis_grille_poids']) === 1);
+$produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille_poids']) || intval($p['soumis_grille_poids']) === 0);
 ?>
 
 <div class="app-layout">
@@ -91,36 +94,81 @@ $produits = $produits ?? [];
           </div>
 
           <div style="border-top: 1px solid #E2E8F0; padding-top: 16px; margin-top: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <label style="font-weight: 800; font-size: 14px; color: #1E293B; margin: 0; display: flex; align-items: center; gap: 6px;">
-                <i data-lucide="list" style="width: 18px; height: 18px; color: #2563EB;"></i> Articles & Produits Commandés
-              </label>
-              <button type="button" id="btnAddArticleRow" class="btn btn-sm btn-outline-primary" style="border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Ajouter un produit
-              </button>
+            <label style="font-weight: 800; font-size: 15px; color: #0F172A; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="shopping-bag" style="width: 18px; height: 18px; color: #2563EB;"></i> Articles & Produits Commandés
+            </label>
+
+            <!-- SECTION 1 : PRODUITS AVEC GRILLE DE POIDS -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                    <i data-lucide="scale" style="width: 14px; height: 14px;"></i> Section 1
+                  </span>
+                  <span style="font-weight: 800; font-size: 13px; color: #0F172A;">Produits Soumis à la Grille de Poids</span>
+                </div>
+                <button type="button" id="btnAddArticleRowAvecGrille" class="btn btn-sm btn-outline-primary" style="border-radius: 8px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                  <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Ajouter (Avec Grille)
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle mb-0" style="border-color: #E2E8F0; font-size: 13px;">
+                  <thead style="background: #E0F2FE; color: #0369A1; font-size: 11px; text-transform: uppercase; font-weight: 800;">
+                    <tr>
+                      <th style="min-width: 180px;">Produit (Avec Grille) *</th>
+                      <th style="min-width: 160px;">Grille / Catégorie de Poids</th>
+                      <th style="width: 90px;">Quantité *</th>
+                      <th style="width: 80px;">Unité</th>
+                      <th style="width: 120px;">Prix Unit. (FCFA) *</th>
+                      <th style="width: 120px; text-align: right;">Sous-Total</th>
+                      <th style="width: 45px; text-align: center;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyArticlesAvecGrille">
+                    <!-- Injecté dynamiquement par JS -->
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div class="table-responsive">
-              <table class="table table-bordered align-middle" id="tableArticlesModal" style="border-color: #E2E8F0;">
-                <thead style="background: #F8FAFC; font-size: 12px; font-weight: 800; color: #475569;">
-                  <tr>
-                    <th style="min-width: 220px;">Produit Avicole *</th>
-                    <th style="width: 110px;">Quantité *</th>
-                    <th style="width: 110px;">Unité</th>
-                    <th style="width: 140px;">Prix Unit. (FCFA) *</th>
-                    <th style="width: 140px; text-align: right;">Sous-Total</th>
-                    <th style="width: 50px; text-align: center;"></th>
-                  </tr>
-                </thead>
-                <tbody id="tbodyArticlesModal">
-                  <!-- Injecté dynamiquement par JS -->
-                </tbody>
-              </table>
+            <!-- SECTION 2 : PRODUITS SANS GRILLE DE POIDS -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                    <i data-lucide="package" style="width: 14px; height: 14px;"></i> Section 2
+                  </span>
+                  <span style="font-weight: 800; font-size: 13px; color: #0F172A;">Produits & Intrants Sans Grille (Tarif Fixe)</span>
+                </div>
+                <button type="button" id="btnAddArticleRowSansGrille" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                  <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Ajouter (Sans Grille)
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle mb-0" style="border-color: #E2E8F0; font-size: 13px;">
+                  <thead style="background: #F1F5F9; color: #475569; font-size: 11px; text-transform: uppercase; font-weight: 800;">
+                    <tr>
+                      <th style="min-width: 200px;">Produit / Intrant (Sans Grille) *</th>
+                      <th style="width: 100px;">Quantité *</th>
+                      <th style="width: 90px;">Unité</th>
+                      <th style="width: 130px;">Prix Unit. (FCFA) *</th>
+                      <th style="width: 130px; text-align: right;">Sous-Total</th>
+                      <th style="width: 45px; text-align: center;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyArticlesSansGrille">
+                    <!-- Injecté dynamiquement par JS -->
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div style="background: #F1F5F9; border: 1px solid #CBD5E1; padding: 14px 18px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-              <div style="font-weight: 800; font-size: 14px; color: #1E293B;">Montant Total Global de la Commande :</div>
-              <div style="font-size: 22px; font-weight: 900; color: #DC2626;" id="valTotalAchat">0 FCFA</div>
+            <!-- RECAPITULATIF TOTAL GLOBAL -->
+            <div style="background: #0F172A; color: #FFFFFF; border-radius: 8px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+              <div style="font-weight: 800; font-size: 14px;">Montant Total Global de la Commande :</div>
+              <div style="font-size: 22px; font-weight: 900; color: #38BDF8;" id="valTotalAchat">0 FCFA</div>
             </div>
           </div>
 
@@ -426,18 +474,30 @@ $(document).ready(function() {
 
     let rowIndex = 0;
 
-    function addArticleRow(qte = '', pu = '', unite = '') {
+    function addArticleRowAvecGrille(qte = '', pu = '', unite = '') {
         rowIndex++;
         let rowId = 'art_row_' + rowIndex;
         let html = `
         <tr id="${rowId}" class="article-item-row">
             <td>
                 <select name="articles[${rowIndex}][produit_code]" class="form-select select-produit-row" style="border-radius: 8px; height: 38px;" required>
-                    <option value="">-- Choisir un produit --</option>
-                    <?php if (!empty($produits)): ?>
-                        <?php foreach ($produits as $p): ?>
-                            <option value="<?= htmlspecialchars($p['code_produit_aviculture']) ?>" data-unite="<?= htmlspecialchars($p['unite_mesure'] ?? 'Pièces') ?>">
+                    <option value="">-- Choisir un produit (avec grille) --</option>
+                    <?php if (!empty($produitsAvecGrille)): ?>
+                        <?php foreach ($produitsAvecGrille as $p): ?>
+                            <option value="<?= htmlspecialchars($p['code_produit_aviculture']) ?>" data-unite="<?= htmlspecialchars($p['unite_mesure'] ?? 'kg') ?>">
                                 <?= htmlspecialchars($p['libelle_produit']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </td>
+            <td>
+                <select name="articles[${rowIndex}][categorie_poids_code]" class="form-select select-grille-row" style="border-radius: 8px; height: 38px;">
+                    <option value="">-- Choisir grille --</option>
+                    <?php if (!empty($categoriesPoids)): ?>
+                        <?php foreach ($categoriesPoids as $c): ?>
+                            <option value="<?= htmlspecialchars($c['code_categorie_poids']) ?>">
+                                <?= htmlspecialchars($c['libelle_categorie_poids']) ?> (<?= number_format($c['poids_min'], 2, ',', ' ') ?> - <?= number_format($c['poids_max'], 2, ',', ' ') ?> kg)
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -447,7 +507,7 @@ $(document).ready(function() {
                 <input type="number" step="0.01" min="0.01" name="articles[${rowIndex}][quantite]" class="form-control input-qte-row" style="border-radius: 8px; height: 38px;" placeholder="Qte" value="${qte}" required>
             </td>
             <td>
-                <input type="text" name="articles[${rowIndex}][unite_mesure]" class="form-control input-unite-row" style="border-radius: 8px; height: 38px;" placeholder="Ex: kg, sacs" value="${unite}">
+                <input type="text" name="articles[${rowIndex}][unite_mesure]" class="form-control input-unite-row" style="border-radius: 8px; height: 38px;" placeholder="Ex: kg" value="${unite}">
             </td>
             <td>
                 <input type="number" step="50" min="0" name="articles[${rowIndex}][prix_unitaire]" class="form-control input-pu-row" style="border-radius: 8px; height: 38px;" placeholder="FCFA" value="${pu}" required>
@@ -462,7 +522,49 @@ $(document).ready(function() {
             </td>
         </tr>`;
 
-        $('#tbodyArticlesModal').append(html);
+        $('#tbodyArticlesAvecGrille').append(html);
+        if (window.lucide) lucide.createIcons();
+        recalcTotals();
+        updateProduitSelectOptions();
+    }
+
+    function addArticleRowSansGrille(qte = '', pu = '', unite = '') {
+        rowIndex++;
+        let rowId = 'art_row_' + rowIndex;
+        let html = `
+        <tr id="${rowId}" class="article-item-row">
+            <td>
+                <select name="articles[${rowIndex}][produit_code]" class="form-select select-produit-row" style="border-radius: 8px; height: 38px;" required>
+                    <option value="">-- Choisir un produit (sans grille) --</option>
+                    <?php if (!empty($produitsSansGrille)): ?>
+                        <?php foreach ($produitsSansGrille as $p): ?>
+                            <option value="<?= htmlspecialchars($p['code_produit_aviculture']) ?>" data-unite="<?= htmlspecialchars($p['unite_mesure'] ?? 'Pièces') ?>">
+                                <?= htmlspecialchars($p['libelle_produit']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0.01" name="articles[${rowIndex}][quantite]" class="form-control input-qte-row" style="border-radius: 8px; height: 38px;" placeholder="Qte" value="${qte}" required>
+            </td>
+            <td>
+                <input type="text" name="articles[${rowIndex}][unite_mesure]" class="form-control input-unite-row" style="border-radius: 8px; height: 38px;" placeholder="Ex: sac, unité" value="${unite}">
+            </td>
+            <td>
+                <input type="number" step="50" min="0" name="articles[${rowIndex}][prix_unitaire]" class="form-control input-pu-row" style="border-radius: 8px; height: 38px;" placeholder="FCFA" value="${pu}" required>
+            </td>
+            <td class="text-end fw-bold align-middle cell-stot-row" style="color: #0F172A; font-size: 13px;">
+                0 FCFA
+            </td>
+            <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-remove-row" style="color: #EF4444; border: none; background: #FEE2E2; border-radius: 6px; padding: 4px 8px;" title="Supprimer la ligne">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                </button>
+            </td>
+        </tr>`;
+
+        $('#tbodyArticlesSansGrille').append(html);
         if (window.lucide) lucide.createIcons();
         recalcTotals();
         updateProduitSelectOptions();
@@ -488,46 +590,21 @@ $(document).ready(function() {
                 }
             });
         });
-
-        let totalAvailable = $('.select-produit-row').first().find('option').filter(function() {
-            return $(this).val() !== '';
-        }).length;
-
-        let totalRows = $('.article-item-row').length;
-
-        if (totalAvailable > 0 && (selectedCodes.length >= totalAvailable || totalRows >= totalAvailable)) {
-            $('#btnAddArticleRow').prop('disabled', true).addClass('disabled').css({'opacity': '0.5', 'cursor': 'not-allowed'});
-        } else {
-            $('#btnAddArticleRow').prop('disabled', false).removeClass('disabled').css({'opacity': '', 'cursor': ''});
-        }
     }
 
-    // Initialiser avec au moins 1 ligne
-    addArticleRow();
+    // Initialiser avec Section 1 par défaut
+    addArticleRowAvecGrille();
 
-    $('#btnAddArticleRow').on('click', function(e) {
-        let totalAvailable = $('.select-produit-row').first().find('option').filter(function() {
-            return $(this).val() !== '';
-        }).length;
+    $('#btnAddArticleRowAvecGrille').on('click', function(e) {
+        addArticleRowAvecGrille();
+    });
 
-        let selectedCodes = [];
-        $('.select-produit-row').each(function() {
-            if ($(this).val()) selectedCodes.push($(this).val());
-        });
-
-        let totalRows = $('.article-item-row').length;
-
-        if (totalAvailable > 0 && (selectedCodes.length >= totalAvailable || totalRows >= totalAvailable)) {
-            e.preventDefault();
-            if (window.toastr) toastr.warning("Tous les produits disponibles ont déjà été sélectionnés.");
-            return false;
-        }
-
-        addArticleRow();
+    $('#btnAddArticleRowSansGrille').on('click', function(e) {
+        addArticleRowSansGrille();
     });
 
     $(document).on('click', '.btn-remove-row', function() {
-        if ($('#tbodyArticlesModal tr').length > 1) {
+        if ($('.article-item-row').length > 1) {
             $(this).closest('tr').remove();
             recalcTotals();
             updateProduitSelectOptions();
@@ -552,7 +629,7 @@ $(document).ready(function() {
 
     function recalcTotals() {
         let grandTotal = 0;
-        $('#tbodyArticlesModal tr').each(function() {
+        $('.article-item-row').each(function() {
             let qte = parseFloat($(this).find('.input-qte-row').val()) || 0;
             let pu = parseFloat($(this).find('.input-pu-row').val()) || 0;
             let stot = qte * pu;
@@ -594,9 +671,10 @@ $(document).ready(function() {
 
                 // Réinitialiser le formulaire
                 $('#formAchat')[0].reset();
-                $('#tbodyArticlesModal').empty();
+                $('#tbodyArticlesAvecGrille').empty();
+                $('#tbodyArticlesSansGrille').empty();
                 rowIndex = 0;
-                addArticleRow();
+                addArticleRowAvecGrille();
                 chargerNumeroFactureAuto();
 
                 dt.ajax.reload(null, false);

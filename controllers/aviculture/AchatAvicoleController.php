@@ -14,10 +14,12 @@ class AchatAvicoleController extends BaseController
 
         $fournisseurs = $db->query("SELECT * FROM fournisseurs_avicoles WHERE statut_fournisseur_avicole = 'actif' ORDER BY nom_fournisseur_avicole ASC")->fetchAll(PDO::FETCH_ASSOC);
         $produits = $db->query("SELECT * FROM produits_aviculture_avicole WHERE statut_produit = 'actif' ORDER BY libelle_produit ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $categoriesPoids = $db->query("SELECT * FROM categories_poids_avicole ORDER BY poids_min ASC")->fetchAll(PDO::FETCH_ASSOC);
 
         $this->loadView('../views/aviculture/achats_avicoles.php', [
-            'fournisseurs' => $fournisseurs,
-            'produits'    => $produits
+            'fournisseurs'    => $fournisseurs,
+            'produits'       => $produits,
+            'categoriesPoids' => $categoriesPoids
         ]);
     }
 
