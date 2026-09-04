@@ -204,6 +204,74 @@ $produits = $produits ?? [];
   </div>
 </div>
 
+<!-- Modal Facture Bon d'Achat -->
+<div class="modal fade" id="modalFactureAchat" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="background: #0F172A; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 16px 20px;">
+        <h5 class="modal-title" style="font-weight: 800; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="printer" style="width: 20px; height: 20px; color: #38BDF8;"></i> Facture d'Achat Fournisseur
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="printFactureArea" style="padding: 24px; background: #FFFFFF;">
+        <!-- Header Receipt -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #E2E8F0; padding-bottom: 16px; margin-bottom: 20px;">
+          <div>
+            <h3 style="margin: 0; color: #1E3A5F; font-weight: 900; font-size: 20px;">GEICG - OVOLIAS AVICULTURE</h3>
+            <p style="margin: 4px 0 0 0; color: #64748B; font-size: 13px;">Gestion Administrative & Approvisionnement Avicole</p>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 14px; font-weight: 800; color: #0F172A;" id="facCodeAchat">ACH-AV-000</div>
+            <div style="font-size: 12px; color: #64748B;" id="facDateAchat">Date : -</div>
+          </div>
+        </div>
+
+        <!-- Supplier & Invoice metadata -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; background: #F8FAFC; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+          <div>
+            <strong style="color: #475569; font-size: 12px; text-transform: uppercase;">INFORMATIONS FOURNISSEUR :</strong>
+            <div style="font-weight: 800; color: #0F172A; font-size: 15px; margin-top: 4px;" id="facFournisseurNom">-</div>
+            <div style="font-size: 13px; color: #64748B;" id="facFournisseurTel">Tél : -</div>
+          </div>
+          <div style="text-align: right;">
+            <strong style="color: #475569; font-size: 12px; text-transform: uppercase;">RÉFÉRENCES FACTURE :</strong>
+            <div style="font-weight: 800; color: #0F172A; font-size: 15px; margin-top: 4px;" id="facNumFacture">N° Facture : -</div>
+            <div style="font-size: 13px; color: #64748B; margin-top: 2px;" id="facStatutReg">Statut : -</div>
+          </div>
+        </div>
+
+        <!-- Line items table -->
+        <table class="table table-bordered align-middle" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background: #F1F5F9; color: #334155; font-size: 13px;">
+              <th style="padding: 10px;">Désignation / Article</th>
+              <th style="padding: 10px; text-align: center;">Quantité</th>
+              <th style="padding: 10px; text-align: right;">Prix Unitaire</th>
+              <th style="padding: 10px; text-align: right;">Montant Total</th>
+            </tr>
+          </thead>
+          <tbody id="facTbodyArticles">
+            <!-- Dynamic items -->
+          </tbody>
+          <tfoot>
+            <tr style="background: #FEF2F2;">
+              <th colspan="3" style="text-align: right; font-weight: 800; padding: 12px; color: #991B1B;">TOTAL GÉNÉRAL FACTURE :</th>
+              <th style="text-align: right; font-weight: 900; font-size: 16px; padding: 12px; color: #DC2626;" id="facGrandTotal">0 FCFA</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px;">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600;">Fermer</button>
+        <button type="button" class="btn btn-primary btn-print-facture" style="background: #0F172A; border-color: #0F172A; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <i data-lucide="printer" style="width: 16px; height: 16px;"></i> Imprimer la Facture
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
@@ -245,10 +313,15 @@ $(document).ready(function() {
                 data: null,
                 className: 'text-center',
                 render: function(d, type, row) {
-                    let jsonStr = JSON.stringify(row).replace(/'/g, "&apos;");
-                    return `<button class="btn btn-sm btn-secondary btn-details-achat" data-achat='${jsonStr}' style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
-                        <i data-lucide="eye" style="width: 14px; height: 14px;"></i> Détails
-                    </button>`;
+                    let detailUrl = baseApi + 'aviculture/detailAchat/' + (row.editId || row.code_achat_avicole);
+                    return `<div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                        <a href="${detailUrl}" class="btn btn-sm btn-secondary" style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+                            <i data-lucide="eye" style="width: 14px; height: 14px;"></i> Détails
+                        </a>
+                        <button class="btn btn-sm btn-outline-primary btn-facture-achat" data-code="${row.code_achat_avicole}" style="font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Facture
+                        </button>
+                    </div>`;
                 }
             }
         ],
@@ -284,6 +357,71 @@ $(document).ready(function() {
         let bsModal = new bootstrap.Modal(modalEl);
         bsModal.show();
         if (window.lucide) lucide.createIcons();
+    });
+
+    $(document).on('click', '.btn-facture-achat', function() {
+        let code = $(this).attr('data-code');
+        if (!code) return;
+
+        $.get(baseApi + 'aviculture/apiDetailsAchat', { code: code }, function(res) {
+            if (res.status === 'success' && res.achat) {
+                let a = res.achat;
+                let details = res.details || [];
+
+                $('#facCodeAchat').text(a.code_achat_avicole || '-');
+                $('#facDateAchat').text('Date : ' + (a.date_achat ? new Date(a.date_achat).toLocaleDateString('fr-FR') : '-'));
+                $('#facFournisseurNom').text(a.fournisseur_nom || '-');
+                $('#facFournisseurTel').text('Tél : ' + (a.telephone_fournisseur_avicole || 'N/A'));
+                $('#facNumFacture').text('N° Facture FRS : ' + (a.numero_facture_fournisseur || '-'));
+                
+                let regHtml = a.statut_reglement === 'paye' 
+                    ? '<strong style="color: #166534;">Payé</strong>' 
+                    : '<strong style="color: #92400E;">' + (a.statut_reglement || 'Impayé') + '</strong>';
+                $('#facStatutReg').html('Statut Règlement : ' + regHtml);
+
+                let tbodyHtml = '';
+                let grandTotal = 0;
+
+                if (details.length > 0) {
+                    details.forEach(function(item) {
+                        let qte = parseFloat(item.quantite || 0);
+                        let pu = parseFloat(item.prix_unitaire || 0);
+                        let tot = parseFloat(item.montant_total || (qte * pu));
+                        grandTotal += tot;
+
+                        tbodyHtml += `
+                        <tr>
+                            <td style="padding: 8px 10px; font-weight: 600; color: #1E293B;">${item.libelle_article_intrant || 'Article'}</td>
+                            <td style="padding: 8px 10px; text-align: center; font-weight: 700;">${qte.toLocaleString('fr-FR')} ${item.unite_mesure || ''}</td>
+                            <td style="padding: 8px 10px; text-align: right;">${pu.toLocaleString('fr-FR')} FCFA</td>
+                            <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: #0F172A;">${tot.toLocaleString('fr-FR')} FCFA</td>
+                        </tr>`;
+                    });
+                } else {
+                    tbodyHtml = `<tr><td colspan="4" class="text-center text-muted" style="padding: 16px;">Aucune ligne de détail disponible</td></tr>`;
+                    grandTotal = parseFloat(a.montant_total || 0);
+                }
+
+                $('#facTbodyArticles').html(tbodyHtml);
+                $('#facGrandTotal').text(grandTotal.toLocaleString('fr-FR') + ' FCFA');
+
+                let modalEl = document.getElementById('modalFactureAchat');
+                let bsModal = new bootstrap.Modal(modalEl);
+                bsModal.show();
+                if (window.lucide) lucide.createIcons();
+            } else {
+                if (window.toastr) toastr.error("Impossible de charger la facture.");
+            }
+        }, 'json');
+    });
+
+    $(document).on('click', '.btn-print-facture', function() {
+        let printContents = document.getElementById('printFactureArea').innerHTML;
+        let originalContents = document.body.innerHTML;
+        document.body.innerHTML = '<div style="padding: 40px;">' + printContents + '</div>';
+        window.print();
+        document.body.innerHTML = originalContents;
+        window.location.reload();
     });
 
     let rowIndex = 0;

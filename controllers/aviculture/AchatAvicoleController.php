@@ -50,6 +50,99 @@ class AchatAvicoleController extends BaseController
         $this->json(['data' => $data]);
     }
 
+    public function apiDetails()
+    {
+        $this->requireAuth();
+        $code = $this->get('code') ?? $this->post('code');
+        if (empty($code)) {
+            $this->error("Code d'achat manquant");
+            return;
+        }
+
+        $db = $this->model->getCon();
+        $stmtA = $db->prepare("
+            SELECT a.*, f.nom_fournisseur_avicole, f.telephone_fournisseur_avicole, f.adresse_fournisseur_avicole,
+                   u.nom_user, u.prenom_user
+            FROM achats_avicoles a
+            LEFT JOIN fournisseurs_avicoles f ON a.fournisseur_avicole_code = f.code_fournisseur_avicole
+            LEFT JOIN users u ON a.user_code = u.code_user
+            WHERE a.code_achat_avicole = :code OR a.id_achat_avicole = :code
+        ");
+        $stmtA->execute([':code' => $code]);
+        $achat = $stmtA->fetch(PDO::FETCH_ASSOC);
+
+        if (!$achat) {
+            $this->error("Achat introuvable");
+            return;
+        }
+
+        $stmtD = $db->prepare("
+            SELECT * FROM details_achats_avicoles WHERE achat_code = :code ORDER BY id_detail_achat ASC
+        ");
+        $stmtD->execute([':code' => $achat['code_achat_avicole']]);
+        $details = $stmtD->fetchAll(PDO::FETCH_ASSOC);
+
+        $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
+        $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
+
+        $this->json([
+            'status'  => 'success',
+            'achat'   => $achat,
+            'details' => $details
+        ]);
+    }
+
+    public function detailAchat($param = null)
+    {
+        $this->requireAuth();
+        $code = $param ?? $this->get('code') ?? $this->get('id');
+
+        if (empty($code)) {
+            header('Location: ' . RACINE . 'aviculture/achats');
+            exit();
+        }
+
+        try {
+            $decryptedId = $this->validator->decrypter($code);
+            if (!empty($decryptedId)) {
+                $code = $decryptedId;
+            }
+        } catch (Exception $e) {
+            // Leave code as original if not encrypted
+        }
+
+        $db = $this->model->getCon();
+        $stmtA = $db->prepare("
+            SELECT a.*, f.nom_fournisseur_avicole, f.telephone_fournisseur_avicole, f.adresse_fournisseur_avicole,
+                   u.nom_user, u.prenom_user
+            FROM achats_avicoles a
+            LEFT JOIN fournisseurs_avicoles f ON a.fournisseur_avicole_code = f.code_fournisseur_avicole
+            LEFT JOIN users u ON a.user_code = u.code_user
+            WHERE a.code_achat_avicole = :code OR a.id_achat_avicole = :code
+        ");
+        $stmtA->execute([':code' => $code]);
+        $achat = $stmtA->fetch(PDO::FETCH_ASSOC);
+
+        if (!$achat) {
+            header('Location: ' . RACINE . 'aviculture/achats');
+            exit();
+        }
+
+        $stmtD = $db->prepare("
+            SELECT * FROM details_achats_avicoles WHERE achat_code = :code ORDER BY id_detail_achat ASC
+        ");
+        $stmtD->execute([':code' => $achat['code_achat_avicole']]);
+        $details = $stmtD->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $achat['fournisseur_nom'] = $achat['nom_fournisseur_avicole'] ?? 'Fournisseur Général';
+        $achat['agent_nom'] = trim(($achat['nom_user'] ?? '') . ' ' . ($achat['prenom_user'] ?? ''));
+
+        $this->loadView('../views/aviculture/detail_achat.php', [
+            'achat'   => $achat,
+            'details' => $details
+        ]);
+    }
+
     /**
      * Génère un numéro de facture fournisseur unique au format FACT-YYYY-XXXX (3 à 5 chiffres)
      */
