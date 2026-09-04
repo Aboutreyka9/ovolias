@@ -321,7 +321,7 @@
         <?php endif; ?>
 
         <!-- === MODULE CATALOGUE DES PRODUITS (NOUVELLE FONCTIONNALITÉ OVOLIA) === -->
-        <?php if ($canAccess(['GESTIONNAIRE_MANAGE_PACKS', 'GESTIONNAIRE_MANAGE_ARTICLES', 'GESTIONNAIRE_MANAGE_CATEGORIES_POIDS'], ['ROLE_GESTIONNAIRE', 'ROLE_ADMIN'])): ?>
+        <?php if ($canAccess(['GESTIONNAIRE_MANAGE_STOCK_AVICOLE', 'GESTIONNAIRE_MANAGE_PACKS', 'GESTIONNAIRE_MANAGE_ARTICLES', 'GESTIONNAIRE_MANAGE_CATEGORIES_POIDS', 'LOGISTIQUE_VERIFIER_BON_ACHAT'], ['ROLE_GESTIONNAIRE', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL'])): ?>
         <div class="nav-section">
             <div class="sidebar-accordion-toggle" data-bs-target="#sec-catalogue" aria-expanded="false">
                 <div style="display: flex; align-items: center; gap: 8px;">
