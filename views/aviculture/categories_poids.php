@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../../public/inc/header.php'; 
 $categories = $categories ?? [];
 $grilles = $grilles ?? [];
+
+$userRole = $_SESSION[USERS_AUTH]['role_code'] ?? ($_SESSION['role_code'] ?? '');
+$isCommercial = ($userRole === 'ROLE_COMMERCIAL');
 ?>
 
 <div class="app-layout">
@@ -17,12 +20,14 @@ $grilles = $grilles ?? [];
           <p style="color: #64748B; font-size: 13px; margin: 4px 0 0 0;">Barème officiel par tranche de poids net pour Poulets entiers frais, Pintades & Volailles</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
+          <?php if (!$isCommercial): ?>
           <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAddPrixGrille" style="background: #059669; border-color: #059669; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 8px; padding: 10px 18px; color: white;">
             <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i> Nouveau Tarif de Grille
           </button>
           <a href="<?= RACINE ?>aviculture/pesees" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 8px; padding: 10px 18px;">
             <i data-lucide="qr-code" style="width: 18px; height: 18px;"></i> Registre des Pesées
           </a>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -244,7 +249,9 @@ $grilles = $grilles ?? [];
                 <th style="padding: 12px;">Tranche Poids Net (Min - Max)</th>
                 <th style="padding: 12px; text-align: right;">Tarif Vente Appliqué</th>
                 <th class="text-center" style="padding: 12px;">Statut</th>
+                <?php if (!$isCommercial): ?>
                 <th class="text-end" style="padding: 12px;">Actions</th>
+                <?php endif; ?>
               </tr>
             </thead>
             <tbody>
@@ -274,14 +281,15 @@ $grilles = $grilles ?? [];
                     $checkedAttr = $isActif ? 'checked' : '';
                     ?>
                     <div style="display:flex; justify-content:center; align-items:center;">
-                      <label style="position:relative; display:inline-block; width:38px; height:20px; margin:0; cursor:pointer;" title="<?= $isActif ? 'Actif - Cliquez pour désactiver' : 'Inactif - Cliquez pour activer' ?>">
-                        <input type="checkbox" class="toggle-statut-grille" data-id="<?= $g['id_grille_tarif'] ?>" <?= $checkedAttr ?> style="opacity:0; width:0; height:0;">
-                        <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:<?= $isActif ? '#15803D' : '#CBD5E1' ?>; transition:.3s; border-radius:20px;">
+                      <label style="position:relative; display:inline-block; width:38px; height:20px; margin:0; <?= $isCommercial ? 'cursor:not-allowed; opacity:0.75;' : 'cursor:pointer;' ?>" title="<?= $isCommercial ? 'Statut non modifiable' : ($isActif ? 'Actif - Cliquez pour désactiver' : 'Inactif - Cliquez pour activer') ?>">
+                        <input type="checkbox" class="toggle-statut-grille" data-id="<?= $g['id_grille_tarif'] ?>" <?= $checkedAttr ?> <?= $isCommercial ? 'disabled' : '' ?> style="opacity:0; width:0; height:0;">
+                        <span style="position:absolute; <?= $isCommercial ? 'cursor:not-allowed;' : 'cursor:pointer;' ?> top:0; left:0; right:0; bottom:0; background-color:<?= $isActif ? '#15803D' : '#CBD5E1' ?>; transition:.3s; border-radius:20px;">
                           <span style="position:absolute; content:''; height:14px; width:14px; left:<?= $isActif ? '20px' : '3px' ?>; bottom:3px; background-color:white; transition:.3s; border-radius:50%;"></span>
                         </span>
                       </label>
                     </div>
                   </td>
+                  <?php if (!$isCommercial): ?>
                   <td class="text-end" style="padding: 12px;">
                     <button class="btn btn-sm btn-secondary btn-edit-prix-grille" 
                             data-id="<?= $g['id_grille_tarif'] ?>" 
@@ -296,6 +304,7 @@ $grilles = $grilles ?? [];
                       <i data-lucide="eye" style="width: 14px; height: 14px;"></i> Détails
                     </button>
                   </td>
+                  <?php endif; ?>
                 </tr>
               <?php endforeach; ?>
             </tbody>

@@ -286,7 +286,7 @@
                 <a href="<?= RACINE ?>aviculture/clients" class="nav-item sub <?= strpos($currentUri, '/aviculture/clients') !== false ? 'active' : '' ?>" data-title="Clients Avicoles">
                     <i data-lucide="users"></i> <span>Clients Avicoles</span>
                 </a>
-                <a href="<?= RACINE ?>aviculture/ventes" class="nav-item sub <?= strpos($currentUri, '/aviculture/ventes') !== false ? 'active' : '' ?>" data-title="Ventes Avicoles">
+                <a href="<?= RACINE ?>aviculture/ventes" target="_blank" class="nav-item sub <?= strpos($currentUri, '/aviculture/ventes') !== false ? 'active' : '' ?>" data-title="Ventes Avicoles">
                     <i data-lucide="shopping-cart"></i> <span>Ventes Avicoles</span>
                 </a>
                 <a href="<?= RACINE ?>aviculture/categories_poids" class="nav-item sub <?= strpos($currentUri, '/aviculture/categories_poids') !== false ? 'active' : '' ?>" data-title="Grille Poids & Tarifs">
