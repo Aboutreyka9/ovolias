@@ -319,7 +319,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
 
         <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; padding: 16px 24px;">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-weight: 600; border-radius: 8px;">Annuler</button>
-          <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 900; border-radius: 8px; padding: 10px 24px; font-size: 14px; box-shadow: 0 4px 12px rgba(5,150,105,0.3);">
+          <button type="submit" id="btnSubmitVente" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 900; border-radius: 8px; padding: 10px 24px; font-size: 14px; box-shadow: 0 4px 12px rgba(5,150,105,0.3);">
             <i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: text-bottom;"></i> Encaisser &amp; Générer Ticket / Facture
           </button>
         </div>
@@ -367,6 +367,7 @@ function selectTypeVente(type) {
         $('#btnTypeCommande').addClass('active');
         $('#btnTypeComptoir').removeClass('active');
     }
+    verifierBoutonEncaissement();
 }
 
 function checkReglement() {
@@ -376,6 +377,7 @@ function checkReglement() {
     } else {
         $('#blockCalculMonnaie').show();
     }
+    verifierBoutonEncaissement();
 }
 
 function ajouterArticlePanier() {
@@ -388,14 +390,12 @@ function ajouterArticlePanier() {
     const prodNom = $prod.data('nom') || '';
 
     if (!prodCode) {
-        if (typeof toastr !== 'undefined') toastr.error('Veuillez sélectionner un produit.');
-        else alert('Veuillez sélectionner un produit.');
+        showToast('error', 'Veuillez sélectionner un produit.', 'Champs Requis');
         return;
     }
 
     if (!pu || pu <= 0) {
-        if (typeof toastr !== 'undefined') toastr.warning('Le prix unitaire doit être défini et supérieur à 0 FCFA.');
-        else alert('Le prix unitaire doit être supérieur à 0 FCFA.');
+        showToast('warning', 'Le prix unitaire doit être défini et supérieur à 0 FCFA.', 'Tarif Invalide');
         return;
     }
 
@@ -475,12 +475,51 @@ function recalculerTotaux() {
     $('#displaySousTotal').text(subtotal.toLocaleString('fr-FR') + ' FCFA');
     $('#displayNetPay').text(net.toLocaleString('fr-FR') + ' FCFA');
     $('#displayMonnaieRendue').text(monnaie.toLocaleString('fr-FR') + ' FCFA');
+
+    verifierBoutonEncaissement();
+}
+
+function verifierBoutonEncaissement() {
+    const typeVente = $('#input_type_vente').val() || 'comptoir_direct';
+    const typeReglement = $('#selectReglement').val() || 'comptant_especes';
+    const recu = parseFloat($('#inputMontantRecu').val()) || 0;
+    const $btn = $('#btnSubmitVente');
+
+    const isComptoirDirect = (typeVente === 'comptoir_direct' || typeReglement === 'comptant_especes');
+
+    if (isComptoirDirect) {
+        if (!recu || recu <= 0) {
+            $btn.prop('disabled', true).css({ 'opacity': '0.5', 'cursor': 'not-allowed' });
+        } else {
+            $btn.prop('disabled', false).css({ 'opacity': '1', 'cursor': 'pointer' });
+        }
+    } else {
+        $btn.prop('disabled', false).css({ 'opacity': '1', 'cursor': 'pointer' });
+    }
+}
+
+function showToast(type, message, title) {
+    if (typeof toastr !== 'undefined' && typeof toastr[type] === 'function') {
+        toastr[type](message, title || '');
+    } else {
+        alert((title ? title + ' : ' : '') + message);
+    }
 }
 
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
 
     const grillesTarifs = <?= json_encode($grillesTarifs) ?>;
+
+    // Écoute dynamique du montant reçu pour verrouiller/déverrouiller le bouton d'encaissement
+    $('#inputMontantRecu').on('input change keyup', function() {
+        recalculerTotaux();
+        verifierBoutonEncaissement();
+    });
+
+    $('#modalVente').on('shown.bs.modal', function() {
+        verifierBoutonEncaissement();
+    });
 
     // Filtre des catégories de poids selon le produit sélectionné
     $('#pos_produit').on('change', function() {
@@ -566,9 +605,7 @@ $(document).ready(function() {
             $('#pos_prix').val('');
             const prodText = $('#pos_produit option:selected').text().trim();
             const msg = "Aucun tarif configuré dans la grille pour " + (prodText || "cet article") + ". Veuillez saisir le prix unitaire.";
-            if (typeof toastr !== 'undefined') {
-                toastr.warning(msg, "Tarif Non Renseigné");
-            }
+            showToast('warning', msg, "Tarif Non Renseigné");
         }
     }
 
@@ -635,8 +672,25 @@ $(document).ready(function() {
         const $btn = $(this).find('button[type="submit"]');
 
         if (panier.length === 0 && $('.chk-etiq:checked').length === 0) {
-            alert('Veuillez ajouter au moins un article dans le panier.');
+            showToast('warning', 'Veuillez ajouter au moins un article dans le panier.', 'Panier Vide');
             return;
+        }
+
+        const typeReglement = $('#type_reglement').val();
+        const montantRecu = parseFloat($('#inputMontantRecu').val()) || 0;
+        const totalNet = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
+
+        if (typeReglement === 'comptant_especes') {
+            if (montantRecu <= 0) {
+                showToast('warning', 'Veuillez saisir le montant reçu en espèces de la part du client.', 'Montant Reçu Requis');
+                $('#inputMontantRecu').focus();
+                return;
+            }
+            if (montantRecu < totalNet) {
+                showToast('warning', 'Le montant reçu (' + montantRecu.toLocaleString('fr-FR') + ' FCFA) est inférieur au montant net à payer (' + totalNet.toLocaleString('fr-FR') + ' FCFA).', 'Montant Insuffisant');
+                $('#inputMontantRecu').focus();
+                return;
+            }
         }
 
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Traitement...');
@@ -650,9 +704,8 @@ $(document).ready(function() {
             data: formData,
             dataType: 'json',
             success: function(res) {
-                if (res.status === 'success' || res.success) {
-                    if (typeof toastr !== 'undefined') toastr.success(res.message);
-                    else alert(res.message);
+                if (res.status == 1 || res.status === 'success' || res.success) {
+                    showToast('success', res.message || 'Vente enregistrée avec succès !', 'Vente Validée');
 
                     $('#modalVente').modal('hide');
                     dt.ajax.reload();
@@ -666,13 +719,13 @@ $(document).ready(function() {
 
                     setTimeout(() => { location.reload(); }, 1500);
                 } else {
-                    alert(res.message || 'Erreur lors de la vente');
+                    showToast('error', res.message || 'Erreur lors de la vente.', 'Erreur Vente');
                     $btn.prop('disabled', false).html('<i data-lucide="check"></i> Encaisser & Générer Ticket');
                 }
             },
             error: function(xhr) {
                 let msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Une erreur est survenue.';
-                alert(msg);
+                showToast('error', msg, 'Erreur Serveur');
                 $btn.prop('disabled', false).html('<i data-lucide="check"></i> Encaisser & Générer Ticket');
             }
         });
@@ -687,7 +740,7 @@ $(document).ready(function() {
         $('#modalDetailVente').modal('show');
 
         $.get(baseApi + 'aviculture/apiDetailsVente', { code: code }, function(res) {
-            if (res.status === 'success') {
+            if (res.status == 1 || res.status === 'success' || res.success) {
                 const v = res.vente;
                 const items = res.items;
 

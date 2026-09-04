@@ -185,8 +185,16 @@ class VenteAvicoleController extends BaseController
 
         $total_net = max(0, $total_ht - $remise_totale);
         
-        // Calcul du montant payé et de la monnaie rendue
+        // Validation du montant reçu pour les règlements au comptant en espèces
         if ($type_reglement === 'comptant_especes') {
+            if ($montant_recu <= 0) {
+                $this->error("Veuillez saisir le montant reçu en espèces de la part du client.");
+                return;
+            }
+            if ($montant_recu < $total_net) {
+                $this->error("Le montant reçu (" . number_format($montant_recu, 0, ',', ' ') . " FCFA) est inférieur au montant net à payer (" . number_format($total_net, 0, ',', ' ') . " FCFA).");
+                return;
+            }
             $montant_paye = $total_net;
             $monnaie_rendue = max(0, $montant_recu - $total_net);
             $statut_reglement = 'paye';
