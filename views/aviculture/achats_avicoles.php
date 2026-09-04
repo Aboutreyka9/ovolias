@@ -29,11 +29,12 @@ $produits = $produits ?? [];
               <tr style="background: #F8FAFC; text-align: left; color: #64748B;">
                 <th style="padding: 12px;">Code Achat</th>
                 <th style="padding: 12px;">Fournisseur</th>
-                <th style="padding: 12px; text-align: center;">Qté Totale</th>
                 <th style="padding: 12px;">N° Facture FRS</th>
+                <th style="padding: 12px; text-align: center;">Statut Achat</th>
+                <th style="padding: 12px; text-align: center;">Qté Totale</th>
                 <th style="padding: 12px;">Montant Total</th>
-                <th style="padding: 12px;">Date Achat</th>
                 <th style="padding: 12px; text-align: center;">Statut Règlement</th>
+                <th style="padding: 12px; text-align: center;">Date Achat</th>
                 <th style="padding: 12px; text-align: center;">Actions</th>
               </tr>
             </thead>
@@ -166,6 +167,12 @@ $produits = $produits ?? [];
           </div>
           <div class="col-md-4">
             <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Statut Achat</small>
+              <div id="detStatutAchat" style="margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
               <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Qté Totale</small>
               <div id="detQteTotale" style="font-weight: 800; color: #0F172A; font-size: 15px; margin-top: 2px;">-</div>
             </div>
@@ -215,11 +222,25 @@ $(document).ready(function() {
         columns: [
             { data: 'code_achat_avicole', render: d => `<code style="font-weight:700; color:#334155; background:#F1F5F9; padding:2px 6px; border-radius:4px;">${d}</code>` },
             { data: 'fournisseur_nom', render: d => `<strong style="color:#0F172A;">${d || '-'}</strong>` },
-            { data: 'quantite_totale', className: 'text-center', render: d => `<span style="font-weight:700; color:#0F172A; font-size:13px;">${parseFloat(d||0).toLocaleString('fr-FR')}</span>` },
             { data: 'numero_facture_fournisseur', render: d => d || '-' },
+            { 
+                data: 'statut_achat', 
+                className: 'text-center', 
+                render: d => {
+                    const st = (d || 'valide').toLowerCase();
+                    if (st === 'valide' || st === 'recu' || st === 'confirme') {
+                        return `<span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Validé</span>`;
+                    } else if (st === 'annule') {
+                        return `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulé</span>`;
+                    } else {
+                        return `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`;
+                    }
+                }
+            },
+            { data: 'quantite_totale', className: 'text-center', render: d => `<span style="font-weight:700; color:#0F172A; font-size:13px;">${parseFloat(d||0).toLocaleString('fr-FR')}</span>` },
             { data: 'montant_total', render: d => `<strong style="color:#DC2626; font-size:14px;">${parseFloat(d||0).toLocaleString('fr-FR')} FCFA</strong>` },
-            { data: 'date_achat', render: d => d ? new Date(d).toLocaleDateString('fr-FR') : '-' },
             { data: 'statut_reglement', className: 'text-center', render: d => d === 'paye' ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">Payé</span>` : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">${d}</span>` },
+            { data: 'date_achat', className: 'text-center', render: d => d ? new Date(d).toLocaleDateString('fr-FR') : '-' },
             {
                 data: null,
                 className: 'text-center',
@@ -245,6 +266,14 @@ $(document).ready(function() {
         $('#detQteTotale').text(parseFloat(data.quantite_totale || 0).toLocaleString('fr-FR'));
         $('#detDateAchat').text(data.date_achat ? new Date(data.date_achat).toLocaleDateString('fr-FR') : '-');
         $('#detMontantTotal').text(parseFloat(data.montant_total || 0).toLocaleString('fr-FR') + ' FCFA');
+
+        let stAchat = (data.statut_achat || 'valide').toLowerCase();
+        let stAchatHtml = (stAchat === 'valide' || stAchat === 'recu' || stAchat === 'confirme')
+            ? `<span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Validé</span>`
+            : (stAchat === 'annule'
+                ? `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulé</span>`
+                : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`);
+        $('#detStatutAchat').html(stAchatHtml);
 
         let statutHtml = data.statut_reglement === 'paye'
             ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">Payé</span>`
