@@ -571,19 +571,59 @@ $(document).ready(function() {
     }
 
     function updateProduitSelectOptions() {
-        let selectedCodes = [];
-        $('.select-produit-row').each(function() {
-            let val = $(this).val();
-            if (val) {
-                selectedCodes.push(val);
+        // 1. Collecter les combinaisons (produit + grille) sélectionnées dans la Section 1
+        let selectedPairsSection1 = [];
+        $('#tbodyArticlesAvecGrille tr').each(function() {
+            let p = $(this).find('.select-produit-row').val();
+            let g = $(this).find('.select-grille-row').val();
+            if (p && g) {
+                selectedPairsSection1.push(p + '___' + g);
             }
         });
 
-        $('.select-produit-row').each(function() {
-            let currentVal = $(this).val();
-            $(this).find('option').each(function() {
-                let optVal = $(this).val();
-                if (optVal && selectedCodes.includes(optVal) && optVal !== currentVal) {
+        // Désactiver les options en double dans la Section 1 (Produits avec grille)
+        $('#tbodyArticlesAvecGrille tr').each(function() {
+            let $tr = $(this);
+            let curP = $tr.find('.select-produit-row').val();
+            let curG = $tr.find('.select-grille-row').val();
+
+            // Mettre à jour les grilles disponibles selon le produit sélectionné
+            $tr.find('.select-grille-row option').each(function() {
+                let optG = $(this).val();
+                if (optG) {
+                    if (curP && optG !== curG && selectedPairsSection1.includes(curP + '___' + optG)) {
+                        $(this).prop('disabled', true).css('color', '#94A3B8');
+                    } else {
+                        $(this).prop('disabled', false).css('color', '');
+                    }
+                }
+            });
+
+            // Mettre à jour les produits disponibles selon la grille sélectionnée
+            $tr.find('.select-produit-row option').each(function() {
+                let optP = $(this).val();
+                if (optP) {
+                    if (curG && optP !== curP && selectedPairsSection1.includes(optP + '___' + curG)) {
+                        $(this).prop('disabled', true).css('color', '#94A3B8');
+                    } else {
+                        $(this).prop('disabled', false).css('color', '');
+                    }
+                }
+            });
+        });
+
+        // 2. Section 2 : Désactiver les produits sans grille déjà sélectionnés
+        let selectedProdsSection2 = [];
+        $('#tbodyArticlesSansGrille tr').each(function() {
+            let p = $(this).find('.select-produit-row').val();
+            if (p) selectedProdsSection2.push(p);
+        });
+
+        $('#tbodyArticlesSansGrille tr').each(function() {
+            let curP = $(this).find('.select-produit-row').val();
+            $(this).find('.select-produit-row option').each(function() {
+                let optP = $(this).val();
+                if (optP && selectedProdsSection2.includes(optP) && optP !== curP) {
                     $(this).prop('disabled', true).css('color', '#94A3B8');
                 } else {
                     $(this).prop('disabled', false).css('color', '');
@@ -613,10 +653,37 @@ $(document).ready(function() {
         }
     });
 
-    $(document).on('change', '.select-produit-row', function() {
-        let opt = $(this).find(':selected');
-        let u = opt.data('unite') || 'Pièces';
+    $(document).on('change', '.select-produit-row, .select-grille-row', function() {
         let $tr = $(this).closest('tr');
+        
+        // Empêcher les doublons exacts Produit + Grille dans la Section 1
+        if ($tr.closest('#tbodyArticlesAvecGrille').length > 0) {
+            let p = $tr.find('.select-produit-row').val();
+            let g = $tr.find('.select-grille-row').val();
+
+            if (p && g) {
+                let duplicateCount = 0;
+                $('#tbodyArticlesAvecGrille tr').each(function() {
+                    let otherP = $(this).find('.select-produit-row').val();
+                    let otherG = $(this).find('.select-grille-row').val();
+                    if (otherP === p && otherG === g) {
+                        duplicateCount++;
+                    }
+                });
+
+                if (duplicateCount > 1) {
+                    if (window.toastr) {
+                        toastr.warning("Cette combinaison Produit + Grille de Poids est déjà présente dans la commande.");
+                    } else {
+                        alert("Cette combinaison Produit + Grille de Poids est déjà présente dans la commande.");
+                    }
+                    $(this).val('');
+                }
+            }
+        }
+
+        let opt = $tr.find('.select-produit-row :selected');
+        let u = opt.data('unite') || 'Pièces';
         if (!$tr.find('.input-unite-row').val()) {
             $tr.find('.input-unite-row').val(u);
         }
