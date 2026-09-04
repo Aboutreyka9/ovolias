@@ -366,6 +366,7 @@ function selectTypeVente(type) {
     } else {
         $('#btnTypeCommande').addClass('active');
         $('#btnTypeComptoir').removeClass('active');
+        $('#blockCalculMonnaie').hide();
     }
     verifierBoutonEncaissement();
 }
@@ -483,12 +484,20 @@ function verifierBoutonEncaissement() {
     const typeVente = $('#input_type_vente').val() || 'comptoir_direct';
     const typeReglement = $('#selectReglement').val() || 'comptant_especes';
     const recu = parseFloat($('#inputMontantRecu').val()) || 0;
+    const net = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
     const $btn = $('#btnSubmitVente');
 
-    const isComptoirDirect = (typeVente === 'comptoir_direct' || typeReglement === 'comptant_especes');
+    const hasItems = (panier.length > 0 || $('.chk-etiq:checked').length > 0);
 
-    if (isComptoirDirect) {
-        if (!recu || recu <= 0) {
+    if (!hasItems) {
+        $btn.prop('disabled', true).css({ 'opacity': '0.5', 'cursor': 'not-allowed' });
+        return;
+    }
+
+    const isEspecesComptoir = (typeVente === 'comptoir_direct' && typeReglement === 'comptant_especes');
+
+    if (isEspecesComptoir) {
+        if (!recu || recu <= 0 || recu < net) {
             $btn.prop('disabled', true).css({ 'opacity': '0.5', 'cursor': 'not-allowed' });
         } else {
             $btn.prop('disabled', false).css({ 'opacity': '1', 'cursor': 'pointer' });
