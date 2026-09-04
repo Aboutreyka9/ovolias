@@ -167,9 +167,17 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
             </div>
 
             <!-- RECAPITULATIF TOTAL GLOBAL -->
-            <div style="background: #0F172A; color: #FFFFFF; border-radius: 8px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-              <div style="font-weight: 800; font-size: 14px;">Montant Total Global de la Commande :</div>
-              <div style="font-size: 22px; font-weight: 900; color: #38BDF8;" id="valTotalAchat">0 FCFA</div>
+            <div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%); color: #FFFFFF; border-radius: 10px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 16px; border: 1px solid #1E293B; box-shadow: 0 4px 12px rgba(15,23,42,0.08);">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="background: rgba(52, 211, 153, 0.15); color: #34D399; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                  <i data-lucide="calculator" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div>
+                  <span style="font-weight: 800; font-size: 14px; color: #F8FAFC; display: block;">Montant Total Global de la Commande</span>
+                  <span style="font-size: 11px; color: #94A3B8;">Cumul calculé en temps réel des deux sections</span>
+                </div>
+              </div>
+              <div style="font-size: 24px; font-weight: 900; color: #34D399; letter-spacing: -0.5px;" id="valTotalAchat">0 FCFA</div>
             </div>
           </div>
 
