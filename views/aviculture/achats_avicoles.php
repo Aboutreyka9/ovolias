@@ -547,7 +547,7 @@ $(document).ready(function() {
                 $('#facRecapPaye').text(payeAchat.toLocaleString('fr-FR') + ' FCFA');
                 $('#facRecapReste').text(resteAchat.toLocaleString('fr-FR') + ' FCFA');
 
-                if (resteAchat <= 0) {
+                if (resteAchat <= 0 || a.statut_reglement === 'paye') {
                     $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
                 } else {
                     $('#boxFormReglement').html(`
