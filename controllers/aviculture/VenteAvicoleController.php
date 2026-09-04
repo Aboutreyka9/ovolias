@@ -335,7 +335,7 @@ class VenteAvicoleController extends BaseController
 
         $stmt = $db->prepare("
             SELECT v.*, c.nom_client_avicole AS nom_client, c.type_client_avicole, c.telephone_client_avicole AS telephone_client,
-                   u.nom_user, u.prenom_user, e.nom_etablissement, e.adresse_etablissement, e.telephone_etablissement
+                   u.nom_user, u.prenom_user, e.libelle_etablissement AS nom_etablissement, e.adresse_etablissement, e.telephone_etablissement
             FROM ventes_avicoles v
             LEFT JOIN clients_avicoles c ON v.client_avicole_code = c.code_client_avicole
             LEFT JOIN users u ON v.user_code = u.code_user
@@ -374,7 +374,7 @@ class VenteAvicoleController extends BaseController
 
         $stmt = $db->prepare("
             SELECT v.*, c.nom_client_avicole AS nom_client, c.type_client_avicole, c.telephone_client_avicole AS telephone_client, c.adresse_client_avicole AS adresse_client,
-                   u.nom_user, u.prenom_user, e.nom_etablissement, e.adresse_etablissement, e.telephone_etablissement
+                   u.nom_user, u.prenom_user, e.libelle_etablissement AS nom_etablissement, e.adresse_etablissement, e.telephone_etablissement
             FROM ventes_avicoles v
             LEFT JOIN clients_avicoles c ON v.client_avicole_code = c.code_client_avicole
             LEFT JOIN users u ON v.user_code = u.code_user

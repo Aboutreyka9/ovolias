@@ -329,7 +329,7 @@ class LivraisonAvicoleController extends BaseController
                    c.nom_client_avicole AS nom_client, c.type_client_avicole, c.telephone_client_avicole AS telephone_client, c.adresse_client_avicole AS adresse_client, c.ville_client_avicole AS ville_client,
                    u.nom_user AS livreur_nom, u.prenom_user AS livreur_prenom, u.telephone_user AS livreur_tel,
                    veh.libelle_vehicule, veh.immatriculation,
-                   e.nom_etablissement, e.adresse_etablissement, e.telephone_etablissement, e.email_etablissement
+                   e.libelle_etablissement AS nom_etablissement, e.adresse_etablissement, e.telephone_etablissement, e.email_etablissement
             FROM livraisons_avicoles l
             INNER JOIN ventes_avicoles v ON l.vente_code = v.code_vente_avicole
             LEFT JOIN clients_avicoles c ON v.client_avicole_code = c.code_client_avicole
