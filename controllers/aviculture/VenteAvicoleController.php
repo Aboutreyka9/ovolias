@@ -60,6 +60,7 @@ class VenteAvicoleController extends BaseController
         $db = $this->model->getCon();
 
         $client_code = $this->post('client_avicole_code');
+        $type_vente = $this->post('type_vente') ?? (empty($client_code) ? 'comptoir_direct' : 'commande_livraison');
         $type_reglement = $this->post('type_reglement') ?? 'comptant_especes';
         $etiquettes_selectionnees = $_POST['etiquettes'] ?? [];
 
@@ -72,6 +73,9 @@ class VenteAvicoleController extends BaseController
         $user_code = $_SESSION[USERS_AUTH]['code_user'] ?? 'USR-ADMIN-001';
         $etab_code = $_SESSION[USERS_AUTH]['etablissement_code'] ?? '5454544456';
         $zone_code = $_SESSION[USERS_AUTH]['zone_user'] ?? 'DEFAULT';
+
+        // Déterminer le statut de livraison
+        $statut_livraison = ($type_vente === 'comptoir_direct') ? 'non_requis' : 'a_planifier';
 
         // 1. Récupérer les détails des étiquettes choisies
         $inClause = implode(',', array_fill(0, count($etiquettes_selectionnees), '?'));
@@ -95,22 +99,24 @@ class VenteAvicoleController extends BaseController
         // 2. Insérer l'en-tête de vente
         $stmtV = $db->prepare("
             INSERT INTO ventes_avicoles (
-                code_vente_avicole, client_avicole_code, type_reglement, 
+                code_vente_avicole, client_avicole_code, type_vente, type_reglement, 
                 montant_total_ht, montant_remise, montant_total_net, montant_paye, 
-                statut_vente, date_vente, user_code, etablissement_code, zone_code
+                statut_vente, statut_livraison, date_vente, user_code, etablissement_code, zone_code
             ) VALUES (
-                :code, :client, :type_reg, 
+                :code, :client, :type_v, :type_reg, 
                 :ht, 0, :net, :paye, 
-                'validee', NOW(), :user, :etab, :zone
+                'validee', :statut_liv, NOW(), :user, :etab, :zone
             )
         ");
         $stmtV->execute([
             ':code' => $code_vente,
             ':client' => $client_code ?: null,
+            ':type_v' => $type_vente,
             ':type_reg' => $type_reglement,
             ':ht' => $montant_total,
             ':net' => $montant_total,
             ':paye' => $montant_total,
+            ':statut_liv' => $statut_livraison,
             ':user' => $user_code,
             ':etab' => $etab_code,
             ':zone' => $zone_code
@@ -157,21 +163,27 @@ class VenteAvicoleController extends BaseController
 
             $stmtUpd->execute([':etiq' => $item['code_etiquette']]);
 
-            $stmtMvm->execute([
-                ':mvm' => 'MVM-' . strtoupper(substr(md5(uniqid()), 0, 8)),
-                ':prod' => $item['produit_code'],
-                ':cat' => $item['categorie_poids_code'],
-                ':poids' => $item['poids_net_reel'],
-                ':ref' => $code_vente,
-                ':user' => $user_code,
-                ':etab' => $etab_code,
-                ':zone' => $zone_code
-            ]);
+            // Seule la vente au comptoir directe décrémente immédiatement le stock physique global.
+            // Pour les commandes à livrer, le déchargement de stock s'effectue à la confirmation du Bon de Livraison (BL).
+            if ($type_vente === 'comptoir_direct') {
+                $stmtMvm->execute([
+                    ':mvm' => 'MVM-' . strtoupper(substr(md5(uniqid()), 0, 8)),
+                    ':prod' => $item['produit_code'],
+                    ':cat' => $item['categorie_poids_code'],
+                    ':poids' => -$item['poids_net_reel'],
+                    ':ref' => $code_vente,
+                    ':user' => $user_code,
+                    ':etab' => $etab_code,
+                    ':zone' => $zone_code
+                ]);
+            }
         }
 
         $this->success("Vente enregistrée avec succès ! Facture/Ticket N° {$code_vente}", [
             'code_vente' => $code_vente,
-            'montant_total' => number_format($montant_total, 0, ',', ' ') . ' FCFA'
+            'montant_total' => number_format($montant_total, 0, ',', ' ') . ' FCFA',
+            'type_vente' => $type_vente,
+            'statut_livraison' => $statut_livraison
         ]);
     }
 }

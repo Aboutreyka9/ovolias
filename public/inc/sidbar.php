@@ -351,6 +351,12 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-distribution">
+                <a href="<?= RACINE ?>aviculture/livraisons" class="nav-item sub <?= strpos($currentUri, '/aviculture/livraisons') !== false ? 'active' : '' ?>" data-title="Expéditions & Livraisons">
+                    <i data-lucide="truck"></i> <span>Expéditions &amp; Livraisons</span>
+                </a>
+                <a href="<?= RACINE ?>aviculture/vehicules" class="nav-item sub <?= strpos($currentUri, '/aviculture/vehicules') !== false ? 'active' : '' ?>" data-title="Flotte de Véhicules">
+                    <i data-lucide="car"></i> <span>Flotte de Véhicules</span>
+                </a>
                 <a href="<?= RACINE ?>aviculture/stock" target="_blank" class="nav-item sub <?= strpos($currentUri, '/aviculture/stock') !== false ? 'active' : '' ?>" data-title="État des Stocks">
                     <i data-lucide="package"></i> <span>État des Stocks</span>
                 </a>
