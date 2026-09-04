@@ -397,6 +397,17 @@ function ajouterArticlePanier() {
     const catCode = $cat.val() || null;
     const catNom = $cat.data('nom') || '-';
 
+    // Empêcher la sélection/ajout si le couple Produit + Catégorie est déjà dans le panier
+    const isDuplicate = panier.some(item => 
+        item.produit_code === prodCode && 
+        ((!item.categorie_poids_code && !catCode) || item.categorie_poids_code === catCode)
+    );
+
+    if (isDuplicate) {
+        showToast('warning', `L'article "${prodNom}" (${catNom}) existe déjà dans la liste des produits sélectionnés.`, 'Article Déjà Sélectionné');
+        return;
+    }
+
     panier.push({
         produit_code: prodCode,
         produit_nom: prodNom,
@@ -430,6 +441,7 @@ function renderPanier() {
                 </td>
             </tr>
         `);
+        $('#pos_produit').trigger('change');
         return;
     }
 
@@ -447,6 +459,8 @@ function renderPanier() {
             </tr>
         `);
     });
+
+    $('#pos_produit').trigger('change');
 }
 
 function recalculerTotaux() {
@@ -540,15 +554,24 @@ $(document).ready(function() {
             .filter(g => g.produit_code === pCode)
             .map(g => g.categorie_poids_code);
 
-        // Masquer / afficher les options du select catégorie de poids
+        // Masquer / afficher les options du select catégorie de poids (en excluant celles déjà dans le panier)
         let hasValidCat = false;
         $catSelect.find('option').each(function() {
             const val = $(this).val();
             if (!val) {
                 $(this).show();
             } else if (activeCatCodes.includes(val)) {
-                $(this).show();
-                hasValidCat = true;
+                const isAlreadyInCart = panier.some(item => 
+                    item.produit_code === pCode && 
+                    ((!item.categorie_poids_code && val === 'CATP-NON-SOUMIS') || item.categorie_poids_code === val)
+                );
+
+                if (isAlreadyInCart) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                    hasValidCat = true;
+                }
             } else {
                 $(this).hide();
             }
