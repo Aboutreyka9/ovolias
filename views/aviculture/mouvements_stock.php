@@ -1,5 +1,32 @@
 <?php require_once __DIR__ . '/../../public/inc/header.php'; ?>
 
+<style>
+@media print {
+  .sidebar, .navbar, .header, #sidebarToggle, .card.mb-4, .btn,
+  .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate {
+    display: none !important;
+  }
+  .content-wrapper {
+    padding: 0 !important;
+    background: #FFFFFF !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  .table th, .table td {
+    border: 1px solid #94A3B8 !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+}
+</style>
+
 <div class="content-wrapper" style="padding: 24px; background: #F8FAFC; min-height: 100vh;">
   <!-- EN-TÊTE PAGE ET NAVIGATION -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
@@ -13,6 +40,9 @@
     </div>
 
     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <button type="button" onclick="window.print()" class="btn btn-primary" style="font-weight: 700; border-radius: 8px; font-size: 13px; background: #2563EB; border-color: #2563EB; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">
+        <i data-lucide="printer" style="width: 16px; height: 16px;"></i> Imprimer le Journal
+      </button>
       <a href="<?= RACINE ?>aviculture/stock" class="btn btn-light" style="font-weight: 700; border-radius: 8px; font-size: 13px; border: 1px solid #CBD5E1; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;">
         <i data-lucide="arrow-left" style="width: 16px; height: 16px; color: #475569;"></i> Retour au Stock Global
       </a>
