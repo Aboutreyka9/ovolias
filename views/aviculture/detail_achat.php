@@ -638,6 +638,17 @@ $(document).ready(function() {
         }
     }
 
+    // Affichage des messages flash enregistrés avant un rechargement de page
+    try {
+        const flashMsg = sessionStorage.getItem('flash_toast_msg');
+        const flashType = sessionStorage.getItem('flash_toast_type') || 'success';
+        if (flashMsg) {
+            notifyMsg(flashMsg, flashType);
+            sessionStorage.removeItem('flash_toast_msg');
+            sessionStorage.removeItem('flash_toast_type');
+        }
+    } catch(e) {}
+
     // Soumission du formulaire de règlement depuis la page de détails
     $('#formReglerFactureDetail').on('submit', function(e) {
         e.preventDefault();
@@ -654,9 +665,18 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(res) {
                 if (res.status === 1 || res.status === 'success') {
-                    notifyMsg(res.message || 'Règlement enregistré avec succès !', 'success');
+                    const msg = res.message || 'Règlement enregistré avec succès !';
+                    try {
+                        sessionStorage.setItem('flash_toast_msg', msg);
+                        sessionStorage.setItem('flash_toast_type', 'success');
+                    } catch(e) {}
+
+                    notifyMsg(msg, 'success');
                     $('#modalReglerFactureDetail').modal('hide');
-                    setTimeout(() => location.reload(), 600);
+
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1200);
                 } else {
                     notifyMsg(res.message || 'Erreur lors du règlement', 'error');
                     $btn.prop('disabled', false).html('<i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Valider le Règlement');
