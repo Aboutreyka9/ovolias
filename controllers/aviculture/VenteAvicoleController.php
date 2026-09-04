@@ -16,9 +16,18 @@ class VenteAvicoleController extends BaseController
         // 1. Clients
         $clients = $db->query("SELECT * FROM clients_avicoles WHERE statut_client_avicole = 'actif' ORDER BY nom_client_avicole ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-        // 2. Produits & Catégories de poids pour le Panier POS
-        $produits = $db->query("SELECT * FROM produits_aviculture_avicole WHERE statut_produit = 'actif' ORDER BY libelle_produit ASC")->fetchAll(PDO::FETCH_ASSOC);
+        // 2. Produits & Catégories de poids pour le Panier POS (Uniquement ceux avec tarif configuré dans la grille)
+        $produits = $db->query("
+            SELECT DISTINCT p.* 
+            FROM produits_aviculture_avicole p
+            INNER JOIN grilles_tarifs_poids_avicole g ON p.code_produit_aviculture = g.produit_code
+            WHERE p.statut_produit = 'actif' 
+              AND g.statut_grille = 'actif'
+              AND g.prix_vente > 0
+            ORDER BY p.libelle_produit ASC
+        ")->fetchAll(PDO::FETCH_ASSOC);
         $categoriesPoids = $db->query("SELECT * FROM categories_poids_avicole ORDER BY poids_min ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $grillesTarifs = $db->query("SELECT produit_code, categorie_poids_code, prix_vente FROM grilles_tarifs_poids_avicole WHERE statut_grille = 'actif' AND prix_vente > 0")->fetchAll(PDO::FETCH_ASSOC);
 
         // 3. Volailles pesées & étiquetées en stock
         $etiquettesDispo = $db->query("
@@ -50,6 +59,7 @@ class VenteAvicoleController extends BaseController
             'clients'         => $clients,
             'produits'        => $produits,
             'categoriesPoids' => $categoriesPoids,
+            'grillesTarifs'   => $grillesTarifs,
             'etiquettes'      => $etiquettesDispo,
             'kpis'            => $kpis
         ]);
@@ -175,8 +185,16 @@ class VenteAvicoleController extends BaseController
 
         $total_net = max(0, $total_ht - $remise_totale);
         
-        // Calcul du montant payé et de la monnaie rendue
+        // Validation du montant reçu pour les règlements au comptant en espèces
         if ($type_reglement === 'comptant_especes') {
+            if ($montant_recu <= 0) {
+                $this->error("Veuillez saisir le montant reçu en espèces de la part du client.");
+                return;
+            }
+            if ($montant_recu < $total_net) {
+                $this->error("Le montant reçu (" . number_format($montant_recu, 0, ',', ' ') . " FCFA) est inférieur au montant net à payer (" . number_format($total_net, 0, ',', ' ') . " FCFA).");
+                return;
+            }
             $montant_paye = $total_net;
             $monnaie_rendue = max(0, $montant_recu - $total_net);
             $statut_reglement = 'paye';

@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../public/inc/header.php';
 $clients = $clients ?? [];
 $produits = $produits ?? [];
 $categoriesPoids = $categoriesPoids ?? [];
+$grillesTarifs = $grillesTarifs ?? [];
 $etiquettes = $etiquettes ?? [];
 $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_a_livrer' => 0];
 ?>
@@ -221,7 +222,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
 
               <div class="col-md-2">
                 <label style="font-size: 11px; font-weight: 700; color: #475569;">Prix Unitaire (F)</label>
-                <input type="number" id="pos_prix" value="0" step="50" class="form-control form-control-sm" style="border-radius: 6px;">
+                <input type="number" id="pos_prix" value="0" min="0" step="any" readonly class="form-control form-control-sm" style="border-radius: 6px; background-color: #F1F5F9; cursor: not-allowed; font-weight: 700;">
               </div>
 
               <div class="col-md-2">
@@ -318,7 +319,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
 
         <div class="modal-footer" style="background: #F8FAFC; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; padding: 16px 24px;">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-weight: 600; border-radius: 8px;">Annuler</button>
-          <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 900; border-radius: 8px; padding: 10px 24px; font-size: 14px; box-shadow: 0 4px 12px rgba(5,150,105,0.3);">
+          <button type="submit" id="btnSubmitVente" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 900; border-radius: 8px; padding: 10px 24px; font-size: 14px; box-shadow: 0 4px 12px rgba(5,150,105,0.3);">
             <i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: text-bottom;"></i> Encaisser &amp; Générer Ticket / Facture
           </button>
         </div>
@@ -361,20 +362,15 @@ function selectTypeVente(type) {
     if (type === 'comptoir_direct') {
         $('#btnTypeComptoir').addClass('active');
         $('#btnTypeCommande').removeClass('active');
-        $('#blockCalculMonnaie').show();
     } else {
         $('#btnTypeCommande').addClass('active');
         $('#btnTypeComptoir').removeClass('active');
     }
+    verifierBoutonEncaissement();
 }
 
 function checkReglement() {
-    const reg = $('#selectReglement').val();
-    if (reg === 'credit' || reg === 'virement') {
-        $('#blockCalculMonnaie').hide();
-    } else {
-        $('#blockCalculMonnaie').show();
-    }
+    verifierBoutonEncaissement();
 }
 
 function ajouterArticlePanier() {
@@ -387,7 +383,12 @@ function ajouterArticlePanier() {
     const prodNom = $prod.data('nom') || '';
 
     if (!prodCode) {
-        alert('Veuillez sélectionner un produit.');
+        showToast('error', 'Veuillez sélectionner un produit.', 'Champs Requis');
+        return;
+    }
+
+    if (!pu || pu <= 0) {
+        showToast('warning', 'Le prix unitaire doit être défini et supérieur à 0 FCFA.', 'Tarif Invalide');
         return;
     }
 
@@ -467,18 +468,147 @@ function recalculerTotaux() {
     $('#displaySousTotal').text(subtotal.toLocaleString('fr-FR') + ' FCFA');
     $('#displayNetPay').text(net.toLocaleString('fr-FR') + ' FCFA');
     $('#displayMonnaieRendue').text(monnaie.toLocaleString('fr-FR') + ' FCFA');
+
+    verifierBoutonEncaissement();
+}
+
+function verifierBoutonEncaissement() {
+    const typeVente = $('#input_type_vente').val() || 'comptoir_direct';
+    const typeReglement = $('#selectReglement').val() || 'comptant_especes';
+    const recu = parseFloat($('#inputMontantRecu').val()) || 0;
+    const net = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
+    const $btn = $('#btnSubmitVente');
+
+    const hasItems = (panier.length > 0 || $('.chk-etiq:checked').length > 0);
+
+    if (!hasItems) {
+        $btn.prop('disabled', true).css({ 'opacity': '0.5', 'cursor': 'not-allowed' });
+        return;
+    }
+
+    const isEspecesComptoir = (typeVente === 'comptoir_direct' && typeReglement === 'comptant_especes');
+
+    if (isEspecesComptoir) {
+        if (!recu || recu <= 0 || recu < net) {
+            $btn.prop('disabled', true).css({ 'opacity': '0.5', 'cursor': 'not-allowed' });
+        } else {
+            $btn.prop('disabled', false).css({ 'opacity': '1', 'cursor': 'pointer' });
+        }
+    } else {
+        $btn.prop('disabled', false).css({ 'opacity': '1', 'cursor': 'pointer' });
+    }
+}
+
+function showToast(type, message, title) {
+    if (typeof toastr !== 'undefined' && typeof toastr[type] === 'function') {
+        toastr[type](message, title || '');
+    } else {
+        alert((title ? title + ' : ' : '') + message);
+    }
 }
 
 $(document).ready(function() {
     const baseApi = (typeof RACINE !== 'undefined') ? RACINE : '/ovolias/';
 
-    // Auto-remplissage du prix quand on choisit un produit ou une catégorie
-    $('#pos_produit, #pos_cat').on('change', function() {
-        const pPrix = parseFloat($('#pos_produit option:selected').data('prix')) || 0;
-        const cPrix = parseFloat($('#pos_cat option:selected').data('prix')) || 0;
-        const finalPrix = cPrix > 0 ? cPrix : pPrix;
-        $('#pos_prix').val(finalPrix);
+    const grillesTarifs = <?= json_encode($grillesTarifs) ?>;
+
+    // Écoute dynamique du montant reçu pour verrouiller/déverrouiller le bouton d'encaissement
+    $('#inputMontantRecu').on('input change keyup', function() {
+        recalculerTotaux();
+        verifierBoutonEncaissement();
     });
+
+    $('#modalVente').on('shown.bs.modal', function() {
+        verifierBoutonEncaissement();
+    });
+
+    // Filtre des catégories de poids selon le produit sélectionné
+    $('#pos_produit').on('change', function() {
+        const pCode = $(this).val();
+        const $catSelect = $('#pos_cat');
+
+        if (!pCode) {
+            $catSelect.find('option').show();
+            $('#pos_prix').val('');
+            return;
+        }
+
+        // Récupérer les codes de catégories de poids configurées et actives pour ce produit
+        const activeCatCodes = grillesTarifs
+            .filter(g => g.produit_code === pCode)
+            .map(g => g.categorie_poids_code);
+
+        // Masquer / afficher les options du select catégorie de poids
+        let hasValidCat = false;
+        $catSelect.find('option').each(function() {
+            const val = $(this).val();
+            if (!val) {
+                $(this).show();
+            } else if (activeCatCodes.includes(val)) {
+                $(this).show();
+                hasValidCat = true;
+            } else {
+                $(this).hide();
+            }
+        });
+
+        // Si des catégories spécifiques existent pour ce produit, pré-sélectionner la première valide
+        if (hasValidCat) {
+            const firstCat = activeCatCodes.find(c => c !== 'CATP-NON-SOUMIS');
+            if (firstCat && $catSelect.find(`option[value="${firstCat}"]`).length > 0) {
+                $catSelect.val(firstCat);
+            } else {
+                $catSelect.val('');
+            }
+        } else {
+            $catSelect.val('');
+        }
+
+        updatePosPrix();
+    });
+
+    $('#pos_cat').on('change', function() {
+        updatePosPrix();
+    });
+
+    function updatePosPrix() {
+        const pCode = $('#pos_produit').val();
+        const cCode = $('#pos_cat').val();
+
+        if (!pCode) {
+            $('#pos_prix').val('');
+            return;
+        }
+
+        let matchPrix = null;
+
+        // 1. Recherche par couple exact (produit + catégorie de poids)
+        if (cCode) {
+            const found = grillesTarifs.find(g => g.produit_code === pCode && g.categorie_poids_code === cCode);
+            if (found) matchPrix = parseFloat(found.prix_vente);
+        }
+
+        // 2. Recherche pour produit non soumis à la grille de poids (CATP-NON-SOUMIS)
+        if (matchPrix === null) {
+            const foundFixe = grillesTarifs.find(g => g.produit_code === pCode && g.categorie_poids_code === 'CATP-NON-SOUMIS');
+            if (foundFixe) matchPrix = parseFloat(foundFixe.prix_vente);
+        }
+
+        // 3. Fallback: premier tarif trouvé pour ce produit
+        if (matchPrix === null) {
+            const foundAny = grillesTarifs.find(g => g.produit_code === pCode);
+            if (foundAny) matchPrix = parseFloat(foundAny.prix_vente);
+        }
+
+        if (matchPrix !== null && matchPrix > 0) {
+            $('#pos_prix').val(matchPrix);
+        } else {
+            $('#pos_prix').val('');
+            const prodText = $('#pos_produit option:selected').text().trim();
+            const msg = "Aucun tarif configuré dans la grille pour " + (prodText || "cet article") + ". Veuillez saisir le prix unitaire.";
+            showToast('warning', msg, "Tarif Non Renseigné");
+        }
+    }
 
     let dt = $('#tableVentesAvicoles').DataTable({
         ajax: {
@@ -543,8 +673,25 @@ $(document).ready(function() {
         const $btn = $(this).find('button[type="submit"]');
 
         if (panier.length === 0 && $('.chk-etiq:checked').length === 0) {
-            alert('Veuillez ajouter au moins un article dans le panier.');
+            showToast('warning', 'Veuillez ajouter au moins un article dans le panier.', 'Panier Vide');
             return;
+        }
+
+        const typeReglement = $('#type_reglement').val();
+        const montantRecu = parseFloat($('#inputMontantRecu').val()) || 0;
+        const totalNet = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
+
+        if (typeReglement === 'comptant_especes') {
+            if (montantRecu <= 0) {
+                showToast('warning', 'Veuillez saisir le montant reçu en espèces de la part du client.', 'Montant Reçu Requis');
+                $('#inputMontantRecu').focus();
+                return;
+            }
+            if (montantRecu < totalNet) {
+                showToast('warning', 'Le montant reçu (' + montantRecu.toLocaleString('fr-FR') + ' FCFA) est inférieur au montant net à payer (' + totalNet.toLocaleString('fr-FR') + ' FCFA).', 'Montant Insuffisant');
+                $('#inputMontantRecu').focus();
+                return;
+            }
         }
 
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Traitement...');
@@ -558,9 +705,8 @@ $(document).ready(function() {
             data: formData,
             dataType: 'json',
             success: function(res) {
-                if (res.status === 'success' || res.success) {
-                    if (typeof toastr !== 'undefined') toastr.success(res.message);
-                    else alert(res.message);
+                if (res.status == 1 || res.status === 'success' || res.success) {
+                    showToast('success', res.message || 'Vente enregistrée avec succès !', 'Vente Validée');
 
                     $('#modalVente').modal('hide');
                     dt.ajax.reload();
@@ -574,13 +720,13 @@ $(document).ready(function() {
 
                     setTimeout(() => { location.reload(); }, 1500);
                 } else {
-                    alert(res.message || 'Erreur lors de la vente');
+                    showToast('error', res.message || 'Erreur lors de la vente.', 'Erreur Vente');
                     $btn.prop('disabled', false).html('<i data-lucide="check"></i> Encaisser & Générer Ticket');
                 }
             },
             error: function(xhr) {
                 let msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Une erreur est survenue.';
-                alert(msg);
+                showToast('error', msg, 'Erreur Serveur');
                 $btn.prop('disabled', false).html('<i data-lucide="check"></i> Encaisser & Générer Ticket');
             }
         });
@@ -595,7 +741,7 @@ $(document).ready(function() {
         $('#modalDetailVente').modal('show');
 
         $.get(baseApi + 'aviculture/apiDetailsVente', { code: code }, function(res) {
-            if (res.status === 'success') {
+            if (res.status == 1 || res.status === 'success' || res.success) {
                 const v = res.vente;
                 const items = res.items;
 
