@@ -52,6 +52,7 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
                 <th style="padding: 12px; text-align: center;">Qté Totale</th>
                 <th style="padding: 12px;">Montant Total</th>
                 <th style="padding: 12px; text-align: center;">Statut Règlement</th>
+                <th style="padding: 12px; text-align: center;">Statut Réception</th>
                 <th style="padding: 12px; text-align: center;">Date Achat</th>
                 <th style="padding: 12px; text-align: center;">Actions</th>
               </tr>
@@ -263,6 +264,12 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
           </div>
           <div class="col-md-4">
             <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
+              <small style="color: #64748B; font-weight: 700; text-transform: uppercase; font-size: 11px;">Statut Réception</small>
+              <div id="detStatutReception" style="margin-top: 2px;">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;">
               <small style="color: #475569; font-weight: 700; text-transform: uppercase; font-size: 11px;">Montant Total</small>
               <div id="detMontantTotal" style="font-weight: 900; color: #0F172A; font-size: 16px; margin-top: 2px;">-</div>
             </div>
@@ -311,6 +318,43 @@ $produitsSansGrille = array_filter($produits, fn($p) => !isset($p['soumis_grille
             <div style="font-weight: 800; color: #0F172A; font-size: 15px; margin-top: 4px;" id="facNumFacture">N° Facture : -</div>
             <div style="font-size: 13px; color: #64748B; margin-top: 2px;" id="facStatutReg">Statut : -</div>
           </div>
+        </div>
+
+        <!-- RECAP FINANCIER FACTURE / REGLEMENT -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+          <div style="background: #F1F5F9; border-radius: 8px; padding: 12px 14px; border: 1px solid #CBD5E1; text-align: center;">
+            <small style="color: #475569; font-weight: 700; font-size: 11px; text-transform: uppercase;">Montant Total Achat</small>
+            <div style="font-weight: 900; font-size: 15px; color: #0F172A; margin-top: 4px;" id="facRecapTotal">0 FCFA</div>
+          </div>
+          <div style="background: #ECFDF5; border-radius: 8px; padding: 12px 14px; border: 1px solid #6EE7B7; text-align: center;">
+            <small style="color: #065F46; font-weight: 700; font-size: 11px; text-transform: uppercase;">Montant Déjà Réglé</small>
+            <div style="font-weight: 900; font-size: 15px; color: #047857; margin-top: 4px;" id="facRecapPaye">0 FCFA</div>
+          </div>
+          <div style="background: #FEF2F2; border-radius: 8px; padding: 12px 14px; border: 1px solid #FCA5A5; text-align: center;">
+            <small style="color: #991B1B; font-weight: 700; font-size: 11px; text-transform: uppercase;">Reste à Payer</small>
+            <div style="font-weight: 900; font-size: 15px; color: #DC2626; margin-top: 4px;" id="facRecapReste">0 FCFA</div>
+          </div>
+        </div>
+
+        <!-- FORMULAIRE REGLEMENT FACTURE ACHAT -->
+        <div id="boxFormReglement" style="background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+          <form id="formReglerFacture">
+            <input type="hidden" name="code_achat" id="reglerCodeAchat" value="">
+            <div class="row align-items-end g-3">
+              <div class="col-md-7">
+                <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Enregistrer un Règlement (FCFA)</label>
+                <div class="input-group">
+                  <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155;">FCFA</span>
+                  <input type="number" step="any" min="1" name="montant_verse" id="inputMontantVerse" class="form-control" placeholder="Montant versé" required style="border-radius: 0 8px 8px 0; height: 42px; font-weight: 700; color: #0F172A;">
+                </div>
+              </div>
+              <div class="col-md-5">
+                <button type="submit" class="btn btn-success w-100" style="background: #059669; border-color: #059669; height: 42px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                  <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i> Valider le Règlement
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
 
         <!-- Line items table -->
@@ -387,6 +431,24 @@ $(document).ready(function() {
             { data: 'quantite_totale', className: 'text-center', render: d => `<span style="font-weight:700; color:#0F172A; font-size:13px;">${parseFloat(d||0).toLocaleString('fr-FR')}</span>` },
             { data: 'montant_total', render: d => `<strong style="color:#0F172A; font-size:14px;">${parseFloat(d||0).toLocaleString('fr-FR')} FCFA</strong>` },
             { data: 'statut_reglement', className: 'text-center', render: d => d === 'paye' ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">Payé</span>` : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">${d}</span>` },
+            { 
+                data: 'statut_reception', 
+                className: 'text-center', 
+                render: d => {
+                    const st = (d || 'en_attente').toLowerCase();
+                    if (st === 'recue' || st === 'reçue') {
+                        return `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Reçue</span>`;
+                    } else if (st === 'partiellement_recue') {
+                        return `<span style="background: #DBEAFE; color: #1E40AF; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Partielle</span>`;
+                    } else if (st === 'refusee' || st === 'refusée') {
+                        return `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Refusée</span>`;
+                    } else if (st === 'annulee' || st === 'annulée') {
+                        return `<span style="background: #F1F5F9; color: #475569; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulée</span>`;
+                    } else {
+                        return `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`;
+                    }
+                }
+            },
             { data: 'date_achat', className: 'text-center', render: d => d ? new Date(d).toLocaleDateString('fr-FR') : '-' },
             {
                 data: null,
@@ -432,6 +494,18 @@ $(document).ready(function() {
             : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 12px;">${data.statut_reglement || 'Impayé'}</span>`;
         $('#detStatut').html(statutHtml);
 
+        let stRec = (data.statut_reception || 'en_attente').toLowerCase();
+        let stRecHtml = (stRec === 'recue' || stRec === 'reçue')
+            ? `<span style="background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Reçue</span>`
+            : (stRec === 'partiellement_recue'
+                ? `<span style="background: #DBEAFE; color: #1E40AF; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Partielle</span>`
+                : (stRec === 'refusee' || stRec === 'refusée'
+                    ? `<span style="background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Refusée</span>`
+                    : (stRec === 'annulee' || stRec === 'annulée'
+                        ? `<span style="background: #F1F5F9; color: #475569; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Annulée</span>`
+                        : `<span style="background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">En attente</span>`)));
+        $('#detStatutReception').html(stRecHtml);
+
         let modalEl = document.getElementById('modalDetailsAchat');
         let bsModal = new bootstrap.Modal(modalEl);
         bsModal.show();
@@ -448,11 +522,44 @@ $(document).ready(function() {
                 let details = res.details || [];
 
                 $('#facCodeAchat').text(a.code_achat_avicole || '-');
+                $('#reglerCodeAchat').val(a.code_achat_avicole || '');
                 $('#facDateAchat').text('Date : ' + (a.date_achat ? new Date(a.date_achat).toLocaleDateString('fr-FR') : '-'));
                 $('#facFournisseurNom').text(a.fournisseur_nom || '-');
                 $('#facFournisseurTel').text('Tél : ' + (a.telephone_fournisseur_avicole || 'N/A'));
                 $('#facNumFacture').text('N° Facture FRS : ' + (a.numero_facture_fournisseur || '-'));
                 
+                let totAchat = parseFloat(a.montant_total || 0);
+                let payeAchat = parseFloat(a.montant_paye || 0);
+                let resteAchat = Math.max(0, totAchat - payeAchat);
+
+                $('#facRecapTotal').text(totAchat.toLocaleString('fr-FR') + ' FCFA');
+                $('#facRecapPaye').text(payeAchat.toLocaleString('fr-FR') + ' FCFA');
+                $('#facRecapReste').text(resteAchat.toLocaleString('fr-FR') + ' FCFA');
+
+                if (resteAchat <= 0) {
+                    $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
+                } else {
+                    $('#boxFormReglement').html(`
+                      <form id="formReglerFacture">
+                        <input type="hidden" name="code_achat" value="${a.code_achat_avicole || ''}">
+                        <div class="row align-items-end g-3">
+                          <div class="col-md-7">
+                            <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Enregistrer un Règlement (FCFA)</label>
+                            <div class="input-group">
+                              <span class="input-group-text" style="background: #E2E8F0; font-weight: 700; color: #334155;">FCFA</span>
+                              <input type="number" step="any" min="1" max="${resteAchat}" name="montant_verse" id="inputMontantVerse" class="form-control" value="${resteAchat}" required style="border-radius: 0 8px 8px 0; height: 42px; font-weight: 700; color: #0F172A;">
+                            </div>
+                          </div>
+                          <div class="col-md-5">
+                            <button type="submit" class="btn btn-success w-100" style="background: #059669; border-color: #059669; height: 42px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                              <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i> Valider le Règlement
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    `);
+                }
+
                 let regHtml = a.statut_reglement === 'paye' 
                     ? '<strong style="color: #166534;">Payé</strong>' 
                     : '<strong style="color: #92400E;">' + (a.statut_reglement || 'Impayé') + '</strong>';
@@ -492,6 +599,48 @@ $(document).ready(function() {
                 if (window.toastr) toastr.error("Impossible de charger la facture.");
             }
         }, 'json');
+    });
+
+    $(document).on('submit', '#formReglerFacture', function(e) {
+        e.preventDefault();
+        let $btnSubmit = $(this).find('button[type="submit"]');
+        if (typeof loading === 'function') loading($btnSubmit, true, 'Traitement...');
+
+        $.post(baseApi + 'aviculture/reglerAchat', $(this).serialize(), function(res) {
+            if (typeof loading === 'function') loading($btnSubmit, false);
+            let isSuccess = (res.status === 1 || res.status === '1' || res.status === 'success' || res.success === true);
+
+            if (isSuccess) {
+                notifyMsg(res.message || 'Règlement enregistré avec succès !', 'success');
+                if (typeof dt !== 'undefined' && dt) {
+                    dt.ajax.reload(null, false);
+                }
+                
+                // Mettre à jour la vue récap du modal
+                let payeVal = parseFloat(res.montant_paye || 0);
+                let resteVal = parseFloat(res.reste_a_payer || 0);
+
+                $('#facRecapPaye').text(payeVal.toLocaleString('fr-FR') + ' FCFA');
+                $('#facRecapReste').text(resteVal.toLocaleString('fr-FR') + ' FCFA');
+
+                if (resteVal <= 0) {
+                    $('#boxFormReglement').html('<div style="background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; border-radius: 8px; padding: 12px; font-weight: 700; text-align: center;"><i class="fa fa-check-circle me-1"></i> Facture Intégralement Réglée</div>');
+                    $('#facStatutReg').html('Statut Règlement : <strong style="color: #166534;">Payé</strong>');
+                } else {
+                    $('#inputMontantVerse').val(resteVal).attr('max', resteVal);
+                    $('#facStatutReg').html('Statut Règlement : <strong style="color: #92400E;">Partiel</strong>');
+                }
+            } else {
+                notifyMsg(res.message || 'Erreur lors du règlement', 'error');
+            }
+        }, 'json').fail(function(xhr) {
+            if (typeof loading === 'function') loading($btnSubmit, false);
+            let errMsg = 'Erreur serveur lors du traitement du règlement.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errMsg = xhr.responseJSON.message;
+            }
+            notifyMsg(errMsg, 'error');
+        });
     });
 
     $(document).on('click', '.btn-print-facture', function() {
