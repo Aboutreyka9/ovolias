@@ -221,7 +221,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
 
               <div class="col-md-2">
                 <label style="font-size: 11px; font-weight: 700; color: #475569;">Prix Unitaire (F)</label>
-                <input type="number" id="pos_prix" value="0" step="50" class="form-control form-control-sm" style="border-radius: 6px;">
+                <input type="number" id="pos_prix" value="0" min="0" step="any" class="form-control form-control-sm" style="border-radius: 6px;">
               </div>
 
               <div class="col-md-2">

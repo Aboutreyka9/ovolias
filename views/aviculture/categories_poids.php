@@ -327,7 +327,7 @@ $grilles = $grilles ?? [];
           <div style="margin-bottom: 16px;">
             <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Nouveau Prix de Vente (FCFA) *</label>
             <div class="input-group">
-              <input type="number" name="prix_vente" id="edit_prix_val" class="form-control" style="border-radius: 8px 0 0 8px; height: 44px; font-size: 16px; font-weight: 800;" required min="1" step="50" placeholder="Ex: 2500">
+              <input type="number" name="prix_vente" id="edit_prix_val" class="form-control" style="border-radius: 8px 0 0 8px; height: 44px; font-size: 16px; font-weight: 800;" required min="0" step="any" placeholder="Ex: 2500">
               <span class="input-group-text" style="border-radius: 0 8px 8px 0; background: #F1F5F9; font-weight: 700; color: #475569;">FCFA</span>
             </div>
           </div>
@@ -563,7 +563,7 @@ $(document).ready(function() {
           <div style="margin-bottom: 16px;">
             <label style="font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 6px; display: block;">Prix de Vente Spécifique (FCFA) *</label>
             <div class="input-group">
-              <input type="number" name="prix_vente" class="form-control" style="border-radius: 8px 0 0 8px; height: 44px; font-size: 16px; font-weight: 800;" required min="1" step="50" placeholder="Ex: 3500">
+              <input type="number" name="prix_vente" class="form-control" style="border-radius: 8px 0 0 8px; height: 44px; font-size: 16px; font-weight: 800;" required min="0" step="any" placeholder="Ex: 3500">
               <span class="input-group-text" style="border-radius: 0 8px 8px 0; background: #F1F5F9; font-weight: 700; color: #475569;">FCFA</span>
             </div>
           </div>
