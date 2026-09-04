@@ -40,8 +40,8 @@
     </div>
 
     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-      <button type="button" onclick="window.print()" class="btn btn-primary" style="font-weight: 700; border-radius: 8px; font-size: 13px; background: #2563EB; border-color: #2563EB; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">
-        <i data-lucide="printer" style="width: 16px; height: 16px;"></i> Imprimer le Journal
+      <button type="button" onclick="window.print()" class="btn btn-dark" style="font-weight: 700; border-radius: 8px; font-size: 13px; background: #0F172A; border-color: #0F172A; color: #FFFFFF; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; box-shadow: 0 2px 6px rgba(15,23,42,0.2);">
+        <i data-lucide="printer" style="width: 16px; height: 16px; color: #FFFFFF;"></i> Imprimer le Journal
       </button>
       <a href="<?= RACINE ?>aviculture/stock" class="btn btn-light" style="font-weight: 700; border-radius: 8px; font-size: 13px; border: 1px solid #CBD5E1; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;">
         <i data-lucide="arrow-left" style="width: 16px; height: 16px; color: #475569;"></i> Retour au Stock Global
