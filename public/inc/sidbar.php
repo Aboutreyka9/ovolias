@@ -320,8 +320,8 @@
         </div>
         <?php endif; ?>
 
-        <!-- === MODULE CATALOGUE DES PRODUITS (NOUVELLE FONCTIONNALITÉ OVOLIA) === -->
-        <?php if ($canAccess(['GESTIONNAIRE_MANAGE_PACKS', 'GESTIONNAIRE_MANAGE_ARTICLES', 'GESTIONNAIRE_MANAGE_CATEGORIES_POIDS'], ['ROLE_GESTIONNAIRE', 'ROLE_ADMIN'])): ?>
+        <!-- === MODULE CATALOGUE ET LOGISTIQUE DES PRODUITS === -->
+        <?php if ($canAccess(['GESTIONNAIRE_MANAGE_STOCK_AVICOLE', 'GESTIONNAIRE_MANAGE_PACKS', 'GESTIONNAIRE_MANAGE_ARTICLES', 'GESTIONNAIRE_MANAGE_CATEGORIES_POIDS', 'LOGISTIQUE_VERIFIER_BON_ACHAT', 'COMMERCIAL_MANAGE_LIVRAISONS', 'LOGISTIQUE_MANAGE_LIVRAISONS'], ['ROLE_GESTIONNAIRE', 'ROLE_COMMERCIAL', 'ROLE_ADMIN', 'ROLE_DIR_GENERAL'])): ?>
         <div class="nav-section">
             <div class="sidebar-accordion-toggle" data-bs-target="#sec-catalogue" aria-expanded="false">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -351,10 +351,16 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-distribution">
-                <a href="<?= RACINE ?>aviculture/stock" class="nav-item sub <?= strpos($currentUri, '/aviculture/stock') !== false ? 'active' : '' ?>" data-title="État des Stocks">
+                <a href="<?= RACINE ?>aviculture/livraisons" class="nav-item sub <?= strpos($currentUri, '/aviculture/livraisons') !== false ? 'active' : '' ?>" data-title="Expéditions & Livraisons">
+                    <i data-lucide="truck"></i> <span>Expéditions &amp; Livraisons</span>
+                </a>
+                <a href="<?= RACINE ?>aviculture/vehicules" class="nav-item sub <?= strpos($currentUri, '/aviculture/vehicules') !== false ? 'active' : '' ?>" data-title="Flotte de Véhicules">
+                    <i data-lucide="car"></i> <span>Flotte de Véhicules</span>
+                </a>
+                <a href="<?= RACINE ?>aviculture/stock" target="_blank" class="nav-item sub <?= strpos($currentUri, '/aviculture/stock') !== false ? 'active' : '' ?>" data-title="État des Stocks">
                     <i data-lucide="package"></i> <span>État des Stocks</span>
                 </a>
-                <a href="<?= RACINE ?>aviculture/mouvements_stock" class="nav-item sub <?= strpos($currentUri, '/aviculture/mouvements_stock') !== false ? 'active' : '' ?>" data-title="Mouvements de Stock">
+                <a href="<?= RACINE ?>aviculture/mouvements_stock" target="_blank" class="nav-item sub <?= strpos($currentUri, '/aviculture/mouvements_stock') !== false ? 'active' : '' ?>" data-title="Mouvements de Stock">
                     <i data-lucide="history"></i> <span>Mouvements de Stock</span>
                 </a>
                 <a href="<?= RACINE ?>aviculture/pesees" class="nav-item sub <?= strpos($currentUri, '/aviculture/pesees') !== false ? 'active' : '' ?>" data-title="Pesées & Étiquettes">

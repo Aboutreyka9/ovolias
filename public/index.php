@@ -165,6 +165,14 @@ $route->addRoute('/aviculture/stock', ['StockAvicoleController', 'stock']);
 $route->addRoute('/aviculture/mouvements_stock', ['StockAvicoleController', 'mouvements']);
 $route->addRoute('/aviculture/ajusterStock', ['StockAvicoleController', 'ajusterStock']);
 
+$route->addRoute('/aviculture/livraisons', ['LivraisonAvicoleController', 'list']);
+$route->addRoute('/aviculture/planifierLivraison', ['LivraisonAvicoleController', 'planifier']);
+$route->addRoute('/aviculture/validerLivraison', ['LivraisonAvicoleController', 'validerLivraison']);
+$route->addRoute('/aviculture/imprimerBL/{param}', ['LivraisonAvicoleController', 'imprimerBL']);
+$route->addRoute('/aviculture/imprimerBL', ['LivraisonAvicoleController', 'imprimerBL']);
+$route->addRoute('/aviculture/vehicules', ['LivraisonAvicoleController', 'vehicules']);
+$route->addRoute('/aviculture/addVehicule', ['LivraisonAvicoleController', 'addVehicule']);
+
 
 // -------------------------------------------------------------
 // Module: Clients & Zones Commerciales
