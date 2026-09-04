@@ -707,11 +707,12 @@ $(document).ready(function() {
             return;
         }
 
-        const typeReglement = $('#type_reglement').val();
+        const typeVente = $('#input_type_vente').val() || 'comptoir_direct';
+        const typeReglement = $('#selectReglement').val() || 'comptant_especes';
         const montantRecu = parseFloat($('#inputMontantRecu').val()) || 0;
         const totalNet = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
 
-        if (typeReglement === 'comptant_especes') {
+        if (typeVente === 'comptoir_direct' && typeReglement === 'comptant_especes') {
             if (montantRecu <= 0) {
                 showToast('warning', 'Veuillez saisir le montant reçu en espèces de la part du client.', 'Montant Reçu Requis');
                 $('#inputMontantRecu').focus();

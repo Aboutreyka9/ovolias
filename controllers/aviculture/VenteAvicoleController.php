@@ -185,8 +185,8 @@ class VenteAvicoleController extends BaseController
 
         $total_net = max(0, $total_ht - $remise_totale);
         
-        // Validation du montant reçu pour les règlements au comptant en espèces
-        if ($type_reglement === 'comptant_especes') {
+        // Validation du montant reçu uniquement pour les ventes comptoir direct au comptant en espèces
+        if ($type_vente === 'comptoir_direct' && $type_reglement === 'comptant_especes') {
             if ($montant_recu <= 0) {
                 $this->error("Veuillez saisir le montant reçu en espèces de la part du client.");
                 return;
