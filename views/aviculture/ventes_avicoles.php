@@ -296,7 +296,7 @@ $kpis = $kpis ?? ['total_ventes' => 0, 'ca_jour' => 0, 'ca_comptoir' => 0, 'cmd_
 
               <div class="col-md-3">
                 <label style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Remise Accordée (F)</label>
-                <input type="number" name="montant_remise" id="inputRemise" value="0" min="0" oninput="recalculerTotaux()" class="form-control form-control-sm" style="border-radius: 6px; font-size: 14px; font-weight: 700;">
+                <input type="number" name="montant_remise" id="inputRemise" value="0" min="0" readonly oninput="recalculerTotaux()" class="form-control form-control-sm" style="border-radius: 6px; font-size: 14px; font-weight: 700; background: #1E293B; color: #94A3B8; border-color: #334155; cursor: not-allowed;">
               </div>
 
               <div class="col-md-3" style="border-left: 1px solid #334155;">
@@ -362,14 +362,24 @@ function selectTypeVente(type) {
     if (type === 'comptoir_direct') {
         $('#btnTypeComptoir').addClass('active');
         $('#btnTypeCommande').removeClass('active');
+        $('#selectClient').val('').prop('disabled', true).css({ 'background-color': '#F1F5F9', 'cursor': 'not-allowed' });
     } else {
         $('#btnTypeCommande').addClass('active');
         $('#btnTypeComptoir').removeClass('active');
+        $('#selectClient').prop('disabled', false).css({ 'background-color': '#FFFFFF', 'cursor': 'pointer' });
     }
     verifierBoutonEncaissement();
 }
 
 function checkReglement() {
+    const reg = $('#selectReglement').val();
+    if (reg === 'mobile_money' || reg === 'cheque' || reg === 'virement') {
+        const net = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
+        if (net > 0) {
+            $('#inputMontantRecu').val(net);
+            recalculerTotaux();
+        }
+    }
     verifierBoutonEncaissement();
 }
 
@@ -394,6 +404,17 @@ function ajouterArticlePanier() {
 
     const catCode = $cat.val() || null;
     const catNom = $cat.data('nom') || '-';
+
+    // Empêcher la sélection/ajout si le couple Produit + Catégorie est déjà dans le panier
+    const isDuplicate = panier.some(item => 
+        item.produit_code === prodCode && 
+        ((!item.categorie_poids_code && !catCode) || item.categorie_poids_code === catCode)
+    );
+
+    if (isDuplicate) {
+        showToast('warning', `L'article "${prodNom}" (${catNom}) existe déjà dans la liste des produits sélectionnés.`, 'Article Déjà Sélectionné');
+        return;
+    }
 
     panier.push({
         produit_code: prodCode,
@@ -428,6 +449,7 @@ function renderPanier() {
                 </td>
             </tr>
         `);
+        $('#pos_produit').trigger('change');
         return;
     }
 
@@ -445,6 +467,8 @@ function renderPanier() {
             </tr>
         `);
     });
+
+    $('#pos_produit').trigger('change');
 }
 
 function recalculerTotaux() {
@@ -478,6 +502,11 @@ function verifierBoutonEncaissement() {
     const recu = parseFloat($('#inputMontantRecu').val()) || 0;
     const net = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
     const $btn = $('#btnSubmitVente');
+
+    if (typeVente === 'commande_livraison') {
+        $btn.prop('disabled', false).css({ 'opacity': '1', 'cursor': 'pointer' });
+        return;
+    }
 
     const hasItems = (panier.length > 0 || $('.chk-etiq:checked').length > 0);
 
@@ -519,7 +548,7 @@ $(document).ready(function() {
     });
 
     $('#modalVente').on('shown.bs.modal', function() {
-        verifierBoutonEncaissement();
+        selectTypeVente($('#input_type_vente').val() || 'comptoir_direct');
     });
 
     // Filtre des catégories de poids selon le produit sélectionné
@@ -538,15 +567,24 @@ $(document).ready(function() {
             .filter(g => g.produit_code === pCode)
             .map(g => g.categorie_poids_code);
 
-        // Masquer / afficher les options du select catégorie de poids
+        // Masquer / afficher les options du select catégorie de poids (en excluant celles déjà dans le panier)
         let hasValidCat = false;
         $catSelect.find('option').each(function() {
             const val = $(this).val();
             if (!val) {
                 $(this).show();
             } else if (activeCatCodes.includes(val)) {
-                $(this).show();
-                hasValidCat = true;
+                const isAlreadyInCart = panier.some(item => 
+                    item.produit_code === pCode && 
+                    ((!item.categorie_poids_code && val === 'CATP-NON-SOUMIS') || item.categorie_poids_code === val)
+                );
+
+                if (isAlreadyInCart) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                    hasValidCat = true;
+                }
             } else {
                 $(this).hide();
             }
@@ -677,11 +715,12 @@ $(document).ready(function() {
             return;
         }
 
-        const typeReglement = $('#type_reglement').val();
+        const typeVente = $('#input_type_vente').val() || 'comptoir_direct';
+        const typeReglement = $('#selectReglement').val() || 'comptant_especes';
         const montantRecu = parseFloat($('#inputMontantRecu').val()) || 0;
         const totalNet = parseFloat($('#displayNetPay').text().replace(/[^\d.-]/g, '')) || 0;
 
-        if (typeReglement === 'comptant_especes') {
+        if (typeVente === 'comptoir_direct' && typeReglement === 'comptant_especes') {
             if (montantRecu <= 0) {
                 showToast('warning', 'Veuillez saisir le montant reçu en espèces de la part du client.', 'Montant Reçu Requis');
                 $('#inputMontantRecu').focus();
