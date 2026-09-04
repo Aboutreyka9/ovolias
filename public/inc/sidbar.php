@@ -351,11 +351,17 @@
                 <i data-lucide="chevron-down" class="chevron-icon"></i>
             </div>
             <div class="nav-section-items" id="sec-distribution">
+                <a href="<?= RACINE ?>aviculture/stock" class="nav-item sub <?= strpos($currentUri, '/aviculture/stock') !== false ? 'active' : '' ?>" data-title="État des Stocks">
+                    <i data-lucide="package"></i> <span>État des Stocks</span>
+                </a>
+                <a href="<?= RACINE ?>aviculture/mouvements_stock" class="nav-item sub <?= strpos($currentUri, '/aviculture/mouvements_stock') !== false ? 'active' : '' ?>" data-title="Mouvements de Stock">
+                    <i data-lucide="history"></i> <span>Mouvements de Stock</span>
+                </a>
                 <a href="<?= RACINE ?>aviculture/pesees" class="nav-item sub <?= strpos($currentUri, '/aviculture/pesees') !== false ? 'active' : '' ?>" data-title="Pesées & Étiquettes">
                     <i data-lucide="qr-code"></i> <span>Pesées & Étiquettes</span>
                 </a>
                 <a href="<?= RACINE ?>aviculture/achats" class="nav-item sub <?= strpos($currentUri, '/aviculture/achats') !== false ? 'active' : '' ?>" data-title="Achats Produits Finis">
-                    <i data-lucide="shopping-bag"></i> <span>Achats Produits Finis</span>
+                    <i data-lucide="shopping-bag"></i> <span>Achats &amp; Entrées</span>
                 </a>
                 <a href="<?= RACINE ?>aviculture/fournisseurs" class="nav-item sub <?= strpos($currentUri, '/aviculture/fournisseurs') !== false ? 'active' : '' ?>" data-title="Fournisseurs Avicoles">
                     <i data-lucide="building"></i> <span>Fournisseurs Avicoles</span>

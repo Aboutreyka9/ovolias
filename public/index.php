@@ -161,6 +161,10 @@ $route->addRoute('/aviculture/apiDetailsAchat', ['AchatAvicoleController', 'apiD
 $route->addRoute('/aviculture/detailAchat/{param}', ['AchatAvicoleController', 'detailAchat']);
 $route->addRoute('/aviculture/detail_achat', ['AchatAvicoleController', 'detailAchat']);
 
+$route->addRoute('/aviculture/stock', ['StockAvicoleController', 'stock']);
+$route->addRoute('/aviculture/mouvements_stock', ['StockAvicoleController', 'mouvements']);
+$route->addRoute('/aviculture/ajusterStock', ['StockAvicoleController', 'ajusterStock']);
+
 
 // -------------------------------------------------------------
 // Module: Clients & Zones Commerciales
