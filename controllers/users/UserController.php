@@ -677,6 +677,7 @@ class UserController extends BaseController
 
                     Validator::saveSesion(USERS_AUTH, $sessionData);
                     $_SESSION['permissions'] = $allPermissions;
+                    $_SESSION['user_permissions'] = $allPermissions;
                     $_SESSION['roles'] = $roleCodes;
                     $_SESSION['etablissement_active_code'] = $user['etablissement_code'] ?? '5454544456';
                     $_SESSION['zone_active_code'] = $user['zone_code'] ?? null;

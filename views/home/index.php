@@ -12,7 +12,7 @@ $recentAchatsAvicoles = $recentAchatsAvicoles ?? [];
 $recentDepenses = $recentDepenses ?? [];
 
 // Récupération des permissions en session pour le filtrage d'accès
-$userPermissions = $_SESSION['user_permissions'] ?? [];
+$userPermissions = $_SESSION['user_permissions'] ?? ($_SESSION['permissions'] ?? []);
 $userRole = $_SESSION[USERS_AUTH]['role_code'] ?? ($auth['role_code'] ?? '');
 
 $canAccess = function(array $perms = [], array $roles = []) use ($userPermissions, $userRole): bool {
