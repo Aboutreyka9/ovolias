@@ -15,8 +15,20 @@
       </div>
       <div class="card" style="background:#FFF; border-radius:12px; padding:24px; border:1px solid #E2E8F0; max-width:600px;">
         <div class="row mb-3">
-          <div class="col-6"><strong>Libellé Zone :</strong></div>
+          <div class="col-6"><strong>Libellé Succursale :</strong></div>
           <div class="col-6"><?= htmlspecialchars($item['libelle_zone'] ?? '-') ?></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-6"><strong>Localisation :</strong></div>
+          <div class="col-6"><?= htmlspecialchars($item['localisation_zone'] ?? '-') ?></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-6"><strong>N° Téléphone :</strong></div>
+          <div class="col-6"><?= htmlspecialchars($item['telephone_zone'] ?? '-') ?></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-6"><strong>Contact / Responsable :</strong></div>
+          <div class="col-6"><?= htmlspecialchars($item['contact_zone'] ?? '-') ?></div>
         </div>
         <div class="row mb-3">
           <div class="col-6"><strong>Date Création :</strong></div>

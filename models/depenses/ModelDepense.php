@@ -7,7 +7,7 @@ class ModelDepense extends BaseModel
     protected ?string $statusField = 'statut_depense';
     protected ?string $createdAtField = 'created_at_depense';
 
-    public function getAllWithDetails(): array
+    public function getAllWithDetails(?string $zoneCode = null): array
     {
         try {
             $sql = "
@@ -17,9 +17,17 @@ class ModelDepense extends BaseModel
                 FROM depenses d
                 LEFT JOIN type_depenses td ON td.code_type_depense = d.type_depense_code
                 LEFT JOIN users u ON u.code_user = d.user_code
-                ORDER BY d.created_at_depense DESC, d.id_depense DESC
+                WHERE 1=1
             ";
-            return $this->getCon()->query($sql)->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            $params = [];
+            if (!empty($zoneCode)) {
+                $sql .= " AND d.zone_code = ?";
+                $params[] = $zoneCode;
+            }
+            $sql .= " ORDER BY d.id_depense DESC";
+            $stmt = $this->getCon()->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         } catch (Exception $e) {
             error_log("ModelDepense::getAllWithDetails error: " . $e->getMessage());
             return [];

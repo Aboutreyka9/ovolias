@@ -20,8 +20,10 @@
               <tr style="background: #F8FAFC; text-align: left; color: #64748B;">
                 <th style="padding: 12px;">ID</th>
                 <th style="padding: 12px;">Code</th>
-                <th style="padding: 12px;">Nom de la Zone</th>
-                <th style="padding: 12px;">Date Création</th>
+                <th style="padding: 12px;">Nom / Succursale</th>
+                <th style="padding: 12px;">Localisation</th>
+                <th style="padding: 12px;">Téléphone</th>
+                <th style="padding: 12px;">Contact</th>
                 <th style="padding: 12px;">Statut</th>
                 <th style="padding: 12px; text-align: right;">Actions</th>
               </tr>
@@ -48,7 +50,9 @@ $(document).ready(function() {
       { data: 'libelle_zone', render: function(d) {
         return '<strong style="color:#0F172A;">' + (d || '-') + '</strong>';
       }},
-      { data: 'created_at_zone', defaultContent: '-' },
+      { data: 'localisation_zone', defaultContent: '<span style="color:#94A3B8;">-</span>' },
+      { data: 'telephone_zone', defaultContent: '<span style="color:#94A3B8;">-</span>' },
+      { data: 'contact_zone', defaultContent: '<span style="color:#94A3B8;">-</span>' },
       { data: 'statut_zone', width: '80px', className: 'text-center', render: function(d, type, row) {
         var isActif = (d === 'actif');
         var checkedAttr = isActif ? 'checked' : '';

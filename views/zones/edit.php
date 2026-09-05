@@ -25,6 +25,21 @@ $title = $isEdit ? 'Éditer la Zone' : 'Nouvelle Zone Commerciale';
           </div>
 
           <div class="mb-3">
+            <label class="form-label" style="font-weight:600; color:#334155;">Localisation de la Succursale</label>
+            <input type="text" name="localisation_zone" class="form-control" value="<?= htmlspecialchars($item['localisation_zone'] ?? '') ?>" placeholder="ex: Abidjan Cocody Angré, Bd Latrille">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:600; color:#334155;">N° Téléphone Succursale</label>
+            <input type="text" name="telephone_zone" class="form-control" value="<?= htmlspecialchars($item['telephone_zone'] ?? '') ?>" placeholder="ex: +225 07 08 09 10 11">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:600; color:#334155;">Nom du Contact / Responsable</label>
+            <input type="text" name="contact_zone" class="form-control" value="<?= htmlspecialchars($item['contact_zone'] ?? '') ?>" placeholder="ex: M. KOUASSI Jean (Gérant)">
+          </div>
+
+          <div class="mb-3">
             <label class="form-label" style="font-weight:600; color:#334155;">Statut</label>
             <select name="statut_zone" class="form-select">
               <option value="actif" <?= ($item['statut_zone'] ?? 'actif') === 'actif' ? 'selected' : '' ?>>Actif</option>
