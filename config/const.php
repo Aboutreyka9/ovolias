@@ -11,7 +11,7 @@ if (!defined('RACINE')) {
     if (!empty($envUrl)) {
         define('RACINE', rtrim($envUrl, '/') . '/');
     } else {
-        define('RACINE', $isLocalEnvironment ? 'http://localhost/ovolias/' : 'https://ovolias.app/');
+        define('RACINE', $isLocalEnvironment ? 'http://localhost/ovolias/' : 'https://ovolias.oliveservice.net/');
     }
 }
 

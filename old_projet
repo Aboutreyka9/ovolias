@@ -1,89 +1,72 @@
-# Inventaire des fichiers contenant l'ancien nom de projet ('geicg' ou 'olive')
+# Inventaire des Modules et Dossiers Archivés dans le Dossier Trash
 
-Ce fichier liste l'ensemble des fichiers du projet Ovolias qui comportent encore des références ou des noms issus des anciens projets **GEICG** ou **Olive Service**.
-
----
-
-## 1. Fichiers dont le NOM DE FICHIER contient 'geicg' ou 'olive'
-
-- `database/migration_olive_service.sql`
-- `database/olive.sql`
-- `database/run_migration_olive.php`
+Tous les anciens modules, dossiers et fichiers issus de l'ancien système (tontine / cotisations / souscriptions aux packs / sessions & années d'exercice) ont été isolés et déplacés dans un dossier `trash/` au sein de chaque groupe principal.
 
 ---
 
-## 2. Fichiers dont le CONTENU contient 'geicg' ou 'olive'
+## 1. Emplacements des Dossiers Trash
 
-### Configuration et Environnement
-- `.env`
-- `.env.example`
-- `config/const.php`
-- `config/Database.php`
-- `config/GeniusPayConfig.php`
+### A. Contrôleurs (`controllers/trash/`)
+- `controllers/trash/annees/`
+- `controllers/trash/articles/`
+- `controllers/trash/caisse_commercial/`
+- `controllers/trash/categorie_packs/`
+- `controllers/trash/categories_articles/`
+- `controllers/trash/cotisations/`
+- `controllers/trash/distributions/`
+- `controllers/trash/packs/`
+- `controllers/trash/sessions/`
+- `controllers/trash/souscriptions/`
+- `controllers/trash/versements/`
 
-### Noyau et Services Back-end (Core)
-- `core/GeniusPayService.php`
-- `core/MailerService.php`
-- `core/NotificationService.php`
+### B. Modèles (`models/trash/`)
+- `models/trash/annees/`
+- `models/trash/articles/`
+- `models/trash/caisses/`
+- `models/trash/categorie_packs/`
+- `models/trash/categories_articles/`
+- `models/trash/cotisations/`
+- `models/trash/distributions/`
+- `models/trash/packs/`
+- `models/trash/sessions/`
+- `models/trash/souscriptions/`
+- `models/trash/versements/`
 
-### Contrôleurs (Controllers)
-- `controllers/etablissements/EtablissementController.php`
-- `controllers/users/UserController.php`
+### C. Vues (`views/trash/`)
+- `views/trash/annees/`
+- `views/trash/articles/`
+- `views/trash/caisse_commercial/`
+- `views/trash/categorie_packs/`
+- `views/trash/categories_articles/`
+- `views/trash/cautisations_payment/`
+- `views/trash/cotisations/`
+- `views/trash/distributions/`
+- `views/trash/packs/`
+- `views/trash/sessions/`
+- `views/trash/souscriptions/`
+- `views/trash/versements/`
 
-### Base de Données et Scripts SQL
-- `database/migration_olive_service.sql`
-- `database/olive.sql`
-- `database/rbac.sql`
-- `database/run_migration_olive.php`
+### D. Fichiers JavaScript Front-End (`public/assets/js/modules/trash/`)
+- `public/assets/js/modules/trash/caisse_commercial.js`
+- `public/assets/js/modules/trash/clotures_caisse.js`
+- `public/assets/js/modules/trash/cotisations.js`
+- `public/assets/js/modules/trash/ouvertures_caisse.js`
+- `public/assets/js/modules/trash/packs.js`
+- `public/assets/js/modules/trash/souscriptions.js`
+- `public/assets/js/modules/trash/versements.js`
 
-### Point d'Entrée Principal (Router)
-- `public/index.php`
+---
 
-### JavaScript Framework & Logique Front-End
-- `public/json/app.js`
-- `public/json/auth.js`
-- `public/json/dashboard.js`
-- `public/json/theme-manager.js`
-- `public/json/entities/abonnements_pressings.js`
-- `public/json/entities/clients.js`
-- `public/json/entities/commandes.js`
-- `public/json/entities/forfaits.js`
-- `public/json/entities/notifications.js`
-- `public/json/entities/quartiers.js`
-- `public/json/entities/roles.js`
-- `public/json/entities/villes.js`
+## 2. Structure Active Conservée pour OVOLIA Aviculture
 
-### JavaScript En-têtes de Modules
-- `public/assets/js/modules/caisse_commercial.js`
-- `public/assets/js/modules/clients.js`
-- `public/assets/js/modules/clotures_caisse.js`
-- `public/assets/js/modules/cotisations.js`
-- `public/assets/js/modules/depenses.js`
-- `public/assets/js/modules/ouvertures_caisse.js`
-- `public/assets/js/modules/packs.js`
-- `public/assets/js/modules/souscriptions.js`
-- `public/assets/js/modules/versements.js`
+1. **Cœur Avicole OVOLIA** :
+   - `controllers/aviculture/`
+   - `models/aviculture/`
+   - `views/aviculture/`
+   - `public/assets/js/modules/aviculture.js`
 
-### Vues, Layouts et Templates d'Emails (Views & Includes)
-- `public/inc/footer.php`
-- `public/inc/nav.php`
-- `public/inc/sidbar.php`
-- `views/caisse_commercial/edit.php`
-- `views/depenses/edit.php`
-- `views/errors/404.php`
-- `views/etablissements/config.php`
-- `views/home/index.php`
-- `views/sessions/list.php`
-- `views/users/connexion.php`
-- `views/users/edit.php`
-- `views/users/forgot_password.php`
-- `views/users/reset_password.php`
-- `views/templates/emails/reset_password.php`
-- `views/templates/emails/welcome_credentials.php`
-
-### Documentation et Notes
-- `README.md`
-- `description_projet.md`
-- `consigne.md`
-- `optimisation_requete.md`
-- `user_accessmd.`
+2. **Administration & Socle Commun** :
+   - Utilisateurs & Droits : `users`, `roles`, `permissions`, `fonctions`
+   - Établissements & Zones : `etablissements`, `zones`, `zone_commercials`
+   - Dépenses & Charges : `depenses`, `type_depenses`
+   - Tableau de Bord : `home`
