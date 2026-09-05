@@ -1,72 +1,69 @@
-# Inventaire des Modules et Dossiers Archivés dans le Dossier Trash
+# Inventaire des Modules, Dossiers et Base de Données Archivés
 
-Tous les anciens modules, dossiers et fichiers issus de l'ancien système (tontine / cotisations / souscriptions aux packs / sessions & années d'exercice) ont été isolés et déplacés dans un dossier `trash/` au sein de chaque groupe principal.
-
----
-
-## 1. Emplacements des Dossiers Trash
-
-### A. Contrôleurs (`controllers/trash/`)
-- `controllers/trash/annees/`
-- `controllers/trash/articles/`
-- `controllers/trash/caisse_commercial/`
-- `controllers/trash/categorie_packs/`
-- `controllers/trash/categories_articles/`
-- `controllers/trash/cotisations/`
-- `controllers/trash/distributions/`
-- `controllers/trash/packs/`
-- `controllers/trash/sessions/`
-- `controllers/trash/souscriptions/`
-- `controllers/trash/versements/`
-
-### B. Modèles (`models/trash/`)
-- `models/trash/annees/`
-- `models/trash/articles/`
-- `models/trash/caisses/`
-- `models/trash/categorie_packs/`
-- `models/trash/categories_articles/`
-- `models/trash/cotisations/`
-- `models/trash/distributions/`
-- `models/trash/packs/`
-- `models/trash/sessions/`
-- `models/trash/souscriptions/`
-- `models/trash/versements/`
-
-### C. Vues (`views/trash/`)
-- `views/trash/annees/`
-- `views/trash/articles/`
-- `views/trash/caisse_commercial/`
-- `views/trash/categorie_packs/`
-- `views/trash/categories_articles/`
-- `views/trash/cautisations_payment/`
-- `views/trash/cotisations/`
-- `views/trash/distributions/`
-- `views/trash/packs/`
-- `views/trash/sessions/`
-- `views/trash/souscriptions/`
-- `views/trash/versements/`
-
-### D. Fichiers JavaScript Front-End (`public/assets/js/modules/trash/`)
-- `public/assets/js/modules/trash/caisse_commercial.js`
-- `public/assets/js/modules/trash/clotures_caisse.js`
-- `public/assets/js/modules/trash/cotisations.js`
-- `public/assets/js/modules/trash/ouvertures_caisse.js`
-- `public/assets/js/modules/trash/packs.js`
-- `public/assets/js/modules/trash/souscriptions.js`
-- `public/assets/js/modules/trash/versements.js`
+Tous les anciens modules, dossiers, tables de base de données et permissions RBAC issus de l'ancien système (tontine / cotisations / souscriptions aux packs / sessions & années d'exercice / pédagogie) ont été nettoyés et archivés.
 
 ---
 
-## 2. Structure Active Conservée pour OVOLIA Aviculture
+## 1. Sauvegarde de la Base de Données (Backup SQL)
+- **Fichier de sauvegarde généré** : `database/backup_ovolias_before_cleanup_20260905.sql` (110 KB)
 
-1. **Cœur Avicole OVOLIA** :
-   - `controllers/aviculture/`
-   - `models/aviculture/`
-   - `views/aviculture/`
-   - `public/assets/js/modules/aviculture.js`
+---
 
-2. **Administration & Socle Commun** :
-   - Utilisateurs & Droits : `users`, `roles`, `permissions`, `fonctions`
-   - Établissements & Zones : `etablissements`, `zones`, `zone_commercials`
-   - Dépenses & Charges : `depenses`, `type_depenses`
-   - Tableau de Bord : `home`
+## 2. Nettoyage de la Base de Données (19 Tables Obsolètes Supprimées)
+- `cautisation_clients`
+- `souscriptions`
+- `pack_souscriptions`
+- `pack_articles`
+- `packs`
+- `categorie_packs`
+- `articles`
+- `distributions`
+- `versements_commerciaux`
+- `caisses`
+- `clients`
+- `annees`
+- `sessions`
+- `zone_commercials`
+- `categories_poids` (ancien doublon)
+- `grilles_tarifs_poids` (ancien doublon)
+- `pesees_etiquettes` (ancien doublon)
+- `produits_aviculture` (ancien doublon)
+- `mouvements_stock_aviculture` (ancien doublon)
+
+---
+
+## 3. Nettoyage du Système RBAC (Rôles & Permissions)
+
+### A. 5 Rôles Scolaires / Pédagogiques Supprimés :
+- `ROLE_DIR_ETUDES`
+- `ROLE_CHEF_DEP`
+- `ROLE_SCOLARITE`
+- `ROLE_ENSEIGNANT`
+- `ROLE_COMMUNICATION`
+
+### B. 22 Permissions Obsolètes Supprimées :
+- Catalogue & Packs : `GESTIONNAIRE_MANAGE_ARTICLES`, `GESTIONNAIRE_MANAGE_CATEGORIES_ARTICLES`, `GESTIONNAIRE_MANAGE_CATEGORIE_PACKS`, `GESTIONNAIRE_MANAGE_PACKS`, `GESTIONNAIRE_MANAGE_SESSIONS`, `GESTIONNAIRE_MANAGE_ANNEES`, `GESTIONNAIRE_MANAGE_DISTRIBUTIONS`
+- Souscriptions & Cotisations : `COMMERCIAL_ADD_SOUSCRIPTION`, `COMMERCIAL_VIEW_OWN_SOUSCRIPTIONS`, `COMMERCIAL_COLLECT_COTISATION`, `COMMERCIAL_VIEW_OWN_COTISATIONS`, `COMMERCIAL_MANAGE_OWN_CAISSE`, `COMMERCIAL_MAKE_VERSEMENT`, `COMMERCIAL_SELECT_PRODUIT_WEIGHT`, `GESTIONNAIRE_VIEW_ALL_SOUSCRIPTIONS`, `GESTIONNAIRE_EDIT_SOUSCRIPTION`
+- Finance Ancienne : `FINANCE_VIEW_ALL_COTISATIONS`, `FINANCE_EDIT_COTISATION`, `FINANCE_VALIDATE_VERSEMENT`, `FINANCE_REJECT_VERSEMENT`, `FINANCE_VIEW_CLOTURES_CAISSE`, `FINANCE_MANAGE_CLOTURES_CAISSE`
+
+---
+
+## 4. Rôles et Permissions Conservés pour OVOLIA Aviculture
+
+### A. 8 Rôles Actifs :
+1. `ROLE_SUPERADMIN` (Super Administrateur)
+2. `ROLE_ADMIN` (Administrateur Système)
+3. `ROLE_DIR_GENERAL` (Directeur Général)
+4. `ROLE_COMMERCIAL` (Commercial Terrain & Caisse POS)
+5. `ROLE_GESTIONNAIRE` (Gestionnaire Stock & Pesées)
+6. `ROLE_FINANCE` (Responsable Finance & Charges)
+7. `ROLE_COMPTABLE` (Chef Comptable)
+8. `ROLE_CAISSIER` (Agent de Caisse)
+
+### B. 30 Permissions Actives par Module :
+- **ADMINISTRATION** (7 permissions) : Utilisateurs, Rôles, Permissions, Établissements, Zones, Statistiques & Rapports Financiers Globaux.
+- **COMMERCIAL** (7 permissions) : Ventes comptoir POS, Catalogue Avicole, Clients Avicoles, Suivi des Livraisons.
+- **LOGISTIQUE** (8 permissions) : Pesées & Étiquettes, Mouvements de Stock, Achats & Approvisionnements, Bons d'Achat, Vehicules & Livraisons.
+- **CATALOGUE** (2 permissions) : Produits Avicoles, Catégories de Poids & Grilles Tarifaires.
+- **FINANCE** (4 permissions) : Dépenses d'exploitation, Catégories de Dépenses, Rapports de Rentabilité Avicole, Validation Stock/Pesée.
+- **GESTIONNAIRE** (2 permissions) : Consultation & Édition du fichier client.
