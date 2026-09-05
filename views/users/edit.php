@@ -104,9 +104,9 @@ $fonctions = isset($fonctions) ? $fonctions : (new ModelFonction())->getAll();
                 <span>Rôle(s) attribué(s) à l'utilisateur <span style="color: #EF4444;">*</span></span>
                 <small style="color: #64748B; font-weight: normal; font-size: 11.5px;">Sélection multiple possible (cumul des accès)</small>
               </label>
-              <select class="form-control select2" id="sel_roles_user" name="roles[]" multiple="multiple" style="width: 100%;" required>
+              <select class="form-control" id="sel_roles_user" name="roles[]" multiple="multiple" style="width: 100%;">
                 <?php foreach($roles as $r): ?>
-                  <option value="<?= htmlspecialchars($r['code_role']) ?>" <?= in_array($r['code_role'], $selectedRoleCodes, true) ? 'selected' : '' ?>>
+                  <option value="<?= htmlspecialchars($r['code_role']) ?>" <?= in_array($r['code_role'], (array)$selectedRoleCodes) ? 'selected' : '' ?>>
                     <?= htmlspecialchars($r['libelle_role'] . ' (' . ($r['groupe'] ?? $r['module']) . ')') ?>
                   </option>
                 <?php endforeach; ?>
@@ -118,7 +118,7 @@ $fonctions = isset($fonctions) ? $fonctions : (new ModelFonction())->getAll();
           </div>
 
           <div style="display: flex; gap: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid #E2E8F0; width: 100%;">
-            <button type="submit" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; font-weight: 700; border-radius: 8px; padding: 10px 24px;">Enregistrer l'Utilisateur</button>
+            <button type="submit" id="btnSubmitUserForm" class="btn btn-primary" style="background: #1E3A5F; border-color: #1E3A5F; font-weight: 700; border-radius: 8px; padding: 10px 24px;">Enregistrer l'Utilisateur</button>
             <a href="<?= RACINE ?>user/list" class="btn btn-secondary" style="font-weight: 600; border-radius: 8px; padding: 10px 24px;">Annuler</a>
           </div>
         </form>
@@ -126,14 +126,53 @@ $fonctions = isset($fonctions) ? $fonctions : (new ModelFonction())->getAll();
     </div>
   </main>
 </div>
+<style>
+.select2-container--default .select2-selection--multiple {
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  min-height: 44px !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: #1E3A5F !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 3px 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  margin-top: 3px !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+  color: #FFFFFF !important;
+  margin-right: 6px !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+  color: #F87171 !important;
+}
+</style>
 <script>
 $(document).ready(function() { 
   if (window.lucide) lucide.createIcons();
-  if ($.fn.select2) {
+  
+  if (typeof $.fn.select2 !== 'undefined') {
     $('#sel_fonction_user').select2({ placeholder: "-- Sélectionner un poste --", allowClear: true, width: '100%' });
     $('#sel_zone_user').select2({ placeholder: "-- Aucune zone (Super Admin / Global) --", allowClear: true, width: '100%' });
-    $('#sel_roles_user').select2({ placeholder: "Sélectionnez un ou plusieurs rôles", closeOnSelect: false, width: '100%' });
+    $('#sel_roles_user').select2({ placeholder: "Sélectionnez un ou plusieurs rôles...", allowClear: true, closeOnSelect: false, width: '100%' });
   }
+
+  $('form').on('submit', function(e) {
+    var roles = $('#sel_roles_user').val();
+    if (!roles || roles.length === 0) {
+      e.preventDefault();
+      if (typeof toastr !== 'undefined') {
+        toastr.error('Veuillez sélectionner au moins un rôle pour cet utilisateur.');
+      } else {
+        alert('Veuillez sélectionner au moins un rôle pour cet utilisateur.');
+      }
+      return false;
+    }
+  });
 });
 </script>
 <?php require_once __DIR__ . '/../../public/inc/footer-link.php'; ?>
