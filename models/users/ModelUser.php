@@ -18,13 +18,13 @@ class ModelUser extends BaseModel
                     WHERE ur.user_code = ?
                     ORDER BY CASE 
                         WHEN ur.role_code = 'ROLE_SUPERADMIN' THEN 1 
-                        WHEN ur.role_code = 'ROLE_DIR_GENERAL' THEN 2
-                        WHEN ur.role_code = 'ROLE_DIR_ETUDES' THEN 3
-                        WHEN ur.role_code = 'ROLE_CHEF_DEP' THEN 4
-                        WHEN ur.role_code = 'ROLE_COMPTABLE' THEN 5
-                        WHEN ur.role_code = 'ROLE_SCOLARITE' THEN 6
-                        WHEN ur.role_code = 'ROLE_CAISSIER' THEN 7
-                        WHEN ur.role_code = 'ROLE_ENSEIGNANT' THEN 8
+                        WHEN ur.role_code = 'ROLE_ADMIN' THEN 2
+                        WHEN ur.role_code = 'ROLE_DIR_GENERAL' THEN 3
+                        WHEN ur.role_code = 'ROLE_GESTIONNAIRE' THEN 4
+                        WHEN ur.role_code = 'ROLE_COMMERCIAL' THEN 5
+                        WHEN ur.role_code = 'ROLE_FINANCE' THEN 6
+                        WHEN ur.role_code = 'ROLE_COMPTABLE' THEN 7
+                        WHEN ur.role_code = 'ROLE_CAISSIER' THEN 8
                         ELSE 9 END, ur.id ASC";
             $stmt = $this->getCon()->prepare($sql);
             $stmt->execute([$userCode]);
